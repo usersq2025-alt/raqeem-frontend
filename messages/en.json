@@ -1,0 +1,477 @@
+{
+  "meta": {
+    "title": "Raqeem — رقيم",
+    "description": "Interactive learning platform for children"
+  },
+  "welcome": {
+    "headline": "A fun learning journey toward your child's dream",
+    "subheadline": "An interactive educational platform for your children",
+    "ctaPrimary": "Create Account",
+    "ctaSecondary": "Log In",
+    "langToggle": "AR / EN",
+    "heroAlt": "A child and a doctor smiling at the start of the learning journey",
+    "eyebrow": "A trusted Arabic learning platform",
+    "trustLine": "Join +{count} families",
+    "trustedBy": "Trusted by",
+    "nav": {
+      "features": "Features",
+      "contact": "Contact us",
+      "menu": "Menu",
+      "close": "Close"
+    },
+    "deco": {
+      "star": "Star",
+      "book": "Book",
+      "pencil": "Pencil"
+    }
+  },
+  "register": {
+    "title": "Create a new account",
+    "back": "Back",
+    "submit": "Create account",
+    "submitting": "Creating...",
+    "fields": {
+      "fullName": "Full name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "phone": "Phone number (optional)",
+      "countryCode": "Country code"
+    },
+    "placeholders": {
+      "fullName": "Enter your full name",
+      "email": "Enter your email",
+      "password": "Enter your password",
+      "confirmPassword": "Re-enter your password",
+      "phone": "Enter your phone number"
+    },
+    "terms": "I agree to the <terms>Terms and Conditions</terms> and the <privacy>Privacy Policy</privacy>",
+    "strength": {
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong",
+      "show": "Show password",
+      "hide": "Hide password"
+    },
+    "errors": {
+      "nameRequired": "Full name is required",
+      "nameLetters": "Name must contain letters only",
+      "nameLength": "Name must be between 3 and 60 characters",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Enter a valid email address",
+      "emailTaken": "This email is already registered",
+      "loginLink": "Log in",
+      "phoneInvalid": "Enter a phone number with 6 to 12 digits",
+      "passwordRequired": "Password is required",
+      "passwordRules": "At least 8 characters, with uppercase, lowercase, and a number",
+      "confirmRequired": "Please confirm your password",
+      "confirmMismatch": "Passwords do not match",
+      "termsRequired": "You must accept the terms and conditions",
+      "generic": "Could not create the account. Please try again."
+    }
+  },
+  "otp": {
+    "title": "Verify your email",
+    "subtitle": "We sent a 4-digit code to {email}",
+    "timer": "The code expires in {time}",
+    "timerExpired": "The code has expired",
+    "resend": "Resend code",
+    "resending": "Sending...",
+    "confirm": "Confirm",
+    "submitting": "Verifying...",
+    "digitLabel": "Digit {n} of 4",
+    "groupLabel": "4-digit verification code",
+    "invalid": "The code is incorrect, try again",
+    "expired": "The code has expired. Request a new one to continue.",
+    "generic": "Verification failed. Please try again.",
+    "missingSession": "Create an account first to reach this page.",
+    "goRegister": "Create account",
+    "verified": "Verified successfully",
+    "back": "Back"
+  },
+  "success": {
+    "title": "Welcome to Raqeem! 🎉",
+    "body": "Your account was created successfully — ready for a fun learning journey",
+    "idLabel": "Your parent ID",
+    "copy": "Copy",
+    "copied": "Copied ✓",
+    "saveNotice": "Save this ID — you will need it to log in later",
+    "continue": "Continue",
+    "mascotAlt": "A child standing on a glowing book, launching a paper airplane at the start of the journey",
+    "idMissing": "Could not display the ID. Refresh the page or try again."
+  },
+  "placeholder": {
+    "register": "Create Account page — coming soon",
+    "login": "Log In page — coming soon",
+    "features": "Features page — coming soon",
+    "contact": "Contact page — coming soon",
+    "verifyOtp": "OTP verification page — coming soon",
+    "terms": "Terms and Conditions page — coming soon",
+    "privacy": "Privacy Policy page — coming soon",
+    "addChild": "Add child profile page — coming soon",
+    "children": "Children list — coming soon",
+    "careerSelection": "Career selection — coming soon",
+    "dashboard": "Child dashboard — coming soon",
+    "account": "Edit parent profile — coming soon",
+    "back": "Back"
+  },
+  "login": {
+    "title": "Log in",
+    "subtitle": "Glad you're back — sign in to continue",
+    "back": "Back",
+    "submit": "Log in",
+    "submitting": "Signing in...",
+    "forgotPassword": "Forgot password?",
+    "forgotAccountId": "Forgot account ID?",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Create a new account",
+    "fields": {
+      "login": "Email or account ID",
+      "password": "Password"
+    },
+    "placeholders": {
+      "login": "example@email.com or RQMP-XXXXXX",
+      "password": "Enter your password"
+    },
+    "errors": {
+      "invalid": "The entered data is incorrect"
+    }
+  },
+  "forgotPassword": {
+    "title": "Reset your password",
+    "subtitle": "Enter your registered email or account ID and we'll send a verification code",
+    "back": "Back",
+    "send": "Send",
+    "sending": "Sending...",
+    "save": "Save new password",
+    "saving": "Saving...",
+    "signingIn": "Signing you in...",
+    "newPasswordTitle": "Set a new password",
+    "newPasswordSubtitle": "Choose a strong password for your account",
+    "otpHint": "If this account is registered, we sent a code to the email linked to {login}",
+    "fields": {
+      "login": "Registered email or account ID"
+    },
+    "placeholders": {
+      "login": "example@email.com or RQMP-XXXXXX"
+    },
+    "steps": {
+      "1": "Account",
+      "2": "Verify",
+      "3": "Password",
+      "4": "Sign in"
+    },
+    "errors": {
+      "generic": "Could not update the password. Please try again."
+    }
+  },
+  "forgotAccountId": {
+    "title": "Recover account ID",
+    "subtitle": "Enter your registered email and we'll send the ID if an account exists",
+    "back": "Back",
+    "send": "Send",
+    "sending": "Sending...",
+    "fields": {
+      "email": "Registered email"
+    },
+    "placeholders": {
+      "email": "Enter your email"
+    },
+    "confirmation": "If this email is registered with us, you will receive a message with your account ID",
+    "stillStuck": "Still having trouble?",
+    "support": "Contact support",
+    "supportEmail": "support@raqeem.app"
+  },
+  "child": {
+    "title": "Add your child's details",
+    "subtitle": "This helps us tailor a learning experience that fits your child",
+    "back": "Back",
+    "submit": "Save and continue",
+    "submitting": "Saving...",
+    "ordinal": {
+      "1": "First child",
+      "2": "Second child",
+      "3": "Third child",
+      "4": "Fourth child",
+      "5": "Fifth child",
+      "n": "Child {n}"
+    },
+    "fields": {
+      "name": "Child's name",
+      "birthDate": "Date of birth",
+      "birthNamed": "When was {name} born?",
+      "grade": "School grade",
+      "gradeNamed": "Which grade is {name} in?",
+      "gender": "Gender",
+      "genderNamed": "How should we welcome {name}?"
+    },
+    "placeholders": {
+      "name": "Enter the child's name",
+      "birthDate": "Day / Month / Year",
+      "grade": "Select school grade"
+    },
+    "grades": {
+      "1": "Grade 1",
+      "2": "Grade 2",
+      "3": "Grade 3",
+      "4": "Grade 4",
+      "5": "Grade 5",
+      "6": "Grade 6"
+    },
+    "gender": {
+      "female": "Female",
+      "male": "Male",
+      "femaleAlt": "Girl",
+      "maleAlt": "Boy"
+    },
+    "errors": {
+      "nameRequired": "Child's name is required",
+      "nameLetters": "Name must contain letters only",
+      "nameLength": "Name must be between 2 and 40 characters",
+      "birthRequired": "Date of birth is required",
+      "birthInvalid": "Enter a birth date that fits primary-school age",
+      "gradeRequired": "Select a school grade",
+      "genderRequired": "Select a gender",
+      "generic": "Could not save the child's details. Please try again.",
+      "unauthenticated": "Your session expired. Sign in and try again."
+    },
+    "popup": {
+      "title": "Added successfully! 🎉",
+      "named": "Welcome {name} to Raqeem",
+      "question": "Do you want to add another child?",
+      "yes": "Yes, add another child",
+      "no": "No, go to the platform",
+      "close": "Close"
+    }
+  },
+  "hub": {
+    "greeting": "Hello, {name} 👋",
+    "subtitle": "Select a child to continue",
+    "addChild": "Add a new child",
+    "points": "{count} points",
+    "startNow": "Start now!",
+    "loadError": "Could not load your children. Please try again.",
+    "prev": "Previous",
+    "next": "Next",
+    "desktopHint": "Pick a student card to open their subjects, store, and headquarters.",
+    "desktopAside": "Add a new child here, or jump into a profile that is already set up.",
+    "childrenCount": "{count, plural, one {# child} other {# children}}",
+    "settings": {
+      "open": "Settings",
+      "edit": "Edit parent profile",
+      "logout": "Log out",
+      "loggingOut": "Signing out..."
+    }
+  },
+  "career": {
+    "back": "Back",
+    "title": "Choose your professional dream!",
+    "subtitle": "Pick a career for your child and start earning points on Raqeem",
+    "chooseHint": "Tap a career until it glows, then confirm",
+    "confirmChoice": "This is my dream",
+    "desktopTitle": "Why a career?",
+    "desktopHint": "The career shows up in the store, headquarters, and the student card. You can continue from the home screen after choosing.",
+    "presets": {
+      "doctor": { "male": "Doctor", "female": "Doctor" },
+      "engineer": { "male": "Engineer", "female": "Engineer" },
+      "teacher": { "male": "Teacher", "female": "Teacher" },
+      "chef": { "male": "Chef", "female": "Chef" },
+      "astronaut": { "male": "Astronaut", "female": "Astronaut" },
+      "soldier": { "male": "Soldier", "female": "Soldier" }
+    },
+    "other": {
+      "title": "Another career ✨",
+      "prompt": "Write your special dream!",
+      "placeholder": "e.g. game designer, pilot, scientist...",
+      "confirm": "Confirm"
+    },
+    "generating": {
+      "title": "Drawing your dream now...",
+      "hint": "This may take a few seconds"
+    },
+    "preview": {
+      "title": "Is this your dream?",
+      "confirm": "Confirm this look",
+      "retry": "Try again",
+      "remaining": "You have {count} attempts left"
+    },
+    "errors": {
+      "choose": "Could not save the career. Please try again.",
+      "tooShort": "Please write at least a short career name.",
+      "rejected": "That description isn’t a good fit. Try another kind career.",
+      "generate": "Could not draw the image right now. Please try again.",
+      "noAttempts": "No attempts left in this session."
+    }
+  },
+  "student": {
+    "brandAlt": "Raqeem",
+    "homeTitle": "Subjects",
+    "back": "Back",
+    "comingSoon": "Coming soon",
+    "lessonsTitle": "Lessons",
+    "emptyUnits": "No published units for this subject yet.",
+    "emptyLessons": "No playable lessons in this unit yet.",
+    "points": "{count} points",
+    "lessonsCount": "{completed} of {total} lessons",
+    "unitLessons": "{completed} of {total} lessons",
+    "path": {
+      "aria": "Unit lesson path",
+      "replay": "Play again",
+      "locked": "Locked",
+      "current": "Next lesson",
+      "completed": "Completed",
+      "finale": "Final activity",
+      "stars": "{count, plural, one {# star} other {# stars}}",
+      "companion": "Unit character"
+    },
+    "streak": {
+      "days": "{count, plural, one {# day in a row} other {# days in a row}}",
+      "title": "Day streak",
+      "current": "{count, plural, one {# day in a row} other {# days in a row}}",
+      "longest": "Longest streak: {count}",
+      "calendarAria": "Daily activity calendar",
+      "today": "Today",
+      "badges": "Badges",
+      "noBadges": "Finish lessons on consecutive days to earn badges.",
+      "open": "Open calendar"
+    },
+    "hq": {
+      "welcomeTitle": "Welcome to your headquarters!",
+      "welcomeBody": "You are the future {profession}, {name}!",
+      "emptyWelcome": "Your HQ is empty for now. Earn points from lessons, then decorate it from the store.",
+      "startLearning": "Start learning",
+      "pointsZero": "0 points"
+    },
+    "units": {
+      "review": "Review station",
+      "gift": "Unit gift",
+      "giftTitle": "Well done! You finished the unit",
+      "giftPoints": "+{count} gift points",
+      "giftItem": "You unlocked a new HQ item",
+      "giftClose": "Awesome"
+    },
+    "nav": {
+      "aria": "Student navigation",
+      "subjects": "Subjects",
+      "store": "Store",
+      "headquarters": "HQ",
+      "home": "Home",
+      "settings": "Settings"
+    },
+    "desktop": {
+      "continueLearning": "Continue learning",
+      "openSubject": "Open subject",
+      "allCaughtUp": "Nice work — you are caught up on available subjects.",
+      "streakTitle": "Day streak",
+      "streakLongest": "Longest streak: {count}",
+      "streakKeep": "Finish a lesson today to keep the streak going.",
+      "streakDone": "The streak is active today. Well done.",
+      "progressOverview": "Progress overview",
+      "lessonsDone": "{completed} of {total} lessons",
+      "recentSubjects": "Recent progress",
+      "noRecent": "No lessons completed yet. Pick a subject from the grid.",
+      "unitPreview": "Unit preview",
+      "openUnit": "Continue unit",
+      "noUnitSelected": "Hover a unit to see its details here.",
+      "lessonPreview": "Lesson preview",
+      "startLesson": "Start lesson",
+      "replayLesson": "Play again",
+      "lockedLesson": "This lesson is locked",
+      "pathLessons": "Lessons in this unit",
+      "storeFilters": "Categories",
+      "itemCount": "{count} items",
+      "hqInventory": "HQ collection",
+      "hqEmpty": "No items yet. Visit the store to add the first piece.",
+      "ownedCount": "{count} items in HQ",
+      "comingSoonLead": "This screen is still being prepared. Use the shortcuts to jump to learning, the store, or headquarters.",
+      "comingSoonHint": "Existing subjects and store interactions still work from the sidebar.",
+      "shortcuts": "Shortcuts"
+    },
+    "subjects": {
+      "arabic": "Arabic",
+      "english": "English",
+      "french": "French",
+      "math": "Mathematics",
+      "religion": "Religious Education",
+      "social": "Social Studies",
+      "science": "Science"
+    },
+    "store": {
+      "title": "Store",
+      "hqTitle": "Headquarters",
+      "tabsAria": "Store sections",
+      "equipment": "Equipment",
+      "furniture": "Furniture",
+      "buy": "Buy",
+      "buyNow": "Buy now",
+      "cancel": "Cancel",
+      "confirmTitle": "Confirm purchase",
+      "balanceAfter": "Balance after purchase",
+      "points": "{count} points",
+      "pointsUnit": "pts",
+      "hiddenHint": "Complete the unit to unlock this item",
+      "soon": "Soon",
+      "backToLearning": "Return to learning",
+      "continueShopping": "Continue shopping",
+      "emptyTab": "No items in this section yet.",
+      "loadError": "Could not load the store. Please try again.",
+      "purchaseFailed": "Purchase could not be completed. No points were deducted.",
+      "alreadyOwned": "You already own this item.",
+      "futureDoctor": "Future doctor",
+      "items": {
+        "stethoscope": "Medical stethoscope",
+        "tablet": "Medical tablet",
+        "microscope": "Learning microscope",
+        "exam_bed": "Exam bed",
+        "anatomy_model": "Anatomy model",
+        "heartbeat_rug": "Heartbeat rug",
+        "trophy_shelf": "Trophy shelf",
+        "medicine_cabinet": "Medicine cabinet",
+        "anatomy_poster": "Anatomy poster"
+      }
+    }
+  },
+  "lesson": {
+    "loading": "Loading the lesson...",
+    "loadError": "Could not load the lesson. Please try again.",
+    "submitError": "Could not submit the answer. Please try again.",
+    "submit": "Submit",
+    "next": "Next",
+    "correct": "Correct answer",
+    "incorrect": "Incorrect answer",
+    "true": "True",
+    "false": "False",
+    "games": "{current} of {total} games",
+    "points": "{count} points",
+    "finished": "Well done! Lesson complete",
+    "backHome": "Return home",
+    "nextLesson": "Next lesson",
+    "replayPoints": "Replays do not add new points",
+    "stars": "{count, plural, one {# star} other {# stars}}",
+    "phrases": [
+      "You are today's star!",
+      "Great progress — keep going!",
+      "Your mind is shining!",
+      "A steady step toward your dream!",
+      "Well done — this is a real win!"
+    ],
+    "rechargeTitle": "Take a short break!",
+    "rechargeBody": "Review the lesson while you wait, then come back with a full battery",
+    "rechargeTimer": "{time} min",
+    "rechargeHq": "Go to headquarters",
+    "rechargeStore": "Browse the store"
+  },
+  "review": {
+    "title": "Review station",
+    "loading": "Loading review...",
+    "loadError": "Could not load the review station.",
+    "empty": "No review questions for this unit.",
+    "submit": "Submit",
+    "next": "Next",
+    "correct": "Correct answer",
+    "incorrect": "Try again",
+    "done": "Review complete!",
+    "bonus": "+{count} bonus points",
+    "back": "Back to units"
+  }
+}

@@ -1,0 +1,35 @@
+---
+description: Visual style lock for generating related image sets (book covers, avatars, icons)
+alwaysApply: true
+---
+
+# Visual consistency for related image sets
+
+When generating **more than one** image/icon/illustration that will appear together (subject covers, profession avatars, store icons, custom-career characters), lock style **before** any generate call. Never generate the set as unrelated one-off prompts.
+
+## Before generating
+
+Write a **Style Lock** and reuse it **verbatim**. It must pin:
+
+- Camera / perspective (exact angle, no mixing)
+- Object state (all closed or all open — one decision)
+- Light and shadow direction and strength
+- Framing (same occupancy of the frame)
+- Outline / stroke treatment
+- Background: **fully transparent in the shipped PNG** (studio white only as a knockout source). No glued-on opaque plate.
+
+## Preferred generation
+
+One **grid/sheet** of the whole set in a single image, with: “every item is from the same design system, not separate designs.” Split and knock out white afterward (`scripts/knockout-white-bg.py`).
+
+## If generating one-by-one
+
+Paste the **full Style Lock unchanged**. Change **only one variable** (subject name, cover tint, profession). No paraphrasing the lock.
+
+## After generating
+
+Compare side by side. Reject any item that differs in angle, state, scale, or lighting — regenerate that item with the same lock. “Close enough” is not acceptable.
+
+## Example (subject books)
+
+Closed hardcover, 3/4 view ~15° from front-right, key light upper-left, contact shadow down-right, same scale, white knockout background.
