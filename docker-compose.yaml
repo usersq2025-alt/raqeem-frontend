@@ -1,0 +1,33 @@
+# Deploy-time parameters (PROJECT_NAME, IMAGE_NAME, APP_VERSION, HOST_PORT)
+# come from a plain `.env` file next to this one on the host — see
+# compose.env.example. NEXT_PUBLIC_* values are NOT here: they're baked into
+# the image at build time (see Dockerfile's builder stage), not read from
+# this file or from any container environment at runtime.
+#
+# No custom `networks:` block on purpose — this project previously hit a
+# long-running problem on this specific server caused by a custom Docker
+# network on the raqeem-api side. This service doesn't need one anyway: it
+# only talks to the backend over a public https:// URL (NEXT_PUBLIC_API_URL,
+# baked in at build time), never over Docker-internal DNS, so the default
+# bridge network is sufficient.
+name: ${PROJECT_NAME}
+
+services:
+  frontend:
+    image: ${IMAGE_NAME}:${APP_VERSION}
+    restart: unless-stopped
+    init: true
+    ports:
+      - "127.0.0.1:${HOST_PORT}:3000"
+    mem_limit: 512m
+    mem_reservation: 128m
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
