@@ -4,9 +4,17 @@
 # docker-compose.yaml / compose.env.example never mention them):
 #
 #   docker build \
-#     --build-arg NEXT_PUBLIC_API_URL=https://api.raqeem-edu.com \
+#     --build-arg NEXT_PUBLIC_API_URL=https://api.raqeem-edu.com/api \
 #     --build-arg NEXT_PUBLIC_USE_MOCK_AUTH=false \
 #     -t raqeem-frontend:latest .
+#
+# NEXT_PUBLIC_API_URL must include the trailing /api — every apiClient call
+# (src/lib/api/*.ts) is written as a bare path like "/register", not
+# "/api/register". A build without it (as this comment itself wrongly showed
+# before) bakes in a base URL missing /api, so every request 404s in
+# production with no CORS headers on the response (config/cors.php's
+# 'paths' => ['api/*', ...] doesn't match the un-prefixed path either) —
+# indistinguishable from a CORS failure in the browser's Network tab.
 #
 # Then `docker compose up -d` (docker-compose.yaml just runs the image this
 # built, via ${IMAGE_NAME}:${APP_VERSION}).
