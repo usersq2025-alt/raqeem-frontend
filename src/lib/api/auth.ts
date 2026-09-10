@@ -124,6 +124,20 @@ export async function resendOtp(parentId: number): Promise<{ message: string }> 
   }
 }
 
+export async function changeSignupEmail(
+  parentId: number,
+  email: string
+): Promise<{ message: string; email: string }> {
+  try {
+    return await apiClient.post<{ message: string; email: string }>("/verify-otp/change-email", {
+      parent_id: parentId,
+      email,
+    });
+  } catch (error) {
+    throw toAuthError(error);
+  }
+}
+
 export type LoginPayload = {
   login: string;
   password: string;

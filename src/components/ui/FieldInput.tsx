@@ -4,27 +4,39 @@ type FieldInputProps = ComponentProps<"input"> & {
   icon: ReactNode;
   trailing?: ReactNode;
   invalid?: boolean;
+  variant?: "default" | "soft";
 };
 
 export const FieldInput = forwardRef<HTMLInputElement, FieldInputProps>(function FieldInput(
-  { icon, trailing, invalid, className = "", ...props },
+  { icon, trailing, invalid, className = "", variant = "default", ...props },
   ref
 ) {
+  const ltrInput = props.dir === "ltr";
+  const iconPadding = trailing
+    ? "ps-11 pe-11"
+    : ltrInput
+      ? "ps-3 pe-11"
+      : "ps-11 pe-3";
+  const surface =
+    variant === "soft"
+      ? "auth-field bg-[#F7F4F0] py-3.5 text-[15px] focus:bg-white"
+      : "bg-white py-3 text-sm";
+
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400">
+      <span className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-neutral-400">
         {icon}
       </span>
       <input
         {...props}
         ref={ref}
         aria-invalid={invalid || undefined}
-        className={`w-full rounded-xl border bg-white py-3 text-sm text-text-navy outline-none transition-[border-color,box-shadow] placeholder:text-neutral-400 focus:border-primary-orange focus:ring-2 focus:ring-primary-orange/20 ${
-          trailing ? "ps-11 pe-11" : "px-3 ps-11"
-        } ${invalid ? "border-red-400" : "border-neutral-200"} ${className}`}
+        className={`w-full rounded-2xl border text-text-navy outline-none transition-[border-color,box-shadow,background-color] placeholder:text-neutral-400 focus:border-primary-orange focus:ring-2 focus:ring-primary-orange/25 ${surface} ${iconPadding} ${
+          invalid ? "border-red-400" : variant === "soft" ? "border-[#E7DFD6]" : "border-neutral-200"
+        } ${className}`}
       />
       {trailing ? (
-        <div className="absolute end-2 top-1/2 -translate-y-1/2">{trailing}</div>
+        <div className="absolute end-2.5 top-1/2 -translate-y-1/2">{trailing}</div>
       ) : null}
     </div>
   );

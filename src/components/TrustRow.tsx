@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { TRUST_AVATARS, TRUST_FAMILIES_COUNT } from "@/config/welcome";
+import { TRUST_AVATARS } from "@/config/welcome";
 
 function Star({ filled }: { filled: boolean }) {
   return (
@@ -18,7 +18,6 @@ function Star({ filled }: { filled: boolean }) {
 
 export function TrustRow() {
   const t = useTranslations("welcome");
-  const count = TRUST_FAMILIES_COUNT.toLocaleString();
 
   return (
     <div className="mt-6 flex w-full max-w-sm flex-col items-center gap-2 md:max-w-none md:items-start">
@@ -36,9 +35,7 @@ export function TrustRow() {
             />
           ))}
         </div>
-        <p className="text-sm font-semibold text-text-navy">
-          {t("trustLine", { count })}
-        </p>
+        <p className="text-sm font-semibold text-text-navy">{t("trustLine")}</p>
       </div>
       <div className="flex items-center gap-0.5" aria-hidden="true">
         {Array.from({ length: 5 }).map((_, index) => (

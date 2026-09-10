@@ -5,19 +5,32 @@
   },
   "welcome": {
     "headline": "A fun learning journey toward your child's dream",
-    "subheadline": "An interactive educational platform for your children",
-    "ctaPrimary": "Create Account",
-    "ctaSecondary": "Log In",
+    "subheadline": "Interactive lessons and smart games.",
+    "ctaPrimary": "Start the journey for free",
+    "ctaLoginPrompt": "Already have an account?",
+    "ctaLogin": "Log in",
     "langToggle": "AR / EN",
     "heroAlt": "A child and a doctor smiling at the start of the learning journey",
-    "eyebrow": "A trusted Arabic learning platform",
-    "trustLine": "Join +{count} families",
-    "trustedBy": "Trusted by",
+    "trustLine": "Join our family",
     "nav": {
       "features": "Features",
       "contact": "Contact us",
       "menu": "Menu",
       "close": "Close"
+    },
+    "highlights": {
+      "parent": {
+        "title": "Parent guidance",
+        "body": "Follow your child's progress calmly, without pressure."
+      },
+      "iq": {
+        "title": "Smart assessment",
+        "body": "Gentle activities that reveal strengths and build confidence."
+      },
+      "games": {
+        "title": "Smart games",
+        "body": "Learn through play: questions, challenges, and little rewards."
+      }
     },
     "deco": {
       "star": "Star",
@@ -26,10 +39,30 @@
     }
   },
   "register": {
-    "title": "Create a new account",
+    "title": "Welcome to Raqeem 👋",
+    "subtitle": "Create your parent account to join your child on their learning journey.",
+    "visualHeadline": "Begin the journey of discovery.",
+    "visualBody": "A small key opens a wide world of your child’s skills.",
+    "coach": {
+      "welcome": "Welcome! Let’s set up your account and start exploring your child’s skills.",
+      "name": "Great choice — welcome to the Raqeem family.",
+      "email": "Perfect. We’ll send a verification code to this inbox.",
+      "password": "A strong password keeps your child’s journey safe.",
+      "ready": "Wonderful — you’re ready to go!"
+    },
+    "nextStep": "Next step: create our little hero’s profile.",
     "back": "Back",
-    "submit": "Create account",
+    "submit": "Join the Raqeem family 🚀",
     "submitting": "Creating...",
+    "haveAccount": "Already have an account?",
+    "haveAccountLogin": "Log in",
+    "or": "or",
+    "oauth": {
+      "google": "Google",
+      "apple": "Apple",
+      "soon": "Quick sign-up with Google and Apple is coming soon."
+    },
+    "assistantAlt": "A child holding a magic key in front of a learning gateway",
     "fields": {
       "fullName": "Full name",
       "email": "Email",
@@ -40,7 +73,7 @@
     },
     "placeholders": {
       "fullName": "Enter your full name",
-      "email": "Enter your email",
+      "email": "name@gmail.com",
       "password": "Enter your password",
       "confirmPassword": "Re-enter your password",
       "phone": "Enter your phone number"
@@ -51,14 +84,26 @@
       "medium": "Medium",
       "strong": "Strong",
       "show": "Show password",
-      "hide": "Hide password"
+      "hide": "Hide password",
+      "rulesTitle": "Your password must include:",
+      "length": "At least 8 characters",
+      "lower": "A lowercase English letter (a–z)",
+      "upper": "An uppercase English letter (A–Z)",
+      "digit": "At least one number (0–9)",
+      "short": {
+        "length": "8 characters",
+        "upper": "Uppercase",
+        "lower": "Lowercase",
+        "digit": "Number"
+      }
     },
     "errors": {
       "nameRequired": "Full name is required",
       "nameLetters": "Name must contain letters only",
       "nameLength": "Name must be between 3 and 60 characters",
       "emailRequired": "Email is required",
-      "emailInvalid": "Enter a valid email address",
+      "emailInvalid": "Please enter a valid email address",
+      "emailHint": "Example: name@gmail.com",
       "emailTaken": "This email is already registered",
       "loginLink": "Log in",
       "phoneInvalid": "Enter a phone number with 6 to 12 digits",
@@ -72,12 +117,25 @@
   },
   "otp": {
     "title": "Verify your email",
-    "subtitle": "We sent a 4-digit code to {email}",
+    "verifyTitle": "Almost there! Let's confirm your email ✨",
+    "subtitle": "Code sent to: {email}",
+    "sentTo": "Code sent to:",
+    "editEmail": "Edit email",
+    "saveEmail": "Save",
+    "savingEmail": "Saving...",
+    "cancelEdit": "Cancel",
+    "coach": "We sent the secret activation code to your inbox! Enter it so we can take off together ✨",
+    "spamHint": "Don't worry if you don't see it — take a quick look at Spam or Promotions 🔍",
+    "assistantAlt": "The teacher guide holding the activation letter",
+    "openInbox": "Go to your inbox 🚀",
     "timer": "The code expires in {time}",
     "timerExpired": "The code has expired",
+    "resendIn": "Resend available in {time}",
+    "resendReady": "You can resend the code now",
     "resend": "Resend code",
     "resending": "Sending...",
     "confirm": "Confirm",
+    "confirmStart": "Confirm account and go ✨",
     "submitting": "Verifying...",
     "digitLabel": "Digit {n} of 4",
     "groupLabel": "4-digit verification code",

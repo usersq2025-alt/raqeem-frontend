@@ -62,6 +62,18 @@ export async function mockRequest<T>(
     return { message: "resent" } as T;
   }
 
+  if (endpoint === "/verify-otp/change-email" && method === "POST") {
+    await wait(450);
+    const email = String(body?.email ?? "");
+    if (isTaken(email)) {
+      throw new ApiError("EMAIL_TAKEN", 422, {
+        message: "EMAIL_TAKEN",
+        errors: { email: ["taken"] },
+      });
+    }
+    return { message: "updated", email } as T;
+  }
+
   if (endpoint === "/students" && method === "POST") {
     await wait(520);
     return {

@@ -5,19 +5,29 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { FieldInput, MailIcon } from "@/components/ui/FieldInput";
 import { requestAccountId } from "@/lib/api/auth";
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { isValidEmail } from "@/lib/validation/registerSchema";
 
 export function ForgotAccountIdForm() {
   const t = useTranslations("forgotAccountId");
+  const tRegister = useTranslations("register");
   const [email, setEmail] = useState("");
+  const [touched, setTouched] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+
+  const trimmed = email.trim();
+  const inspect = touched || trimmed.length >= 2 || trimmed.includes("@");
+  const emailError =
+    inspect && trimmed.length > 0 && !isValidEmail(trimmed) ? tRegister("errors.emailInvalid") : "";
+  const canSend = isValidEmail(trimmed) && !sending && !sent;
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const value = email.trim();
-    if (!EMAIL_PATTERN.test(value) || sending) return;
+    if (!isValidEmail(value) || sending) {
+      setTouched(true);
+      return;
+    }
 
     setSending(true);
     try {
@@ -49,12 +59,20 @@ export function ForgotAccountIdForm() {
           inputMode="email"
           value={email}
           placeholder={t("placeholders.email")}
+          invalid={Boolean(emailError)}
           icon={<MailIcon />}
+          aria-describedby={emailError ? "recovery-email-error" : undefined}
+          onBlur={() => setTouched(true)}
           onChange={(event) => setEmail(event.target.value)}
         />
+        {emailError ? (
+          <p id="recovery-email-error" className="mt-1 text-xs text-red-500">
+            {emailError}
+          </p>
+        ) : null}
       </div>
 
-      <Button type="submit" fullWidth disabled={!EMAIL_PATTERN.test(email.trim()) || sending || sent}>
+      <Button type="submit" fullWidth disabled={!canSend}>
         {sending ? (
           <>
             <span className="otp-spinner" aria-hidden="true" />

@@ -4,10 +4,19 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
+import { FieldInput, MailIcon } from "@/components/ui/FieldInput";
 import { OtpInput, OTP_LENGTH } from "@/components/forms/OtpInput";
-import { AuthApiError, OTP_TTL_MS, resendOtp, verifyOtp } from "@/lib/api/auth";
+import {
+  AuthApiError,
+  OTP_TTL_MS,
+  changeSignupEmail,
+  resendOtp,
+  verifyOtp,
+} from "@/lib/api/auth";
 import { persistSession } from "@/lib/auth/persistSession";
-import { maskEmail } from "@/lib/utils/maskEmail";
+import { isValidEmail } from "@/lib/validation/registerSchema";
+import { inboxUrlForEmail } from "@/lib/utils/openInbox";
+import { saveRegisterDraft, loadRegisterDraft } from "@/lib/registerDraft";
 
 type Status = "idle" | "invalid" | "expired" | "network";
 
@@ -15,6 +24,8 @@ type Props = {
   parentId: number | null;
   email: string;
 };
+
+export const OTP_RESEND_MS = 60_000;
 
 function issuedAtKey(parentId: number) {
   return `raqeem:otp-issued:${parentId}`;
@@ -50,7 +61,13 @@ function formatRemaining(ms: number) {
 
 export function VerifyOtpForm({ parentId, email }: Props) {
   const t = useTranslations("otp");
+  const tRegister = useTranslations("register");
   const router = useRouter();
+  const [currentEmail, setCurrentEmail] = useState(email);
+  const [emailDraft, setEmailDraft] = useState(email);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [savingEmail, setSavingEmail] = useState(false);
   const [code, setCode] = useState("");
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState(0);
@@ -62,6 +79,12 @@ export function VerifyOtpForm({ parentId, email }: Props) {
   const [resending, setResending] = useState(false);
   const [succeeded, setSucceeded] = useState(false);
   const shakeTimer = useRef<number | null>(null);
+  const submitLock = useRef(false);
+
+  useEffect(() => {
+    setCurrentEmail(email);
+    setEmailDraft(email);
+  }, [email]);
 
   useEffect(() => {
     setMounted(true);
@@ -81,12 +104,14 @@ export function VerifyOtpForm({ parentId, email }: Props) {
     };
   }, []);
 
-  const remaining =
+  const remainingExpiry =
     !mounted || issuedAt === null ? OTP_TTL_MS : Math.max(0, issuedAt + OTP_TTL_MS - now);
-  const locallyExpired = remaining === 0;
-  const canResend = locallyExpired || serverExpired;
-  const progress = remaining / OTP_TTL_MS;
-  const masked = email ? maskEmail(email) : null;
+  const resendRemaining =
+    !mounted || issuedAt === null ? OTP_RESEND_MS : Math.max(0, issuedAt + OTP_RESEND_MS - now);
+  const locallyExpired = remainingExpiry === 0;
+  const canResend = (resendRemaining === 0 || serverExpired) && !resending && !succeeded;
+  const progress = resendRemaining / OTP_RESEND_MS;
+  const inboxUrl = inboxUrlForEmail(currentEmail);
   const errorMessage = useMemo(() => {
     if (locallyExpired || status === "expired") return t("expired");
     if (status === "invalid") return t("invalid");
@@ -103,15 +128,17 @@ export function VerifyOtpForm({ parentId, email }: Props) {
     });
   }
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    if (!parentId || code.length !== OTP_LENGTH || submitting || succeeded) return;
+  async function submitCode(nextCode: string) {
+    if (!parentId || nextCode.length !== OTP_LENGTH || submitting || succeeded || submitLock.current) {
+      return;
+    }
 
+    submitLock.current = true;
     setSubmitting(true);
     setStatus("idle");
 
     try {
-      const result = await verifyOtp(parentId, code);
+      const result = await verifyOtp(parentId, nextCode);
       await persistSession(result.token, result.parent);
       setSucceeded(true);
       window.setTimeout(() => {
@@ -133,12 +160,18 @@ export function VerifyOtpForm({ parentId, email }: Props) {
       }
       setStatus("network");
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   }
 
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    await submitCode(code);
+  }
+
   async function handleResend() {
-    if (!parentId || !canResend || resending || succeeded) return;
+    if (!parentId || !canResend || succeeded) return;
     setResending(true);
     try {
       await resendOtp(parentId);
@@ -155,9 +188,53 @@ export function VerifyOtpForm({ parentId, email }: Props) {
     }
   }
 
+  async function handleSaveEmail() {
+    if (!parentId || savingEmail) return;
+    const next = emailDraft.trim();
+    if (!isValidEmail(next)) {
+      setEmailError(tRegister("errors.emailInvalid"));
+      return;
+    }
+    if (next.toLowerCase() === currentEmail.trim().toLowerCase()) {
+      setEditingEmail(false);
+      setEmailError("");
+      return;
+    }
+
+    setSavingEmail(true);
+    setEmailError("");
+    try {
+      const result = await changeSignupEmail(parentId, next);
+      setCurrentEmail(result.email);
+      setEmailDraft(result.email);
+      setEditingEmail(false);
+      const nextIssued = Date.now();
+      writeIssuedAt(parentId, nextIssued);
+      setIssuedAt(nextIssued);
+      setCode("");
+      setStatus("idle");
+      setServerExpired(false);
+      const draft = loadRegisterDraft();
+      saveRegisterDraft({
+        fullName: draft?.fullName ?? "",
+        email: result.email,
+        acceptedTerms: draft?.acceptedTerms ?? true,
+      });
+      router.replace(`/verify-otp?parentId=${parentId}&email=${encodeURIComponent(result.email)}`);
+    } catch (error) {
+      if (error instanceof AuthApiError && error.code === "EMAIL_TAKEN") {
+        setEmailError(tRegister("errors.emailTaken"));
+        return;
+      }
+      setEmailError(t("generic"));
+    } finally {
+      setSavingEmail(false);
+    }
+  }
+
   if (!parentId) {
     return (
-      <div className="mt-6 text-center">
+      <div className="text-start">
         <h1 className="text-2xl font-extrabold text-text-navy">{t("title")}</h1>
         <p className="mt-3 text-text-gray">{t("missingSession")}</p>
         <div className="mt-8">
@@ -169,13 +246,13 @@ export function VerifyOtpForm({ parentId, email }: Props) {
     );
   }
 
-  const urgent = remaining > 0 && remaining <= 60_000;
-  const ringColor = locallyExpired ? "#DC2626" : urgent ? "#F48232" : "#1A2B47";
+  const urgent = resendRemaining > 0 && resendRemaining <= 15_000;
+  const ringColor = canResend ? "#F48232" : urgent ? "#F48232" : "#1A2B47";
   const radius = 11;
   const circumference = 2 * Math.PI * radius;
 
   return (
-    <form onSubmit={handleSubmit} className="relative mt-1">
+    <form onSubmit={handleSubmit} className="relative">
       {succeeded ? (
         <div
           className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-3xl bg-white/92"
@@ -189,14 +266,73 @@ export function VerifyOtpForm({ parentId, email }: Props) {
         </div>
       ) : null}
 
-      <h1 className="text-center text-2xl font-extrabold text-text-navy md:text-[1.7rem]">
-        {t("title")}
+      <h1 className="text-start text-2xl font-extrabold leading-snug text-text-navy md:text-[1.85rem]">
+        {t("verifyTitle")}
       </h1>
-      <p className="mt-2 text-center text-sm leading-6 text-text-gray md:text-[0.95rem]">
-        {t("subtitle", { email: masked ?? "—" })}
-      </p>
 
-      <div className="mt-8">
+      <div className="mt-2.5">
+        {editingEmail ? (
+          <div className="w-full">
+            <FieldInput
+              id="otp-email"
+              name="email"
+              type="email"
+              variant="soft"
+              dir="ltr"
+              lang="en"
+              value={emailDraft}
+              placeholder={tRegister("placeholders.email")}
+              invalid={Boolean(emailError)}
+              icon={<MailIcon />}
+              onChange={(event) => {
+                setEmailDraft(event.target.value);
+                setEmailError("");
+              }}
+            />
+            {emailError ? <p className="mt-1 text-start text-xs text-red-500">{emailError}</p> : null}
+            <div className="mt-2 flex justify-end gap-3 text-xs font-extrabold">
+              <button
+                type="button"
+                className="text-text-gray"
+                onClick={() => {
+                  setEditingEmail(false);
+                  setEmailDraft(currentEmail);
+                  setEmailError("");
+                }}
+              >
+                {t("cancelEdit")}
+              </button>
+              <button
+                type="button"
+                className="text-primary-orange"
+                disabled={savingEmail}
+                onClick={() => void handleSaveEmail()}
+              >
+                {savingEmail ? t("savingEmail") : t("saveEmail")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-start text-sm font-medium leading-relaxed text-text-gray">
+            <span>{t("sentTo")}</span>
+            <span className="inline-flex items-center gap-1.5">
+              <span dir="ltr" className="font-extrabold text-text-navy">
+                {currentEmail || "—"}
+              </span>
+              <button
+                type="button"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full text-text-gray transition-colors hover:bg-orange-50 hover:text-primary-orange"
+                aria-label={t("editEmail")}
+                onClick={() => setEditingEmail(true)}
+              >
+                <PencilIcon />
+              </button>
+            </span>
+          </p>
+        )}
+      </div>
+
+      <div className="mt-7">
         <OtpInput
           key={issuedAt ?? "otp"}
           value={code}
@@ -205,6 +341,9 @@ export function VerifyOtpForm({ parentId, email }: Props) {
             if (status === "invalid" || status === "network") {
               setStatus("idle");
             }
+          }}
+          onComplete={(next) => {
+            void submitCode(next);
           }}
           error={status === "invalid"}
           shake={shake}
@@ -215,7 +354,18 @@ export function VerifyOtpForm({ parentId, email }: Props) {
         />
       </div>
 
-      <div className="mt-3 min-h-7 text-center" aria-live="assertive" aria-atomic="true">
+      {inboxUrl ? (
+        <a
+          href={inboxUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="otp-inbox-btn mt-5"
+        >
+          <span>{t("openInbox")}</span>
+        </a>
+      ) : null}
+
+      <div className="mt-3 min-h-7 text-start" aria-live="assertive" aria-atomic="true">
         {errorMessage ? (
           <p
             id="otp-feedback"
@@ -234,10 +384,10 @@ export function VerifyOtpForm({ parentId, email }: Props) {
 
       <div
         id="otp-timer"
-        className="mt-4 flex items-center justify-center gap-2.5 text-sm text-text-gray"
+        className="mt-5 flex items-center justify-start gap-2.5 text-sm text-text-gray"
         role="timer"
         aria-label={
-          locallyExpired ? t("timerExpired") : t("timer", { time: formatRemaining(remaining) })
+          canResend ? t("resendReady") : t("resendIn", { time: formatRemaining(resendRemaining) })
         }
       >
         <span className="relative inline-flex h-8 w-8 items-center justify-center" aria-hidden="true">
@@ -266,34 +416,55 @@ export function VerifyOtpForm({ parentId, email }: Props) {
             />
           </svg>
         </span>
-        <span className={urgent || locallyExpired ? "font-semibold text-text-navy" : undefined}>
-          {locallyExpired ? t("timerExpired") : t("timer", { time: formatRemaining(remaining) })}
+        <span className={urgent || canResend ? "font-semibold text-text-navy" : undefined}>
+          {canResend ? t("resendReady") : t("resendIn", { time: formatRemaining(resendRemaining) })}
         </span>
       </div>
 
-      <div className="mt-3 text-center">
+      <div className="mt-3 text-start">
         <button
           type="button"
-          onClick={handleResend}
-          disabled={!canResend || resending || succeeded}
+          onClick={() => void handleResend()}
+          disabled={!canResend || succeeded}
           className="text-sm font-bold text-primary-orange transition-colors disabled:cursor-not-allowed disabled:text-neutral-400"
         >
           {resending ? t("resending") : t("resend")}
         </button>
+        <p className="mt-2 text-xs font-medium leading-relaxed text-text-gray">{t("spamHint")}</p>
       </div>
 
-      <div className="mt-8">
-        <Button type="submit" fullWidth disabled={code.length !== OTP_LENGTH || submitting || succeeded}>
+      <div className="mt-7">
+        <button
+          type="submit"
+          className="hero-cta register-submit disabled:opacity-[0.78]"
+          disabled={code.length !== OTP_LENGTH || submitting || succeeded}
+        >
           {submitting ? (
             <>
               <span className="otp-spinner" aria-hidden="true" />
               {t("submitting")}
             </>
           ) : (
-            t("confirm")
+            <>
+              <span>{t("confirmStart")}</span>
+            </>
           )}
-        </Button>
+        </button>
       </div>
     </form>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
+      <path
+        d="M4 16.5 15.2 5.3a1.8 1.8 0 0 1 2.5 0l1 1a1.8 1.8 0 0 1 0 2.5L7.5 20H4v-3.5Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path d="M13.2 7.3 16.7 10.8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
   );
 }

@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useLocale } from "next-intl";
 
 export const OTP_LENGTH = 4;
 
 type Props = {
   value: string;
   onChange: (value: string) => void;
+  onComplete?: (value: string) => void;
   error?: boolean;
   shake?: boolean;
   disabled?: boolean;
@@ -23,6 +25,7 @@ function onlyDigits(raw: string) {
 export function OtpInput({
   value,
   onChange,
+  onComplete,
   error = false,
   shake = false,
   disabled = false,
@@ -31,6 +34,8 @@ export function OtpInput({
   digitLabel,
   groupLabel,
 }: Props) {
+  const locale = useLocale();
+  const isRtl = locale === "ar";
   const groupId = useId();
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
   const [pulseIndex, setPulseIndex] = useState<number | null>(null);
@@ -64,6 +69,9 @@ export function OtpInput({
     if (pulse !== undefined && clipped[pulse]) {
       setPulseIndex(pulse);
     }
+    if (clipped.length === OTP_LENGTH && clipped !== valueRef.current) {
+      onComplete?.(clipped);
+    }
   }
 
   function applyFilled(raw: string, fromIndex: number) {
@@ -87,7 +95,7 @@ export function OtpInput({
       <p id={groupId} className="sr-only">
         {groupLabel}
       </p>
-      <div dir="ltr" className="flex justify-center gap-2.5 sm:gap-3">
+      <div dir={isRtl ? "rtl" : "ltr"} className="flex justify-center gap-2.5 sm:gap-3">
         {digits.map((digit, index) => {
           const isFilled = digit !== "";
           const isPulsing = pulseIndex === index;
@@ -102,6 +110,7 @@ export function OtpInput({
               name={`otp-${index}`}
               type="text"
               inputMode="numeric"
+              dir="ltr"
               autoComplete={index === 0 ? "one-time-code" : "off"}
               pattern="[0-9]*"
               maxLength={index === 0 ? OTP_LENGTH : 1}
@@ -140,13 +149,13 @@ export function OtpInput({
 
                 if (event.key === "ArrowLeft") {
                   event.preventDefault();
-                  focusAt(index - 1);
+                  focusAt(index + (isRtl ? 1 : -1));
                   return;
                 }
 
                 if (event.key === "ArrowRight") {
                   event.preventDefault();
-                  focusAt(index + 1);
+                  focusAt(index + (isRtl ? -1 : 1));
                 }
               }}
               onPaste={(event) => {
@@ -161,13 +170,13 @@ export function OtpInput({
                 event.currentTarget.select();
               }}
               className={[
-                "h-14 w-14 rounded-2xl border-2 bg-white text-center text-2xl font-extrabold text-text-navy outline-none transition-[border-color,box-shadow,transform,background-color] duration-150 sm:h-16 sm:w-16",
+                "h-[3.65rem] w-[3.35rem] rounded-2xl border-2 bg-[#F7F4F0] text-center text-[1.65rem] font-black text-text-navy outline-none transition-[border-color,box-shadow,transform,background-color] duration-150 sm:h-[3.9rem] sm:w-[3.6rem] sm:text-[1.85rem]",
                 "caret-primary-orange",
                 disabled ? "cursor-not-allowed opacity-60" : "",
                 error
-                  ? "border-red-600 bg-red-50 text-red-800 shadow-[0_0_0_3px_rgba(220,38,38,0.18)]"
-                  : "border-neutral-200 focus:border-primary-orange focus:shadow-[0_0_0_4px_rgba(244,130,50,0.18)]",
-                isFilled && !error ? "border-primary-orange/55" : "",
+                  ? "border-red-400 bg-red-50 text-red-800 shadow-[0_0_0_3px_rgba(220,38,38,0.16)]"
+                  : "border-[#E7DFD6] focus:border-primary-orange focus:bg-white focus:shadow-[0_0_0_4px_rgba(244,130,50,0.28)]",
+                isFilled && !error ? "border-primary-orange/70 bg-white" : "",
                 isPulsing ? "animate-otp-pop" : "",
               ].join(" ")}
             />

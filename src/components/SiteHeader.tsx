@@ -16,15 +16,15 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="relative z-20 flex items-center justify-between gap-4">
+    <header className="relative z-20 flex items-center justify-between gap-4 py-1">
       <BrandLogo />
 
-      <nav className="hidden items-center gap-7 md:flex" aria-label={t("menu")}>
+      <nav className="hidden items-center gap-8 md:flex" aria-label={t("menu")}>
         {NAV_LINKS.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            className="text-sm font-medium text-text-gray transition-colors hover:text-text-navy"
+            className="text-[15px] font-bold text-text-navy/80 transition-colors hover:text-primary-orange"
           >
             {t(item.key)}
           </Link>
@@ -36,7 +36,7 @@ export function SiteHeader() {
         <LanguageSwitcher />
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-primary-orange/40 text-text-navy"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-primary-orange/40 bg-white/80 text-text-navy backdrop-blur-sm"
           aria-expanded={open}
           aria-label={open ? t("close") : t("menu")}
           onClick={() => setOpen((value) => !value)}
@@ -63,13 +63,13 @@ export function SiteHeader() {
       </div>
 
       {open ? (
-        <div className="absolute inset-x-0 top-full mt-2 rounded-2xl border border-primary-orange/20 bg-white p-4 shadow-lg md:hidden">
-          <nav className="flex flex-col gap-3" aria-label={t("menu")}>
+        <div className="absolute inset-x-0 top-full mt-2 rounded-2xl border border-primary-orange/20 bg-white/95 p-4 shadow-lg backdrop-blur-sm md:hidden">
+          <nav className="flex flex-col gap-1" aria-label={t("menu")}>
             {NAV_LINKS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="rounded-xl px-2 py-2 text-sm font-medium text-text-gray hover:bg-primary-orange/5 hover:text-text-navy"
+                className="rounded-xl px-3 py-2.5 text-sm font-bold text-text-navy hover:bg-primary-orange/5 hover:text-primary-orange"
                 onClick={() => setOpen(false)}
               >
                 {t(item.key)}

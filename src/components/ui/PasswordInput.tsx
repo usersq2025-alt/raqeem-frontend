@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { FieldInput, LockIcon } from "@/components/ui/FieldInput";
-import { getPasswordStrength } from "@/lib/validation/registerSchema";
+import {
+  getPasswordRules,
+  getPasswordStrength,
+  type PasswordRuleId,
+} from "@/lib/validation/registerSchema";
 
 type Props = {
   id: string;
@@ -14,9 +18,13 @@ type Props = {
   invalid?: boolean;
   showStrength?: boolean;
   describedBy?: string;
+  variant?: "default" | "soft";
   onChange: (value: string) => void;
+  onFocus?: () => void;
   onBlur?: () => void;
 };
+
+const RULE_ORDER: PasswordRuleId[] = ["length", "upper", "lower", "digit"];
 
 export function PasswordInput({
   id,
@@ -27,12 +35,17 @@ export function PasswordInput({
   invalid,
   showStrength = false,
   describedBy,
+  variant = "default",
   onChange,
+  onFocus,
   onBlur,
 }: Props) {
   const t = useTranslations("register.strength");
   const [visible, setVisible] = useState(false);
+  const [focused, setFocused] = useState(false);
   const strength = getPasswordStrength(value);
+  const rules = getPasswordRules(value);
+  const showRules = showStrength && (focused || value.length > 0);
   const labels = ["", t("weak"), t("medium"), t("strong")] as const;
   const barColors = [
     "bg-neutral-200",
@@ -50,15 +63,27 @@ export function PasswordInput({
         value={value}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
+        inputMode="text"
         invalid={invalid}
+        variant={variant}
         icon={<LockIcon />}
         aria-describedby={describedBy}
         onChange={(event) => onChange(event.target.value)}
-        onBlur={onBlur}
+        onFocus={() => {
+          setFocused(true);
+          onFocus?.();
+        }}
+        onBlur={() => {
+          setFocused(false);
+          onBlur?.();
+        }}
         trailing={
           <button
             type="button"
-            className="rounded-md p-1 text-neutral-400 hover:text-text-navy"
+            className="rounded-md p-1 text-neutral-400 transition-colors hover:text-text-navy"
             aria-label={visible ? t("hide") : t("show")}
             onClick={() => setVisible((current) => !current)}
           >
@@ -67,29 +92,51 @@ export function PasswordInput({
         }
       />
 
-      {showStrength && value ? (
-        <div className="mt-2 flex items-center gap-3" id={`${id}-strength`}>
-          <div className="flex flex-1 gap-1.5">
-            {[1, 2, 3].map((level) => (
+      {showRules ? (
+        <div className="mt-2.5" id={`${id}-strength`}>
+          {value ? (
+            <div className="mb-2 flex items-center gap-3">
+              <div className="flex flex-1 gap-1.5" aria-hidden="true">
+                {[1, 2, 3].map((level) => (
+                  <span
+                    key={level}
+                    className={`h-1.5 flex-1 rounded-full transition-colors ${
+                      strength >= level ? barColors[strength] : "bg-neutral-200"
+                    }`}
+                  />
+                ))}
+              </div>
               <span
-                key={level}
-                className={`h-1.5 flex-1 rounded-full ${
-                  strength >= level ? barColors[strength] : "bg-neutral-200"
+                className={`text-xs font-bold ${
+                  strength === 3
+                    ? "text-emerald-600"
+                    : strength === 2
+                      ? "text-amber-600"
+                      : "text-text-gray"
                 }`}
-              />
-            ))}
-          </div>
-          <span
-            className={`text-xs font-bold ${
-              strength === 3
-                ? "text-emerald-600"
-                : strength === 2
-                  ? "text-amber-600"
-                  : "text-text-gray"
-            }`}
-          >
-            {labels[strength]}
-          </span>
+              >
+                {labels[strength]}
+              </span>
+            </div>
+          ) : null}
+          <p className="sr-only">{t("rulesTitle")}</p>
+          <ul className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-xs font-bold">
+            {RULE_ORDER.map((rule, index) => {
+              const met = rules[rule];
+              return (
+                <li key={rule} className="inline-flex items-center gap-1">
+                  {index > 0 ? (
+                    <span className="px-0.5 text-neutral-300" aria-hidden="true">
+                      |
+                    </span>
+                  ) : null}
+                  <span className={met ? "text-emerald-600" : "text-text-gray"}>
+                    {t(`short.${rule}`)} {met ? "✓" : "✗"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       ) : null}
     </div>
