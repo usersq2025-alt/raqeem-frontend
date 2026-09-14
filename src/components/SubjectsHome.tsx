@@ -50,7 +50,7 @@ export function SubjectsHome({ child, subjects, streak }: Props) {
           <div className="absolute end-0 top-0">
             <StreakBadge days={streak.streakCurrent} isActiveToday={streak.isActiveToday} href={streakPath(child.id)} />
           </div>
-          <Image src="/images/brand/logo.png" alt={t("brandAlt")} width={160} height={90} className="h-12 w-auto object-contain" priority />
+          <Image src="/images/brand/logo.png?v=5" alt={t("brandAlt")} width={160} height={106} className="h-12 w-auto object-contain" priority />
 
           <div className="mt-4 flex w-full items-center gap-3">
             <span

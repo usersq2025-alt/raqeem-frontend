@@ -16,10 +16,10 @@ export function BrandLogo({ size = "md" }: Props) {
   return (
     <Link href="/" className="inline-flex shrink-0 items-center">
       <Image
-        src="/images/brand/logo.png"
+        src="/images/brand/logo.png?v=5"
         alt={t("title")}
         width={220}
-        height={140}
+        height={146}
         priority
         className={`w-auto object-contain ${heightClass}`}
       />

@@ -31,23 +31,23 @@ export function OtpInput({
   disabled = false,
   autoFocus = true,
   describedBy,
-  digitLabel,
   groupLabel,
 }: Props) {
   const locale = useLocale();
   const isRtl = locale === "ar";
   const groupId = useId();
-  const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [focused, setFocused] = useState(false);
   const [pulseIndex, setPulseIndex] = useState<number | null>(null);
   const digits = Array.from({ length: OTP_LENGTH }, (_, index) => value[index] ?? "");
+  const activeIndex = Math.min(value.length, OTP_LENGTH - 1);
 
   const valueRef = useRef(value);
   valueRef.current = value;
 
   useEffect(() => {
     if (!autoFocus || disabled) return;
-    const start = Math.min(valueRef.current.length, OTP_LENGTH - 1);
-    inputsRef.current[start]?.focus();
+    inputRef.current?.focus({ preventScroll: true });
   }, [autoFocus, disabled]);
 
   useEffect(() => {
@@ -56,132 +56,91 @@ export function OtpInput({
     return () => window.clearTimeout(timer);
   }, [pulseIndex]);
 
-  function focusAt(index: number) {
-    const clamped = Math.max(0, Math.min(index, OTP_LENGTH - 1));
-    const node = inputsRef.current[clamped];
-    node?.focus();
-    node?.select();
-  }
+  function commit(nextRaw: string) {
+    const clipped = onlyDigits(nextRaw).slice(0, OTP_LENGTH);
+    const previous = valueRef.current;
+    if (clipped === previous) return;
 
-  function commit(next: string, pulse?: number) {
-    const clipped = onlyDigits(next).slice(0, OTP_LENGTH);
+    valueRef.current = clipped;
     onChange(clipped);
-    if (pulse !== undefined && clipped[pulse]) {
-      setPulseIndex(pulse);
+
+    if (clipped.length > previous.length) {
+      setPulseIndex(clipped.length - 1);
     }
-    if (clipped.length === OTP_LENGTH && clipped !== valueRef.current) {
+
+    if (clipped.length === OTP_LENGTH) {
       onComplete?.(clipped);
     }
   }
 
-  function applyFilled(raw: string, fromIndex: number) {
-    const incoming = onlyDigits(raw).slice(0, OTP_LENGTH);
-    if (!incoming) return;
-    const prefix = value.slice(0, fromIndex);
-    const merged = onlyDigits(`${prefix}${incoming}`).slice(0, OTP_LENGTH);
-    const lastFilled = Math.max(0, merged.length - 1);
-    commit(merged, lastFilled);
-    focusAt(merged.length >= OTP_LENGTH ? OTP_LENGTH - 1 : merged.length);
-  }
-
   return (
     <div
-      role="group"
-      aria-labelledby={groupId}
-      aria-describedby={describedBy}
-      aria-invalid={error || undefined}
       className={shake ? "animate-otp-shake" : undefined}
     >
-      <p id={groupId} className="sr-only">
-        {groupLabel}
-      </p>
-      <div dir={isRtl ? "rtl" : "ltr"} className="flex justify-center gap-2.5 sm:gap-3">
-        {digits.map((digit, index) => {
-          const isFilled = digit !== "";
-          const isPulsing = pulseIndex === index;
+      <div
+        className="relative mx-auto w-fit"
+        onPointerDown={() => {
+          if (!disabled) inputRef.current?.focus({ preventScroll: true });
+        }}
+      >
+        <input
+          ref={inputRef}
+          id={groupId}
+          name="otp"
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          enterKeyHint="done"
+          pattern="[0-9]*"
+          maxLength={OTP_LENGTH}
+          dir="ltr"
+          lang="en"
+          aria-label={groupLabel}
+          aria-describedby={describedBy}
+          aria-invalid={error || undefined}
+          disabled={disabled}
+          value={value}
+          onChange={(event) => commit(event.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          className="absolute inset-0 z-10 h-full w-full cursor-text touch-manipulation opacity-0 disabled:cursor-not-allowed"
+          style={{ fontSize: 16, color: "transparent", caretColor: "transparent" }}
+        />
 
-          return (
-            <input
-              key={index}
-              ref={(node) => {
-                inputsRef.current[index] = node;
-              }}
-              id={`${groupId}-${index}`}
-              name={`otp-${index}`}
-              type="text"
-              inputMode="numeric"
-              dir="ltr"
-              autoComplete={index === 0 ? "one-time-code" : "off"}
-              pattern="[0-9]*"
-              maxLength={index === 0 ? OTP_LENGTH : 1}
-              aria-label={digitLabel(index + 1)}
-              aria-invalid={error || undefined}
-              disabled={disabled}
-              value={digit}
-              onChange={(event) => {
-                const next = onlyDigits(event.target.value);
-                if (next.length > 1) {
-                  applyFilled(next, index);
-                  return;
-                }
-                if (next.length === 1) {
-                  const updated = `${value.slice(0, index)}${next}${value.slice(index + 1)}`;
-                  commit(updated, index);
-                  if (index < OTP_LENGTH - 1) {
-                    focusAt(index + 1);
-                  }
-                  return;
-                }
-                commit(`${value.slice(0, index)}${value.slice(index + 1)}`);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Backspace") {
-                  if (digit) {
-                    return;
-                  }
-                  event.preventDefault();
-                  if (index > 0) {
-                    commit(`${value.slice(0, index - 1)}${value.slice(index)}`);
-                    focusAt(index - 1);
-                  }
-                  return;
-                }
+        <div
+          dir={isRtl ? "rtl" : "ltr"}
+          className="pointer-events-none flex justify-center gap-2.5 sm:gap-3"
+          aria-hidden="true"
+        >
+          {digits.map((digit, index) => {
+            const isFilled = digit !== "";
+            const isActive = focused && !disabled && index === activeIndex;
+            const isPulsing = pulseIndex === index;
 
-                if (event.key === "ArrowLeft") {
-                  event.preventDefault();
-                  focusAt(index + (isRtl ? 1 : -1));
-                  return;
-                }
-
-                if (event.key === "ArrowRight") {
-                  event.preventDefault();
-                  focusAt(index + (isRtl ? -1 : 1));
-                }
-              }}
-              onPaste={(event) => {
-                event.preventDefault();
-                applyFilled(event.clipboardData.getData("text"), index);
-              }}
-              onFocus={(event) => {
-                if (index > value.length) {
-                  focusAt(value.length);
-                  return;
-                }
-                event.currentTarget.select();
-              }}
-              className={[
-                "h-[3.65rem] w-[3.35rem] rounded-2xl border-2 bg-[#F7F4F0] text-center text-[1.65rem] font-black text-text-navy outline-none transition-[border-color,box-shadow,transform,background-color] duration-150 sm:h-[3.9rem] sm:w-[3.6rem] sm:text-[1.85rem]",
-                "caret-primary-orange",
-                disabled ? "cursor-not-allowed opacity-60" : "",
-                error
-                  ? "border-red-400 bg-red-50 text-red-800 shadow-[0_0_0_3px_rgba(220,38,38,0.16)]"
-                  : "border-[#E7DFD6] focus:border-primary-orange focus:bg-white focus:shadow-[0_0_0_4px_rgba(244,130,50,0.28)]",
-                isFilled && !error ? "border-primary-orange/70 bg-white" : "",
-                isPulsing ? "animate-otp-pop" : "",
-              ].join(" ")}
-            />
-          );
-        })}
+            return (
+              <span
+                key={index}
+                className={[
+                  "inline-flex h-[3.65rem] w-[3.35rem] items-center justify-center rounded-2xl border-2 text-[1.65rem] font-black text-text-navy transition-[border-color,box-shadow,background-color] duration-150 sm:h-[3.9rem] sm:w-[3.6rem] sm:text-[1.85rem]",
+                  disabled ? "opacity-60" : "",
+                  error
+                    ? "border-red-400 bg-red-50 text-red-800 shadow-[0_0_0_3px_rgba(220,38,38,0.16)]"
+                    : isActive
+                      ? "border-primary-orange bg-white shadow-[0_0_0_4px_rgba(244,130,50,0.28)]"
+                      : isFilled
+                        ? "border-primary-orange/70 bg-white"
+                        : "border-[#E7DFD6] bg-[#F7F4F0]",
+                  isPulsing ? "animate-otp-pop" : "",
+                ].join(" ")}
+              >
+                {digit}
+              </span>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

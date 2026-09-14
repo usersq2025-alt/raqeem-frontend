@@ -49,10 +49,10 @@ export function StudentNav({ childId }: Props) {
       >
         <Link href={withChildQuery("/subjects", childId)} className="mb-6 flex items-center justify-center px-4">
           <Image
-            src="/images/brand/logo.png"
+            src="/images/brand/logo.png?v=5"
             alt={tBrand("brandAlt")}
             width={180}
-            height={96}
+            height={120}
             priority
             className="h-12 w-auto object-contain"
           />
