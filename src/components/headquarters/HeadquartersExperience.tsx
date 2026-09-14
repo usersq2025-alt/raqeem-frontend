@@ -74,7 +74,7 @@ export function HeadquartersExperience({ child, scene, highlightId, fromBalance,
         ) : null}
 
         <header dir="ltr" className="mb-4 flex items-center justify-between gap-3 md:hidden">
-          <Image src="/images/brand/logo.png?v=5" alt={tBrand("brandAlt")} width={150} height={100} className="h-11 w-auto object-contain" priority />
+          <Image src="/images/brand/logo.png" alt={tBrand("brandAlt")} width={150} height={100} className="h-11 w-auto object-contain" priority />
           <div className="flex items-center gap-2">
             <PointsPill count={scene.pointsBalance} from={fromBalance} label={t("pointsUnit")} />
             <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_8px_18px_-12px_rgba(26,43,71,0.5)]">

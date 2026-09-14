@@ -16,7 +16,7 @@ export function BrandLogo({ size = "md" }: Props) {
   return (
     <Link href="/" className="inline-flex shrink-0 items-center">
       <Image
-        src="/images/brand/logo.png?v=5"
+        src="/images/brand/logo.png"
         alt={t("title")}
         width={220}
         height={146}

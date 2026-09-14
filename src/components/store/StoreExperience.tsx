@@ -124,7 +124,7 @@ export function StoreExperience({ childId, catalog }: Props) {
     <div className="md:grid md:grid-cols-[15.5rem_minmax(0,1fr)] md:items-start md:gap-7">
       <h1 className="sr-only md:hidden">{t("title")}</h1>
       <header className="mb-4 flex items-center justify-between gap-3 md:col-span-2 md:hidden" dir="ltr">
-        <Image src="/images/brand/logo.png?v=5" alt="" width={150} height={100} className="h-11 w-auto object-contain" priority />
+        <Image src="/images/brand/logo.png" alt="" width={150} height={100} className="h-11 w-auto object-contain" priority />
         <PointsPill count={balance} label={t("pointsUnit")} />
       </header>
 
