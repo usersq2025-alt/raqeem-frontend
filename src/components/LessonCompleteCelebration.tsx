@@ -6,7 +6,7 @@ import confetti from "canvas-confetti";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import type { LessonAttempt } from "@/lib/api/lessonPlay";
-import { unitPathFocus, withChildQuery } from "@/lib/config/subjects";
+import { lessonPlayPath, unitLessonPath, unitPathFocus, withChildQuery } from "@/lib/config/subjects";
 
 const CONFETTI_COLORS = ["#F48232", "#F9A8D4", "#7DD3FC", "#FDE68A", "#C4B5FD", "#6EE7B7"];
 
@@ -20,13 +20,23 @@ export function LessonCompleteCelebration({ attempt, childId }: Props) {
   const tUnits = useTranslations("student.units");
   const replay = attempt.attemptNumber > 1;
   const awarded = replay ? 0 : attempt.pointsEarned;
-  const stars = Math.max(0, Math.min(3, attempt.stars || (replay ? 0 : awarded > 0 ? Math.min(3, Math.max(1, Math.ceil(awarded / 4))) : 1)));
+  const stars = Math.max(
+    0,
+    Math.min(3, attempt.stars || (replay ? 0 : awarded > 0 ? Math.min(3, Math.max(1, Math.ceil(awarded / 4))) : 1))
+  );
   const phrases = (t.raw("phrases") as string[] | undefined) ?? [];
   const phrase = phrases.length > 0 ? phrases[attempt.id % phrases.length] : t("finished");
-  const nextHref =
-    attempt.nextLessonId && attempt.unitId
-      ? unitPathFocus(attempt.unitId, childId, attempt.nextLessonId)
-      : withChildQuery("/subjects", childId);
+
+  const pathHref = useMemo(() => {
+    if (!attempt.unitId) return withChildQuery("/subjects", childId);
+    if (attempt.nextLessonId) return unitPathFocus(attempt.unitId, childId, attempt.nextLessonId);
+    return unitLessonPath(attempt.unitId, childId);
+  }, [attempt.nextLessonId, attempt.unitId, childId]);
+
+  const replayHref = useMemo(
+    () => lessonPlayPath(attempt.lessonId, childId),
+    [attempt.lessonId, childId]
+  );
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -56,8 +66,6 @@ export function LessonCompleteCelebration({ attempt, childId }: Props) {
     };
   }, []);
 
-  const homeHref = useMemo(() => withChildQuery("/subjects", childId), [childId]);
-
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-10 text-center">
       <p className="text-sm font-extrabold text-primary-orange">{phrase}</p>
@@ -74,24 +82,31 @@ export function LessonCompleteCelebration({ attempt, childId }: Props) {
 
       {attempt.gift ? (
         <div className="mt-6 flex w-full max-w-sm items-center gap-3 rounded-[24px] bg-white p-4 text-start shadow-[0_12px_28px_-18px_rgba(26,43,71,0.4)]">
-          <Image src="/images/student/unit-gift.png" alt="" width={72} height={72} unoptimized className="h-16 w-16 object-contain" />
+          <Image
+            src="/images/student/unit-gift.png"
+            alt=""
+            width={72}
+            height={72}
+            unoptimized
+            className="h-16 w-16 object-contain"
+          />
           <div>
             <p className="text-sm font-extrabold text-text-navy">{tUnits("giftTitle")}</p>
             <p className="mt-1 text-sm font-bold text-primary-orange">
-              {attempt.gift.rewardType === "store_item" ? tUnits("giftItem") : tUnits("giftPoints", { count: attempt.gift.pointsAmount })}
+              {attempt.gift.rewardType === "store_item"
+                ? tUnits("giftItem")
+                : tUnits("giftPoints", { count: attempt.gift.pointsAmount })}
             </p>
           </div>
         </div>
       ) : null}
 
-      <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row-reverse">
-        {attempt.nextLessonId && attempt.unitId ? (
-          <Button href={nextHref} className="sm:flex-1">
-            {t("nextLesson")}
-          </Button>
-        ) : null}
-        <Button href={homeHref} variant={attempt.nextLessonId ? "secondary" : "primary"} className="sm:flex-1">
-          {t("backHome")}
+      <div className="mt-8 flex w-full max-w-md flex-col gap-3">
+        <Button href={pathHref} className="w-full">
+          {t("backToPath")}
+        </Button>
+        <Button href={replayHref} variant="secondary" className="w-full">
+          {t("replayLesson")}
         </Button>
       </div>
     </div>

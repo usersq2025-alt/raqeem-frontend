@@ -22,11 +22,12 @@ export type StoreCatalog = {
 export type HeadquartersItem = {
   id: number;
   slotKey: string;
+  slot: string;
   name: string;
   imageUrl: string | null;
-  xPct: number;
-  yPct: number;
-  widthPct: number;
+  x: number;
+  y: number;
+  width: number;
   zIndex: number;
 };
 
@@ -102,16 +103,20 @@ function mapHqItem(row: Record<string, unknown>): HeadquartersItem | null {
   const id = Number(row.id);
   const slotKey = typeof row.slot_key === "string" ? row.slot_key : typeof row.slotKey === "string" ? row.slotKey : "";
   if (!Number.isFinite(id) || !slotKey) return null;
+  const x = Number(row.x ?? row.x_pct ?? row.xPct ?? 50) || 50;
+  const y = Number(row.y ?? row.y_pct ?? row.yPct ?? 50) || 50;
+  const width = Number(row.width ?? row.width_pct ?? row.widthPct ?? 12) || 12;
   return {
     id,
     slotKey,
+    slot: typeof row.slot === "string" ? row.slot : "table_desk",
     name: typeof row.name === "string" ? row.name : slotKey,
     imageUrl: withAssetVersion(
       typeof row.image_url === "string" ? row.image_url : typeof row.imageUrl === "string" ? row.imageUrl : null
     ),
-    xPct: Number(row.x_pct ?? row.xPct ?? 40) || 40,
-    yPct: Number(row.y_pct ?? row.yPct ?? 40) || 40,
-    widthPct: Number(row.width_pct ?? row.widthPct ?? 14) || 14,
+    x,
+    y,
+    width,
     zIndex: Number(row.z_index ?? row.zIndex ?? 2) || 2,
   };
 }
@@ -180,4 +185,27 @@ export async function purchaseItem(studentId: number, storeItemId: number): Prom
 
 export async function getHeadquarters(studentId: number): Promise<HeadquartersSceneData> {
   return mapHeadquarters(await storeFetch(`/api/students/${studentId}/headquarters`));
+}
+
+export async function updateHeadquartersItemPosition(
+  studentId: number,
+  itemId: number,
+  position: { x: number; y: number; width?: number; zIndex?: number }
+): Promise<HeadquartersItem> {
+  const raw = asRecord(
+    await storeFetch(`/api/students/${studentId}/headquarters/items/${itemId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        x: position.x,
+        y: position.y,
+        width: position.width,
+        z_index: position.zIndex,
+      }),
+    })
+  );
+  const itemRaw = asRecord(raw.item ?? raw);
+  const mapped = mapHqItem(itemRaw);
+  if (!mapped) throw new StoreApiError("INVALID_ITEM", 422);
+  return mapped;
 }

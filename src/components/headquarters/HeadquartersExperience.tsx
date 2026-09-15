@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -30,6 +30,7 @@ export function HeadquartersExperience({ child, scene, highlightId, fromBalance,
   const router = useRouter();
   const chrome = useStudentChrome();
   const setChromePoints = chrome?.setPoints;
+  const [editing, setEditing] = useState(false);
   const avatar = professionAvatarSrc(child.professionCode, child.gender) ?? "/images/brand/logo.png";
   const professionLabel =
     child.professionCode === "doctor" ||
@@ -83,7 +84,19 @@ export function HeadquartersExperience({ child, scene, highlightId, fromBalance,
           </div>
         </header>
 
-        <HeadquartersScene scene={scene} highlightId={highlightId} />
+        {scene.items.length > 0 ? (
+          <div className="mb-3 flex justify-end md:hidden">
+            <button
+              type="button"
+              onClick={() => setEditing((value) => !value)}
+              className="rounded-full bg-white px-4 py-2 text-sm font-extrabold text-text-navy shadow-sm"
+            >
+              {editing ? tHq("doneEditing") : tHq("editLayout")}
+            </button>
+          </div>
+        ) : null}
+
+        <HeadquartersScene scene={scene} studentId={child.id} highlightId={highlightId} editable={editing} />
 
         <div className="mt-5 grid grid-cols-2 gap-2.5 md:hidden">
           <Button href={withChildQuery("/subjects", child.id)} variant="secondary" fullWidth className="!min-w-0 text-[13px] sm:text-base">
@@ -112,6 +125,11 @@ export function HeadquartersExperience({ child, scene, highlightId, fromBalance,
             </div>
           </div>
           <p className="mt-4 text-sm font-bold text-text-gray">{tDesk("ownedCount", { count: scene.items.length })}</p>
+          {scene.items.length > 0 ? (
+            <Button type="button" fullWidth className="mt-3" variant="secondary" onClick={() => setEditing((value) => !value)}>
+              {editing ? tHq("doneEditing") : tHq("editLayout")}
+            </Button>
+          ) : null}
         </section>
 
         <section className="rounded-[28px] bg-white p-5 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.4)]">

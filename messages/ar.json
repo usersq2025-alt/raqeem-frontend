@@ -330,12 +330,30 @@
     "desktopTitle": "لماذا المهنة؟",
     "desktopHint": "المهنة تظهر في المتجر والمقر وبطاقة الطالب. يمكنك المتابعة لاحقاً من الشاشة الرئيسية.",
     "presets": {
-      "doctor": { "male": "طبيب", "female": "طبيبة" },
-      "engineer": { "male": "مهندس", "female": "مهندسة" },
-      "teacher": { "male": "معلّم", "female": "معلّمة" },
-      "chef": { "male": "شيف", "female": "شيف" },
-      "astronaut": { "male": "رائد فضاء", "female": "رائدة فضاء" },
-      "soldier": { "male": "جندي", "female": "جندية" }
+      "doctor": {
+        "male": "طبيب",
+        "female": "طبيبة"
+      },
+      "engineer": {
+        "male": "مهندس",
+        "female": "مهندسة"
+      },
+      "teacher": {
+        "male": "معلّم",
+        "female": "معلّمة"
+      },
+      "chef": {
+        "male": "شيف",
+        "female": "شيف"
+      },
+      "astronaut": {
+        "male": "رائد فضاء",
+        "female": "رائدة فضاء"
+      },
+      "soldier": {
+        "male": "جندي",
+        "female": "جندية"
+      }
     },
     "other": {
       "title": "مهنة أخرى ✨",
@@ -380,7 +398,14 @@
       "completed": "مكتمل",
       "finale": "النشاط الختامي",
       "stars": "{count} نجوم",
-      "companion": "شخصية الوحدة"
+      "companion": "شخصية الوحدة",
+      "unitBadge": "الوحدة الأولى",
+      "completedSummary": "{count} دروس مكتملة",
+      "playNow": "ابدأ الدرس",
+      "continueJourney": "مغامرتك مستمرة",
+      "lockedHint": "أكمل الدرس السابق أولًا",
+      "startHint": "جاهز لدرس «{title}»؟ هيا نبدأ المغامرة!",
+      "replayHint": "يمكنك إعادة هذا الدرس لتقوية ما تعلمته."
     },
     "streak": {
       "days": "{count} أيام متتالية",
@@ -398,7 +423,10 @@
       "welcomeBody": "أنت {profession} المستقبل، {name}!",
       "emptyWelcome": "المقر فارغ الآن. اجمع النقاط من الدروس ثم زيّنه من المتجر.",
       "startLearning": "ابدأ التعلّم",
-      "pointsZero": "0 نقطة"
+      "pointsZero": "0 نقطة",
+      "editLayout": "رتّب المقر",
+      "doneEditing": "تم الترتيب",
+      "dragHint": "اسحب الأدوات وضعها في المكان المناسب"
     },
     "units": {
       "review": "محطة المراجعة",
@@ -490,22 +518,41 @@
     }
   },
   "lesson": {
-    "loading": "جارٍ تحميل الدرس...",
+    "loading": "هيا نبدأ!",
+    "loadingTitle": "هيا نبدأ المغامرة!",
+    "loadingBody": "نحضر أسئلة ممتعة لك… استعد!",
     "loadError": "تعذّر تحميل الدرس. حاول مرة أخرى.",
     "submitError": "تعذّر تسليم الإجابة. حاول مرة أخرى.",
-    "submit": "تسليم",
+    "submit": "تحقق",
     "next": "التالي",
-    "correct": "الإجابة الصحيحة",
-    "incorrect": "إجابة غير صحيحة",
+    "autoNext": "الانتقال للسؤال التالي…",
+    "autoNextDone": "أحسنت! ننتقل لتكريم إنجازك…",
+    "transitionNextTitle": "هيا إلى السؤال التالي!",
+    "transitionNextBody": "أنت تتقدم في مغامرتك… استعد!",
+    "transitionDoneTitle": "أحسنت! أنهيت الدرس",
+    "transitionDoneBody": "ننتقل الآن لتكريم إنجازك…",
+    "correct": "أحسنت! إجابة صحيحة",
+    "incorrect": "ليست هذه المرة",
     "true": "صح",
     "false": "خطأ",
     "games": "{current} من {total} ألعاب",
     "points": "{count} نقطة",
     "finished": "أحسنت! أنهيت الدرس",
     "backHome": "العودة للرئيسية",
+    "backToPath": "العودة لمسار الدروس",
+    "replayLesson": "إعادة الدرس مرة أخرى",
     "nextLesson": "الدرس التالي",
     "replayPoints": "إعادة اللعب لا تضيف نقاطاً جديدة",
     "stars": "{count} نجوم",
+    "previousQuestion": "السابق",
+    "nextQuestion": "التالي",
+    "backToCurrent": "العودة للسؤال الحالي",
+    "viewingPast": "عرض إجابتك السابقة",
+    "reviewPast": "مراجعة أسئلتي",
+    "reviewPastTitle": "أسئلتك السابقة",
+    "reviewPastEmpty": "أجب عن سؤال أولاً لتراجع إجاباتك هنا",
+    "reviewClose": "إغلاق",
+    "yourAnswer": "إجابتك",
     "phrases": [
       "أنت نجم اليوم!",
       "تقدم رائع، استمر!",
@@ -517,19 +564,44 @@
     "rechargeBody": "راجع الدرس وشرح المفاهيم أثناء الانتظار، وارجع لإكمال دروسك بطاقة كاملة",
     "rechargeTimer": "{time} دقيقة",
     "rechargeHq": "اذهب إلى المقر",
-    "rechargeStore": "تسوق قليلاً"
+    "rechargeStore": "تسوق قليلاً",
+    "check": "تحقق",
+    "niceTry": "لا بأس — انظر الإجابة الصحيحة وتابع",
+    "game": "لعبة {current} من {total}",
+    "questionProgress": "سؤال {current} من {total}",
+    "hintChoose": "اختر إجابة ثم اضغط تحقق",
+    "hintMatch": "",
+    "hintClassify": "اسحب البطاقة إلى الصندوق المناسب، ويمكنك نقلها لاحقاً",
+    "hintOrder": "اضغط البطاقة لتضعها في أول خانة فاضية",
+    "hintCrossword": "اقرأ التلميح واكتب الكلمة",
+    "matchLeft": "اختر من هنا",
+    "matchRight": "ثم صل هنا",
+    "matchProgress": "تم الربط {done}/{total}",
+    "matchAllLinked": "أحسنت! كل الأزواج مربوطة",
+    "matchShouldBe": "الصحيح: {text}",
+    "dropHere": "أفلت هنا",
+    "orderEmpty": "ابنِ الترتيب هنا",
+    "orderSlot": "الخانة {n}",
+    "undo": "تراجع",
+    "reset": "إعادة",
+    "expected": "الصحيح",
+    "classifyTray": "البطاقات",
+    "classifyTrayEmpty": "كل البطاقات في الصناديق"
   },
   "review": {
     "title": "محطة المراجعة",
     "loading": "جارٍ تحميل المراجعة...",
     "loadError": "تعذّر تحميل محطة المراجعة.",
     "empty": "لا توجد أسئلة للمراجعة في هذه الوحدة.",
-    "submit": "تسليم",
+    "submit": "تحقق",
     "next": "التالي",
-    "correct": "الإجابة الصحيحة",
-    "incorrect": "حاول مرة أخرى",
+    "correct": "أحسنت! إجابة صحيحة",
+    "incorrect": "ليست هذه المرة",
     "done": "أتممت المراجعة!",
     "bonus": "+{count} نقطة مكافأة",
-    "back": "العودة للوحدات"
+    "back": "العودة للوحدات",
+    "check": "تحقق",
+    "niceTry": "لا بأس — انظر الإجابة الصحيحة وتابع",
+    "questionProgress": "سؤال {current} من {total}"
   }
 }

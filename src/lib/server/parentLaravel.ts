@@ -37,6 +37,23 @@ export async function parentLaravelPost(
   body: unknown,
   timeoutMs: number
 ): Promise<NextResponse> {
+  return parentLaravelWrite("POST", path, body, timeoutMs);
+}
+
+export async function parentLaravelPatch(
+  path: string,
+  body: unknown,
+  timeoutMs: number
+): Promise<NextResponse> {
+  return parentLaravelWrite("PATCH", path, body, timeoutMs);
+}
+
+async function parentLaravelWrite(
+  method: "POST" | "PATCH" | "PUT",
+  path: string,
+  body: unknown,
+  timeoutMs: number
+): Promise<NextResponse> {
   const session = parseSessionCookie((await cookies()).get(SESSION_COOKIE_NAME)?.value);
   if (!session) {
     return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
@@ -48,7 +65,7 @@ export async function parentLaravelPost(
 
   try {
     const response = await fetch(`${API_BASE_URL}${path}`, {
-      method: "POST",
+      method,
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",

@@ -330,12 +330,30 @@
     "desktopTitle": "Why a career?",
     "desktopHint": "The career shows up in the store, headquarters, and the student card. You can continue from the home screen after choosing.",
     "presets": {
-      "doctor": { "male": "Doctor", "female": "Doctor" },
-      "engineer": { "male": "Engineer", "female": "Engineer" },
-      "teacher": { "male": "Teacher", "female": "Teacher" },
-      "chef": { "male": "Chef", "female": "Chef" },
-      "astronaut": { "male": "Astronaut", "female": "Astronaut" },
-      "soldier": { "male": "Soldier", "female": "Soldier" }
+      "doctor": {
+        "male": "Doctor",
+        "female": "Doctor"
+      },
+      "engineer": {
+        "male": "Engineer",
+        "female": "Engineer"
+      },
+      "teacher": {
+        "male": "Teacher",
+        "female": "Teacher"
+      },
+      "chef": {
+        "male": "Chef",
+        "female": "Chef"
+      },
+      "astronaut": {
+        "male": "Astronaut",
+        "female": "Astronaut"
+      },
+      "soldier": {
+        "male": "Soldier",
+        "female": "Soldier"
+      }
     },
     "other": {
       "title": "Another career ✨",
@@ -380,7 +398,14 @@
       "completed": "Completed",
       "finale": "Final activity",
       "stars": "{count, plural, one {# star} other {# stars}}",
-      "companion": "Unit character"
+      "companion": "Unit character",
+      "unitBadge": "Unit overview",
+      "completedSummary": "{count} lessons done",
+      "playNow": "Start lesson",
+      "continueJourney": "Your adventure continues",
+      "lockedHint": "Finish the previous lesson first",
+      "startHint": "Ready for “{title}”? Let’s start the adventure!",
+      "replayHint": "You can replay this lesson to strengthen what you learned."
     },
     "streak": {
       "days": "{count, plural, one {# day in a row} other {# days in a row}}",
@@ -398,7 +423,10 @@
       "welcomeBody": "You are the future {profession}, {name}!",
       "emptyWelcome": "Your HQ is empty for now. Earn points from lessons, then decorate it from the store.",
       "startLearning": "Start learning",
-      "pointsZero": "0 points"
+      "pointsZero": "0 points",
+      "editLayout": "Arrange room",
+      "doneEditing": "Done arranging",
+      "dragHint": "Drag items and place them where you like"
     },
     "units": {
       "review": "Review station",
@@ -490,22 +518,41 @@
     }
   },
   "lesson": {
-    "loading": "Loading the lesson...",
+    "loading": "Let's go!",
+    "loadingTitle": "Adventure loading!",
+    "loadingBody": "Getting fun questions ready… get excited!",
     "loadError": "Could not load the lesson. Please try again.",
     "submitError": "Could not submit the answer. Please try again.",
-    "submit": "Submit",
+    "submit": "Check",
     "next": "Next",
-    "correct": "Correct answer",
-    "incorrect": "Incorrect answer",
+    "autoNext": "Moving to the next question…",
+    "autoNextDone": "Great! Taking you to celebrate…",
+    "transitionNextTitle": "On to the next question!",
+    "transitionNextBody": "You're moving forward in your adventure… get ready!",
+    "transitionDoneTitle": "Great! Lesson complete",
+    "transitionDoneBody": "Taking you to celebrate your win…",
+    "correct": "Great! That's correct",
+    "incorrect": "Not this time",
     "true": "True",
     "false": "False",
     "games": "{current} of {total} games",
     "points": "{count} points",
     "finished": "Well done! Lesson complete",
     "backHome": "Return home",
+    "backToPath": "Back to lesson path",
+    "replayLesson": "Replay this lesson",
     "nextLesson": "Next lesson",
     "replayPoints": "Replays do not add new points",
     "stars": "{count, plural, one {# star} other {# stars}}",
+    "previousQuestion": "Previous",
+    "nextQuestion": "Next",
+    "backToCurrent": "Back to current question",
+    "viewingPast": "Viewing your past answer",
+    "reviewPast": "My past questions",
+    "reviewPastTitle": "Your previous answers",
+    "reviewPastEmpty": "Answer a question first to review it here",
+    "reviewClose": "Close",
+    "yourAnswer": "Your answer",
     "phrases": [
       "You are today's star!",
       "Great progress — keep going!",
@@ -517,19 +564,44 @@
     "rechargeBody": "Review the lesson while you wait, then come back with a full battery",
     "rechargeTimer": "{time} min",
     "rechargeHq": "Go to headquarters",
-    "rechargeStore": "Browse the store"
+    "rechargeStore": "Browse the store",
+    "check": "Check",
+    "niceTry": "That's okay — see the right answer and keep going",
+    "game": "Game {current} of {total}",
+    "questionProgress": "Question {current} of {total}",
+    "hintChoose": "Pick an answer, then tap Check",
+    "hintMatch": "",
+    "hintClassify": "Drag each card into a box — you can move it again anytime",
+    "hintOrder": "Tap a card to place it in the first empty slot",
+    "hintCrossword": "Read the clue and type the word",
+    "matchLeft": "Pick here",
+    "matchRight": "Then match here",
+    "matchProgress": "Linked {done}/{total}",
+    "matchAllLinked": "Nice! All pairs are linked",
+    "matchShouldBe": "Correct: {text}",
+    "dropHere": "Drop here",
+    "orderEmpty": "Build your order here",
+    "orderSlot": "Slot {n}",
+    "undo": "Undo",
+    "reset": "Reset",
+    "expected": "Correct",
+    "classifyTray": "Cards",
+    "classifyTrayEmpty": "All cards are in boxes"
   },
   "review": {
     "title": "Review station",
     "loading": "Loading review...",
     "loadError": "Could not load the review station.",
     "empty": "No review questions for this unit.",
-    "submit": "Submit",
+    "submit": "Check",
     "next": "Next",
-    "correct": "Correct answer",
-    "incorrect": "Try again",
+    "correct": "Great! That's correct",
+    "incorrect": "Not this time",
     "done": "Review complete!",
     "bonus": "+{count} bonus points",
-    "back": "Back to units"
+    "back": "Back to units",
+    "check": "Check",
+    "niceTry": "That's okay — see the right answer and keep going",
+    "questionProgress": "Question {current} of {total}"
   }
 }

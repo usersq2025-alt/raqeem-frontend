@@ -1,13 +1,15 @@
 export type PathPoint = { x: number; y: number };
 
-const TOP = 12.4;
-const BOTTOM = 87.6;
-const AMPLITUDE = 18.5;
+/** Percentages inside the scrollable path stage (0–100). */
+const TOP = 10;
+const BOTTOM = 92;
+/** Stronger zigzag so nodes clearly alternate left/right. */
+const AMPLITUDE = 18;
 
 export function pathPointAt(t: number): PathPoint {
   const clamped = Math.min(1, Math.max(0, t));
   return {
-    x: 50 + AMPLITUDE * Math.sin(clamped * Math.PI * 2),
+    x: 50 + AMPLITUDE * Math.sin(clamped * Math.PI * 2.15),
     y: BOTTOM - clamped * (BOTTOM - TOP),
   };
 }
@@ -18,7 +20,7 @@ export function stationPoints(count: number): PathPoint[] {
   return Array.from({ length: count }, (_, i) => pathPointAt(i / (count - 1)));
 }
 
-export function curveSamples(steps = 48): PathPoint[] {
+export function curveSamples(steps = 64): PathPoint[] {
   return Array.from({ length: steps + 1 }, (_, i) => pathPointAt(i / steps));
 }
 
@@ -31,13 +33,19 @@ export function smoothPath(points: PathPoint[]): string {
     const p1 = points[i];
     const p2 = points[i + 1];
     const p3 = points[i + 2] ?? p2;
-    const c1x = p1.x + (p2.x - p0.x) / 8;
-    const c1y = p1.y + (p2.y - p0.y) / 8;
-    const c2x = p2.x - (p3.x - p1.x) / 8;
-    const c2y = p2.y - (p3.y - p1.y) / 8;
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
     d += ` C ${fmt(c1x)} ${fmt(c1y)}, ${fmt(c2x)} ${fmt(c2y)}, ${fmt(p2.x)} ${fmt(p2.y)}`;
   }
   return d;
+}
+
+/** Pixel height of the path stage so nodes stay spacious while scrolling. */
+export function pathStageHeightPx(lessonCount: number): number {
+  const n = Math.max(lessonCount, 1);
+  return Math.max(720, n * 148 + 220);
 }
 
 export function mixHex(hex: string, toward: string, amount: number): string {
