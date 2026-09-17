@@ -51,8 +51,8 @@ export function StudentNav({ childId }: Props) {
           <Image
             src="/images/brand/logo.png"
             alt={tBrand("brandAlt")}
-            width={180}
-            height={120}
+            width={1012}
+            height={551}
             priority
             className="h-12 w-auto object-contain"
           />

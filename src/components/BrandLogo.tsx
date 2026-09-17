@@ -18,8 +18,8 @@ export function BrandLogo({ size = "md" }: Props) {
       <Image
         src="/images/brand/logo.png"
         alt={t("title")}
-        width={220}
-        height={146}
+        width={1012}
+        height={551}
         priority
         className={`w-auto object-contain ${heightClass}`}
       />
