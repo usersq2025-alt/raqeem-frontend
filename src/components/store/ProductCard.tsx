@@ -9,10 +9,22 @@ type Props = {
   onBuy: (item: StoreCatalogItem, imageEl: HTMLElement | null) => void;
 };
 
+function storeItemDisplayName(
+  item: StoreCatalogItem,
+  t: { (key: string): string; has: (key: string) => boolean }
+): string {
+  if (item.name && item.name.trim()) return item.name.trim();
+  if (item.slotKey) {
+    const key = `items.${item.slotKey}`;
+    if (t.has(key)) return t(key);
+  }
+  return item.slotKey ?? "";
+}
+
 export function ProductCard({ item, index, onBuy }: Props) {
   const t = useTranslations("student.store");
   const state = productCardState(item);
-  const displayName = item.slotKey ? t(`items.${item.slotKey}`) : (item.name ?? "");
+  const displayName = storeItemDisplayName(item, t);
   const transitionName = item.slotKey ? `store-item-${item.slotKey}` : `store-item-${item.id}`;
 
   if (state === "hidden") {
@@ -25,7 +37,9 @@ export function ProductCard({ item, index, onBuy }: Props) {
         <div className="relative mx-auto mt-2 flex h-[5.6rem] w-[5.6rem] items-center justify-center">
           <span className="store-silhouette h-[4.8rem] w-[4.8rem]" aria-hidden="true" />
         </div>
-        <p className="mt-auto px-1 pb-1 text-center text-[12px] font-bold leading-snug text-text-gray">{t("hiddenHint")}</p>
+        <p className="mt-auto px-1 pb-1 text-center text-[12px] font-bold leading-snug text-text-gray">
+          {t("hiddenHint")}
+        </p>
       </article>
     );
   }
@@ -36,6 +50,11 @@ export function ProductCard({ item, index, onBuy }: Props) {
       style={{ animationDelay: `${index * 55}ms` }}
     >
       {state === "locked" ? <LockBadge /> : null}
+      {state === "owned" ? (
+        <span className="absolute start-2.5 top-2.5 z-10 inline-flex items-center rounded-full bg-[#2DBEA1] px-2 py-0.5 text-[10px] font-extrabold text-white shadow-sm">
+          {t("purchased")}
+        </span>
+      ) : null}
       <div
         className="relative mx-auto mt-1 flex h-[6.6rem] w-[6.6rem] items-center justify-center"
         style={{ viewTransitionName: transitionName }}
@@ -56,11 +75,15 @@ export function ProductCard({ item, index, onBuy }: Props) {
       <h3 className="mt-2 line-clamp-2 text-center text-[13px] font-extrabold leading-snug text-text-navy sm:text-sm">
         {displayName}
       </h3>
-      {state === "locked" ? (
+      {state === "owned" ? (
+        <p className="mt-auto pb-1 text-center text-[12px] font-extrabold text-[#2DBEA1]">{t("purchased")}</p>
+      ) : state === "locked" ? (
         <p className="mt-auto pb-1 text-center text-[12px] font-extrabold text-[#E23D3D]">{t("lockedPath")}</p>
       ) : (
         <div className="mt-auto flex flex-col items-center gap-1.5 pt-2">
-          <p className={`text-sm font-extrabold ${state === "insufficient" ? "text-[#BDBDBD]" : "text-text-navy"}`}>
+          <p
+            className={`text-sm font-extrabold ${state === "insufficient" ? "text-[#BDBDBD]" : "text-text-navy"}`}
+          >
             <span className="tabular-nums">{item.pricePoints}</span>
           </p>
           <button

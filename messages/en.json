@@ -782,16 +782,23 @@
       "loadError": "Could not load the store. Please try again.",
       "purchaseFailed": "Purchase could not be completed. No points were deducted.",
       "alreadyOwned": "You already own this item.",
+      "purchased": "Purchased",
       "futureDoctor": "Future doctor",
       "items": {
-        "stethoscope": "Medical stethoscope",
+        "stethoscope": "Doctor stethoscope",
         "tablet": "Medical tablet",
-        "microscope": "Learning microscope",
+        "medical_tablet": "Medical tablet",
+        "microscope": "Microscope",
         "exam_bed": "Exam bed",
+        "exam_lamp": "Exam lamp",
         "anatomy_model": "Anatomy model",
         "heartbeat_rug": "Heartbeat rug",
-        "trophy_shelf": "Trophy shelf",
+        "doctor_desk": "Doctor desk",
+        "doctor_chair": "Doctor chair",
         "medicine_cabinet": "Medicine cabinet",
+        "diagnostic_station": "Diagnostic station",
+        "achievement_shelf": "Achievement shelf",
+        "trophy_shelf": "Trophy shelf",
         "anatomy_poster": "Anatomy poster"
       }
     }

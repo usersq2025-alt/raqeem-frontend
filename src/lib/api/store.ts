@@ -11,6 +11,7 @@ export type StoreCatalogItem = {
   pricePoints: number | null;
   isHidden: boolean;
   isLocked: boolean;
+  isOwned: boolean;
   canPurchase: boolean;
 };
 
@@ -56,10 +57,11 @@ export class StoreApiError extends Error {
   }
 }
 
-export type ProductCardState = "available" | "insufficient" | "hidden" | "locked";
+export type ProductCardState = "available" | "insufficient" | "hidden" | "locked" | "owned";
 
 export function productCardState(item: StoreCatalogItem): ProductCardState {
   if (item.isHidden) return "hidden";
+  if (item.isOwned) return "owned";
   if (item.isLocked) return "locked";
   if (item.canPurchase) return "available";
   return "insufficient";
@@ -95,6 +97,7 @@ function mapItem(row: Record<string, unknown>): StoreCatalogItem | null {
     pricePoints: isHidden || !Number.isFinite(price) ? null : price,
     isHidden,
     isLocked: Boolean(row.is_locked ?? row.isLocked),
+    isOwned: Boolean(row.is_owned ?? row.isOwned),
     canPurchase: Boolean(row.can_purchase ?? row.canPurchase),
   };
 }

@@ -11,6 +11,10 @@ import { useStudentChrome } from "@/components/StudentChrome";
 import { withChildQuery } from "@/lib/config/subjects";
 import { storePathForProfession, storePathIndex } from "@/lib/config/storeProgression";
 import {
+  getStagesForProfession,
+  stageHasAssets,
+} from "@/lib/config/headquartersStages";
+import {
   purchaseItem,
   StoreApiError,
   type StoreCatalog,
@@ -73,20 +77,40 @@ export function StoreExperience({ childId, catalog, professionCode = null }: Pro
 
   const path = useMemo(() => storePathForProfession(professionCode), [professionCode]);
 
+  const readySlotKeys = useMemo(() => {
+    const stages = getStagesForProfession(professionCode);
+    const keys = new Set<string>();
+    for (const stage of stages) {
+      if (stage.stage > 0 && stage.storeSlotKey && stageHasAssets(stage)) {
+        keys.add(stage.storeSlotKey);
+      }
+    }
+    return keys;
+  }, [professionCode]);
+
   const visible = useMemo(() => {
-    const list = [...items];
-    if (path.length === 0) return list;
-    return list.sort(
-      (a, b) => storePathIndex(path, a.slotKey) - storePathIndex(path, b.slotKey)
-    );
-  }, [items, path]);
+    let list = [...items];
+    if (path.length > 0) {
+      list = list.filter((item) => {
+        if (item.isOwned) return true;
+        if (!item.slotKey) return false;
+        // Prefer asset-ready stages (uploaded images). If sync has none yet, show path items.
+        if (readySlotKeys.size === 0) return path.includes(item.slotKey);
+        return readySlotKeys.has(item.slotKey);
+      });
+      return list.sort(
+        (a, b) => storePathIndex(path, a.slotKey) - storePathIndex(path, b.slotKey)
+      );
+    }
+    return list;
+  }, [items, path, readySlotKeys]);
 
   useEffect(() => {
     setChromePoints?.(balance);
   }, [balance, setChromePoints]);
 
   function openBuy(item: StoreCatalogItem, imageEl: HTMLElement | null) {
-    if (item.isLocked || !item.canPurchase) return;
+    if (item.isOwned || item.isLocked || !item.canPurchase) return;
     setError(null);
     flySource.current = imageEl;
     setSelected(item);
@@ -94,7 +118,7 @@ export function StoreExperience({ childId, catalog, professionCode = null }: Pro
 
   async function confirmBuy() {
     if (!selected || submitting) return;
-    if (selected.isLocked || !selected.canPurchase) {
+    if (selected.isOwned || selected.isLocked || !selected.canPurchase) {
       setSelected(null);
       return;
     }

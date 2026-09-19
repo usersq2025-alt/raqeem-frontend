@@ -148,7 +148,7 @@ export function HeadquartersScene({ scene, studentId, highlightId, editable = fa
               dragging={dragId === item.id}
               editable={editable}
               saving={savingId === item.id}
-              label={t(`items.${item.slotKey}`)}
+              label={item.name || (t.has(`items.${item.slotKey}`) ? t(`items.${item.slotKey}` as "items.heartbeat_rug") : item.slotKey)}
               futureDoctor={t("futureDoctor")}
               onPointerDown={(event) => onPointerDown(event, item)}
               onPointerMove={onPointerMove}

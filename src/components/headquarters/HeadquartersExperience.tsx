@@ -181,7 +181,8 @@ function LegacyHeadquartersExperience({
             <ul className="mt-3 flex flex-col gap-2">
               {scene.items.slice(0, 6).map((item) => (
                 <li key={item.id} className="rounded-2xl bg-neutral-50 px-3 py-2 text-sm font-extrabold text-text-navy">
-                  {t(`items.${item.slotKey}`)}
+                  {item.name ||
+                    (t.has(`items.${item.slotKey}`) ? t(`items.${item.slotKey}` as "items.heartbeat_rug") : item.slotKey)}
                 </li>
               ))}
             </ul>

@@ -43,3 +43,7 @@ next-env.d.ts
 # python
 __pycache__/
 *.pyc
+
+# local HQ bot drop zone (optional)
+/hq-inbox/*
+!/hq-inbox/.gitkeep

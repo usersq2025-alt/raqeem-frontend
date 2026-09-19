@@ -68,6 +68,7 @@ export const MOCK_STORE = {
       price_points: 6,
       is_hidden: false,
       is_locked: false,
+      is_owned: false,
       can_purchase: true,
     },
     {
@@ -79,6 +80,7 @@ export const MOCK_STORE = {
       price_points: 40,
       is_hidden: false,
       is_locked: true,
+      is_owned: false,
       can_purchase: false,
     },
     {
@@ -90,6 +92,7 @@ export const MOCK_STORE = {
       price_points: 80,
       is_hidden: false,
       is_locked: true,
+      is_owned: false,
       can_purchase: false,
     },
     {
@@ -101,6 +104,7 @@ export const MOCK_STORE = {
       price_points: 150,
       is_hidden: false,
       is_locked: true,
+      is_owned: false,
       can_purchase: false,
     },
     {
@@ -112,6 +116,7 @@ export const MOCK_STORE = {
       price_points: 120,
       is_hidden: false,
       is_locked: true,
+      is_owned: false,
       can_purchase: false,
     },
     {
@@ -123,6 +128,7 @@ export const MOCK_STORE = {
       price_points: 70,
       is_hidden: false,
       is_locked: true,
+      is_owned: false,
       can_purchase: false,
     },
     {
@@ -134,6 +140,7 @@ export const MOCK_STORE = {
       price_points: 200,
       is_hidden: false,
       is_locked: true,
+      is_owned: false,
       can_purchase: false,
     },
     {
@@ -145,6 +152,7 @@ export const MOCK_STORE = {
       price_points: 180,
       is_hidden: false,
       is_locked: true,
+      is_owned: false,
       can_purchase: false,
     },
     {
@@ -156,6 +164,7 @@ export const MOCK_STORE = {
       price_points: 90,
       is_hidden: false,
       is_locked: true,
+      is_owned: false,
       can_purchase: false,
     },
   ],

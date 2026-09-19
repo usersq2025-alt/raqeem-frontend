@@ -45,7 +45,12 @@ export function PurchaseConfirmModal({ open, item, currentBalance, submitting, o
   if (!ready || !open || !item || item.pricePoints == null) return null;
 
   const remaining = currentBalance - item.pricePoints;
-  const displayName = item.slotKey ? t(`items.${item.slotKey}`) : (item.name ?? "");
+  const displayName =
+    item.name && item.name.trim()
+      ? item.name.trim()
+      : item.slotKey && t.has(`items.${item.slotKey}`)
+        ? t(`items.${item.slotKey}` as "items.heartbeat_rug")
+        : (item.slotKey ?? "");
 
   return createPortal(
     <div className="purchase-modal-backdrop fixed inset-0 z-[70] flex items-end justify-center bg-[#1A2B47]/45 px-4 pb-8 pt-10 sm:items-center sm:pb-10">
