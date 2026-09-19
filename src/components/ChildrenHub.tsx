@@ -6,6 +6,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { ChildCard } from "@/components/ChildCard";
 import { AddChildCard } from "@/components/AddChildCard";
 import { SettingsMenu } from "@/components/SettingsMenu";
+import { BrandPageDecor } from "@/components/BrandPageDecor";
 import { ChildrenApiError, getChildren, type ChildProfile } from "@/lib/api/children";
 import { useRouter } from "@/i18n/navigation";
 
@@ -101,13 +102,9 @@ export function ChildrenHub({ parentName }: Props) {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background-white">
-      <div className="pointer-events-none absolute inset-0 hidden md:block" aria-hidden="true">
-        <div className="absolute -start-20 top-8 h-72 w-72 rounded-full bg-violet-200/45 blur-3xl" />
-        <div className="absolute -end-16 top-24 h-80 w-80 rounded-full bg-rose-200/40 blur-3xl" />
-        <div className="absolute bottom-10 start-1/3 h-64 w-64 rounded-full bg-emerald-200/35 blur-3xl" />
-      </div>
+      <BrandPageDecor density="compact" />
 
-      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-5 md:px-8 md:py-8">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-5 md:px-8 md:py-8">
         <header className="flex items-center justify-between">
           <BrandLogo size="sm" />
           <SettingsMenu />

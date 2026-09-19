@@ -1,36 +1,273 @@
 {
   "meta": {
     "title": "Raqeem — رقيم",
-    "description": "Interactive learning platform for children"
+    "description": "A platform that helps elementary students review daily lessons and build their dream career HQ under parent guidance."
   },
   "welcome": {
     "headline": "A fun learning journey toward your child's dream",
-    "subheadline": "Interactive lessons and smart games.",
-    "ctaPrimary": "Start the journey for free",
+    "headlineLine1": "A fun learning journey",
+    "headlineLine2": "toward your child's dream",
+    "subheadline": "Interactive curriculum questions, and points your child earns to furnish their dream career headquarters.",
+    "ctaPrimary": "Start your child's journey now",
     "ctaLoginPrompt": "Already have an account?",
     "ctaLogin": "Log in",
-    "langToggle": "AR / EN",
-    "heroAlt": "A child and a doctor smiling at the start of the learning journey",
-    "trustLine": "Join our family",
+    "langAr": "العربية",
+    "langEn": "English",
+    "langToggle": "العربية | English",
+    "heroAlt": "Two happy children with a tablet at the start of their Raqeem learning journey",
+    "trustLine": "A joyful learning experience guided by the parent",
+    "login": "Log in",
+    "register": "Create account",
     "nav": {
-      "features": "Features",
+      "features": "Benefits",
+      "how": "How Raqeem works",
+      "ai": "Artificial intelligence",
+      "subjects": "Subjects",
+      "faq": "FAQ",
       "contact": "Contact us",
       "menu": "Menu",
       "close": "Close"
     },
-    "highlights": {
+    "value": {
+      "carouselLabel": "Raqeem value cards",
+      "dotsLabel": "Card indicators",
+      "prev": "Previous card",
+      "next": "Next card",
+      "curriculum": {
+        "title": "Curriculum-based review",
+        "body": "Short questions and activities drawn from your child's lessons, helping them review and reinforce learning day by day."
+      },
+      "rewards": {
+        "title": "Rewards that build a dream",
+        "body": "Your child earns points for correct answers and uses them to buy tools and furnish the career headquarters they dream of."
+      },
       "parent": {
-        "title": "Parent guidance",
-        "body": "Follow your child's progress calmly, without pressure."
-      },
-      "iq": {
-        "title": "Smart assessment",
-        "body": "Gentle activities that reveal strengths and build confidence."
-      },
-      "games": {
-        "title": "Smart games",
-        "body": "Learn through play: questions, challenges, and little rewards."
+        "title": "Parent follow-up",
+        "body": "Follow your children's progress and see which lessons they have mastered and where they need more review."
       }
+    },
+    "how": {
+      "title": "How does your child's journey begin on Raqeem?",
+      "subtitle": "Four simple steps that turn lesson review into a journey where your child progresses and builds their dream.",
+      "summaryLine": "Create their profile, choose a career, review lessons, then watch their HQ grow.",
+      "steps": {
+        "create": {
+          "title": "Create your child's profile",
+          "body": "Open a parent account and add a profile for each child whose journey you want to follow."
+        },
+        "career": {
+          "title": "They choose a dream career",
+          "body": "Your child picks the career they hope to become and receives their own professional headquarters."
+        },
+        "review": {
+          "title": "They review their lessons",
+          "body": "They answer short questions and activities drawn from their school curriculum."
+        },
+        "build": {
+          "title": "They earn and build",
+          "body": "They earn points for correct answers, then use them to buy tools and furnish their headquarters."
+        }
+      }
+    },
+    "experience": {
+      "title": "Every lesson is a new step toward their dream",
+      "body": "Your child does not review lessons just to collect abstract scores; every correct answer grants points that help develop their career headquarters, so they see the impact of progress and look forward to the next achievement.",
+      "previewAlt": "Lesson path screenshot from the student experience on Raqeem",
+      "pointsLabel": "Points for correct answers",
+      "progressLabel": "Clear progress the child can see",
+      "questionsLabel": "Short, varied questions",
+      "shotPlaceholderTitle": "Lesson path screenshot",
+      "shotPlaceholderHint": "Add the real screenshot here and it will appear automatically."
+    },
+    "showcase": {
+      "title": "See how review becomes a journey",
+      "body": "From the first question your child answers, to the points they earn and the headquarters they build — you can follow the whole journey in one place.",
+      "tabsLabel": "Product experience sections",
+      "soon": "In development",
+      "compare": {
+        "before": "Before",
+        "after": "After",
+        "toggleLabel": "Compare the empty HQ with the furnished HQ",
+        "sliderLabel": "Drag to compare the empty clinic with the furnished clinic"
+      },
+      "tabs": {
+        "progress": {
+          "label": "Review and progress",
+          "title": "Every lesson is a new step toward their dream",
+          "body": "Your child moves along a clear path of lessons and activities, sees what they have finished and what is next, and earns stars and points with every step.",
+          "imageAlt": "Student lesson path inside Raqeem",
+          "bullets": {
+            "questions": "Short, varied questions",
+            "points": "Points for correct answers",
+            "progress": "Clear progress the child can see"
+          }
+        },
+        "build": {
+          "label": "Earn and build",
+          "title": "Learn today, build tomorrow's dream",
+          "body": "Your child uses points earned from reviewing lessons to develop their career headquarters step by step.",
+          "caption": "Every correct answer brings your child closer to a new addition to their HQ.",
+          "beforeAlt": "Doctor clinic before tools are added",
+          "afterAlt": "Doctor clinic after the headquarters is furnished"
+        },
+        "parent": {
+          "label": "Follow and support",
+          "title": "Stay close to your child's progress",
+          "body": "From one account, you can add your children, switch between their profiles, and follow each child's progress.",
+          "imageAlt": "Parent hub for switching between children profiles",
+          "bullets": {
+            "oneAccount": "One account for all children",
+            "childProfile": "An independent profile for each child",
+            "progress": "Follow lessons and progress",
+            "aiReports": "Smart reports when the feature launches"
+          }
+        }
+      }
+    },
+    "hq": {
+      "title": "Learn today, build tomorrow's dream",
+      "body": "Your child chooses a career they aspire to, then uses points earned from lesson review to buy tools and furnish their headquarters their way.",
+      "roomAlt": "A student's career headquarters inside Raqeem",
+      "toolsTitle": "Tools that can be bought with points",
+      "items": {
+        "stethoscope": "Stethoscope",
+        "microscope": "Learning microscope",
+        "tablet": "Medical tablet",
+        "anatomy_model": "Anatomy model"
+      }
+    },
+    "ai": {
+      "title": "AI that understands your child's progress",
+      "body": "Raqeem is building AI features that turn a child's performance in lessons into more useful review and clearer insights for parents.",
+      "badge": "In development for the first release",
+      "learnMore": "See how it works",
+      "showLess": "Show less",
+      "reports": {
+        "title": "Reports that help you support them",
+        "body": "The system analyzes your child's performance on questions and activities, highlights strengths and areas that need more review, then provides the parent with a clear report and practical recommendations.",
+        "bullets": {
+          "patterns": "Notice patterns in the child's performance",
+          "strengths": "Identify strengths",
+          "gaps": "Identify areas that need review",
+          "tips": "Offer practical recommendations for the parent"
+        }
+      },
+      "review": {
+        "title": "A review station that adapts to mistakes",
+        "body": "At the end of each unit, Raqeem revisits the questions the child missed and presents them in a new wording, while keeping the curriculum concepts and terminology from their textbook.",
+        "bullets": {
+          "focus": "Focus on questions the child missed",
+          "rephrase": "Rephrase the question in a different style",
+          "practice": "Train the same idea instead of memorizing the answer",
+          "curriculumTerms": "Keep concepts and terminology tied to the curriculum"
+        },
+        "fromLabel": "Original question",
+        "toLabel": "New wording"
+      }
+    },
+    "parent": {
+      "title": "Stay close to your child's progress",
+      "body": "From one account, you can add your children, switch between their profiles, and follow each child's progress to see what they have mastered and what still needs review.",
+      "points": {
+        "oneAccount": "One account for all children",
+        "childProfile": "A separate profile for each child",
+        "progress": "Follow lessons and progress",
+        "aiReports": "AI-supported reports and insights when the feature launches"
+      },
+      "soon": "In development",
+      "previewAlt": "Parent screen for switching between children profiles",
+      "previewNote": "The children hub as it appears to parents on Raqeem",
+      "shotPlaceholderTitle": "Parent hub screenshot",
+      "shotPlaceholderHint": "Add the children-switching screenshot here and it will appear automatically."
+    },
+    "subjects": {
+      "title": "Review connected to what they learn at school",
+      "note": "All seven subjects are available on the platform, and lesson content is added gradually.",
+      "status": {
+        "available": "Available now",
+        "comingSoon": "Coming soon",
+        "inPrep": "In preparation"
+      },
+      "items": {
+        "arabic": "Arabic",
+        "english": "English",
+        "french": "French",
+        "math": "Mathematics",
+        "religion": "Religious education",
+        "social": "Social studies",
+        "science": "Science"
+      }
+    },
+    "safety": {
+      "title": "Designed for children, under your guidance",
+      "body": "Your child does not need a separate account; you manage their profile from the parent account, and their learning journey stays under your supervision.",
+      "accordionTitle": "How do we protect your child's experience?",
+      "points": {
+        "linked": "Children profiles belong to the parent account.",
+        "ageFit": "An experience suited to the age group.",
+        "protection": "Protection for sign-in and data."
+      }
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "showAll": "Show all questions",
+      "showLess": "Show fewer questions",
+      "items": {
+        "what": {
+          "q": "What is Raqeem?",
+          "a": "Raqeem is an interactive learning platform that helps elementary students review their lessons through curriculum-based questions and activities, with a points-and-rewards system tied to the child's career headquarters."
+        },
+        "who": {
+          "q": "Who is the platform for?",
+          "a": "Raqeem is designed for elementary students and their parents: the child reviews lessons while the parent follows progress from their account."
+        },
+        "curriculum": {
+          "q": "Are the questions linked to the school curriculum?",
+          "a": "Yes. Raqeem content is built from the lessons in the target curriculum for each grade and subject."
+        },
+        "points": {
+          "q": "How does the child earn points?",
+          "a": "The child earns points for correct answers on questions and activities, then uses them to get tools and furnishings for their career headquarters."
+        },
+        "hq": {
+          "q": "What is the career headquarters?",
+          "a": "It is a personal space linked to the career the child chooses. They can develop and furnish it using points earned from reviewing lessons."
+        },
+        "ai": {
+          "q": "How does Raqeem use artificial intelligence?",
+          "a": "Raqeem is building AI to analyze student performance and provide reports and recommendations for parents, and to rephrase questions the child missed inside review stations while keeping curriculum concepts and terminology. These features are in development for the first release of the platform."
+        },
+        "aiReplace": {
+          "q": "Does AI replace the teacher or the parent?",
+          "a": "No. AI on Raqeem is an assistive tool to improve review and clarify the child's performance — not a replacement for teachers or parental follow-up."
+        },
+        "childAccount": {
+          "q": "Does the child need a separate account?",
+          "a": "No. The parent creates their account, adds a profile for each child, and manages all children from one account."
+        },
+        "free": {
+          "q": "Is Raqeem free to use?",
+          "a": "Yes. You can start using Raqeem for free during the current phase."
+        },
+        "availability": {
+          "q": "Which grades and subjects are available now?",
+          "a": "Raqeem supports elementary grades 1 through 6, and all seven subjects are available now: Arabic, English, French, Mathematics, Religious education, Social studies, and Science."
+        }
+      }
+    },
+    "finalCta": {
+      "title": "Start a more enjoyable review journey with your child",
+      "body": "Create your account, add your child's profile, and let them discover how lessons turn into progress they can see and build."
+    },
+    "footer": {
+      "blurb": "A daily review platform for elementary students, guided by parents, with rewards that build a child's dream.",
+      "sections": "Page sections",
+      "account": "Account",
+      "legal": "Legal",
+      "privacy": "Privacy policy",
+      "terms": "Terms and conditions",
+      "email": "Email",
+      "rights": "All rights reserved to Raqeem © {year}"
     },
     "deco": {
       "star": "Star",
@@ -172,6 +409,12 @@
     "dashboard": "Child dashboard — coming soon",
     "account": "Edit parent profile — coming soon",
     "back": "Back"
+  },
+  "contactPage": {
+    "title": "Contact us",
+    "body": "We would love to hear from you. Email us and we will get back to you as soon as we can.",
+    "emailLabel": "Email",
+    "backHome": "Back to home"
   },
   "login": {
     "title": "Log in",
@@ -426,7 +669,40 @@
       "pointsZero": "0 points",
       "editLayout": "Arrange room",
       "doneEditing": "Done arranging",
-      "dragHint": "Drag items and place them where you like"
+      "dragHint": "Drag items and place them where you like",
+      "dev": {
+        "clinicTitle": "My clinic",
+        "devLabel": "HQ development",
+        "stageLabel": "Stage {stage}",
+        "progress": "{current} of {total}",
+        "startTitle": "Start setting up your clinic",
+        "startBody": "Use the points you earned from reviewing lessons to add the first piece to your professional HQ.",
+        "nextUpgrade": "Next upgrade",
+        "items": {
+          "heartbeat_rug": "Heartbeat rug"
+        },
+        "rugDesc": "Add a distinctive medical touch to your clinic floor.",
+        "price": "{count} points",
+        "buyAndAdd": "Add it to my clinic",
+        "readyToAdd": "This item is ready to add to your clinic!",
+        "needMorePoints": "You need {remainingPoints} more points to add {item}",
+        "balanceProgress": "{balance} / {price}",
+        "earnPointsCta": "Review a lesson and earn points",
+        "confirmTitle": "Add {item}?",
+        "confirmBody": "{price} points will be deducted and {item} will be added to your clinic.",
+        "confirmBuy": "Confirm purchase",
+        "cancel": "Cancel",
+        "buying": "Purchasing…",
+        "successTitle": "Amazing!",
+        "successBody": "Amazing! You added {item} to your clinic.",
+        "successAction": "View my clinic",
+        "addedBadge": "Added",
+        "comingSoon": "A new clinic upgrade will be available soon.",
+        "balanceLoadError": "Could not load your points balance. Please try again.",
+        "retry": "Retry",
+        "stage0Alt": "Doctor clinic before adding tools",
+        "stage1Alt": "Doctor clinic after adding the heartbeat rug"
+      }
     },
     "units": {
       "review": "Review station",
@@ -497,9 +773,12 @@
       "pointsUnit": "pts",
       "hiddenHint": "Complete the unit to unlock this item",
       "soon": "Soon",
+      "lockedPath": "Locked for now",
+      "pathHint": "Tools unlock one by one as your HQ grows.",
+      "itemLocked": "This tool is not unlocked on your path yet.",
       "backToLearning": "Return to learning",
       "continueShopping": "Continue shopping",
-      "emptyTab": "No items in this section yet.",
+      "emptyTab": "No store items right now.",
       "loadError": "Could not load the store. Please try again.",
       "purchaseFailed": "Purchase could not be completed. No points were deducted.",
       "alreadyOwned": "You already own this item.",

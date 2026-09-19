@@ -1,80 +1,130 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-
-const NAV_LINKS = [
-  { href: "/features" as const, key: "features" as const },
-  { href: "/contact" as const, key: "contact" as const },
-];
+import { LANDING_MAX_WIDTH, LANDING_NAV } from "@/config/landing";
 
 export function SiteHeader() {
   const t = useTranslations("welcome.nav");
+  const tw = useTranslations("welcome");
   const [open, setOpen] = useState(false);
+  const menuId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   return (
-    <header className="relative z-20 flex items-center justify-between gap-4 py-1">
-      <BrandLogo />
+    <header className="sticky top-0 z-40 border-b border-brand-navy/8 bg-brand-cream/90 backdrop-blur-md">
+      <div
+        className={`mx-auto flex ${LANDING_MAX_WIDTH} items-center gap-3 px-5 py-3 sm:px-8 lg:px-10`}
+      >
+        <BrandLogo size="sm" />
 
-      <nav className="hidden items-center gap-8 md:flex" aria-label={t("menu")}>
-        {NAV_LINKS.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="text-[15px] font-bold text-text-navy/80 transition-colors hover:text-primary-orange"
-          >
-            {t(item.key)}
-          </Link>
-        ))}
-        <LanguageSwitcher />
-      </nav>
-
-      <div className="flex items-center gap-2 md:hidden">
-        <LanguageSwitcher />
-        <button
-          type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-primary-orange/40 bg-white/80 text-text-navy backdrop-blur-sm"
-          aria-expanded={open}
-          aria-label={open ? t("close") : t("menu")}
-          onClick={() => setOpen((value) => !value)}
+        <nav
+          className="ms-2 hidden items-center gap-0.5 lg:flex xl:gap-1"
+          aria-label={t("menu")}
         >
-          <span className="sr-only">{open ? t("close") : t("menu")}</span>
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
-            {open ? (
-              <path
-                d="M6 6l12 12M18 6L6 18"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
+          {LANDING_NAV.map((item) =>
+            item.href.startsWith("#") ? (
+              <a
+                key={item.id}
+                href={item.href}
+                className="rounded-lg px-2 py-2 text-[0.86rem] font-bold text-brand-navy-dark/80 transition-colors hover:bg-white/70 hover:text-brand-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 xl:px-2.5 xl:text-[0.92rem]"
+              >
+                {t(item.id)}
+              </a>
             ) : (
-              <path
-                d="M5 7h14M5 12h14M5 17h14"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            )}
-          </svg>
-        </button>
+              <Link
+                key={item.id}
+                href={item.href}
+                className="rounded-lg px-2 py-2 text-[0.86rem] font-bold text-brand-navy-dark/80 transition-colors hover:bg-white/70 hover:text-brand-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 xl:px-2.5 xl:text-[0.92rem]"
+              >
+                {t(item.id)}
+              </Link>
+            )
+          )}
+        </nav>
+
+        <div className="ms-auto flex items-center gap-2 sm:gap-3">
+          <LanguageSwitcher />
+          <Link
+            href="/login"
+            className="hidden min-h-11 items-center justify-center rounded-full border border-brand-navy/20 bg-white px-4 text-sm font-extrabold text-brand-navy transition-colors hover:border-brand-navy hover:bg-brand-navy hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 md:inline-flex"
+          >
+            {tw("login")}
+          </Link>
+          <button
+            type="button"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-brand-navy/20 bg-white text-brand-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 lg:hidden"
+            aria-expanded={open}
+            aria-controls={menuId}
+            aria-label={open ? t("close") : t("menu")}
+            onClick={() => setOpen((value) => !value)}
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
+              {open ? (
+                <path
+                  d="M6 6l12 12M18 6L6 18"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              ) : (
+                <path
+                  d="M5 7h14M5 12h14M5 17h14"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              )}
+            </svg>
+          </button>
+        </div>
       </div>
 
       {open ? (
-        <div className="absolute inset-x-0 top-full mt-2 rounded-2xl border border-primary-orange/20 bg-white/95 p-4 shadow-lg backdrop-blur-sm md:hidden">
-          <nav className="flex flex-col gap-1" aria-label={t("menu")}>
-            {NAV_LINKS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-xl px-3 py-2.5 text-sm font-bold text-text-navy hover:bg-primary-orange/5 hover:text-primary-orange"
-                onClick={() => setOpen(false)}
-              >
-                {t(item.key)}
-              </Link>
-            ))}
+        <div
+          id={menuId}
+          className="border-t border-brand-navy/8 bg-white/95 px-5 py-4 shadow-sm backdrop-blur-sm lg:hidden"
+        >
+          <nav className="mx-auto flex max-w-[1200px] flex-col gap-1" aria-label={t("menu")}>
+            {LANDING_NAV.map((item) =>
+              item.href.startsWith("#") ? (
+                <a
+                  key={item.id}
+                  href={item.href}
+                  className="rounded-xl px-3 py-3 text-sm font-bold text-brand-navy-dark hover:bg-brand-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
+                  onClick={() => setOpen(false)}
+                >
+                  {t(item.id)}
+                </a>
+              ) : (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="rounded-xl px-3 py-3 text-sm font-bold text-brand-navy-dark hover:bg-brand-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
+                  onClick={() => setOpen(false)}
+                >
+                  {t(item.id)}
+                </Link>
+              )
+            )}
+            <Link
+              href="/login"
+              className="mt-2 inline-flex min-h-11 items-center justify-center rounded-full bg-brand-navy px-4 text-sm font-extrabold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 md:hidden"
+              onClick={() => setOpen(false)}
+            >
+              {tw("login")}
+            </Link>
           </nav>
         </div>
       ) : null}

@@ -21,13 +21,19 @@ export async function POST(request: Request, { params }: Props) {
   }
 
   if (USE_MOCK) {
+    // Mirror seeder prices for local prototype demos (authoritative in real API is StoreItem.price_points)
+    const mockPrices: Record<number, { slot_key: string; price_paid: number }> = {
+      1: { slot_key: "stethoscope", price_paid: 40 },
+      6: { slot_key: "heartbeat_rug", price_paid: 6 },
+    };
+    const matched = mockPrices[storeItemId] ?? { slot_key: "stethoscope", price_paid: 40 };
     return NextResponse.json(
       {
-        id: 1,
+        id: storeItemId,
         store_item_id: storeItemId,
-        slot_key: "stethoscope",
-        price_paid: 40,
-        points_balance: 0,
+        slot_key: matched.slot_key,
+        price_paid: matched.price_paid,
+        points_balance: Math.max(0, 80 - matched.price_paid),
       },
       { status: 201 }
     );

@@ -55,8 +55,21 @@ function unitSet(titles: string[]) {
 }
 
 export const MOCK_STORE = {
-  points_balance: 40,
+  // Sequential doctor path: only heartbeat_rug is purchasable
+  points_balance: 80,
+  next_required_item: "heartbeat_rug",
   items: [
+    {
+      id: 6,
+      category: "furniture",
+      slot_key: "heartbeat_rug",
+      name: "سجادة نبض",
+      image_url: "/images/store/heartbeat-rug.png",
+      price_points: 6,
+      is_hidden: false,
+      is_locked: false,
+      can_purchase: true,
+    },
     {
       id: 1,
       category: "equipment",
@@ -65,8 +78,8 @@ export const MOCK_STORE = {
       image_url: "/images/store/stethoscope.png",
       price_points: 40,
       is_hidden: false,
-      is_locked: false,
-      can_purchase: true,
+      is_locked: true,
+      can_purchase: false,
     },
     {
       id: 2,
@@ -76,7 +89,7 @@ export const MOCK_STORE = {
       image_url: "/images/store/tablet.png",
       price_points: 80,
       is_hidden: false,
-      is_locked: false,
+      is_locked: true,
       can_purchase: false,
     },
     {
@@ -87,13 +100,6 @@ export const MOCK_STORE = {
       image_url: "/images/store/microscope.png",
       price_points: 150,
       is_hidden: false,
-      is_locked: false,
-      can_purchase: false,
-    },
-    {
-      id: 4,
-      category: "equipment",
-      is_hidden: true,
       is_locked: true,
       can_purchase: false,
     },
@@ -109,17 +115,6 @@ export const MOCK_STORE = {
       can_purchase: false,
     },
     {
-      id: 6,
-      category: "furniture",
-      slot_key: "heartbeat_rug",
-      name: "سجادة نبض",
-      image_url: "/images/store/heartbeat-rug.png",
-      price_points: 55,
-      is_hidden: false,
-      is_locked: false,
-      can_purchase: false,
-    },
-    {
       id: 7,
       category: "furniture",
       slot_key: "trophy_shelf",
@@ -127,13 +122,39 @@ export const MOCK_STORE = {
       image_url: "/images/store/trophy-shelf.png",
       price_points: 70,
       is_hidden: false,
-      is_locked: false,
+      is_locked: true,
+      can_purchase: false,
+    },
+    {
+      id: 4,
+      category: "equipment",
+      slot_key: "exam_bed",
+      name: "سرير فحص طبي",
+      image_url: "/images/store/exam-bed.png",
+      price_points: 200,
+      is_hidden: false,
+      is_locked: true,
       can_purchase: false,
     },
     {
       id: 8,
       category: "furniture",
-      is_hidden: true,
+      slot_key: "medicine_cabinet",
+      name: "خزانة أدوية",
+      image_url: "/images/store/medicine-cabinet.png",
+      price_points: 180,
+      is_hidden: false,
+      is_locked: true,
+      can_purchase: false,
+    },
+    {
+      id: 9,
+      category: "furniture",
+      slot_key: "anatomy_poster",
+      name: "ملصق تشريح",
+      image_url: "/images/store/anatomy-poster.png",
+      price_points: 90,
+      is_hidden: false,
       is_locked: true,
       can_purchase: false,
     },
@@ -141,7 +162,7 @@ export const MOCK_STORE = {
 };
 
 export const MOCK_HEADQUARTERS = {
-  points_balance: 40,
+  points_balance: 80,
   profession_code: "doctor",
   gender: "female",
   items: [] as Array<Record<string, unknown>>,

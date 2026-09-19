@@ -4,24 +4,65 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { DoctorHeadquartersExperience } from "@/components/headquarters/DoctorHeadquartersExperience";
 import { HeadquartersScene } from "@/components/headquarters/HeadquartersScene";
 import { PointsPill } from "@/components/store/PointsPill";
 import { Button } from "@/components/ui/Button";
 import { useStudentChrome } from "@/components/StudentChrome";
 import type { ChildProfile } from "@/lib/api/children";
-import type { HeadquartersSceneData } from "@/lib/api/store";
+import type { HeadquartersSceneData, StoreCatalog } from "@/lib/api/store";
+import { isDoctorProfession } from "@/lib/config/headquartersStages";
 import { professionAvatarSrc } from "@/lib/config/professions";
 import { withChildQuery } from "@/lib/config/subjects";
 
 type Props = {
   child: ChildProfile;
   scene: HeadquartersSceneData;
+  catalog?: StoreCatalog | null;
   highlightId: number | null;
   fromBalance: number | null;
   welcome?: boolean;
 };
 
-export function HeadquartersExperience({ child, scene, highlightId, fromBalance, welcome = false }: Props) {
+export function HeadquartersExperience({
+  child,
+  scene,
+  catalog = null,
+  highlightId,
+  fromBalance,
+  welcome = false,
+}: Props) {
+  if (isDoctorProfession(child.professionCode ?? scene.professionCode)) {
+    return (
+      <DoctorHeadquartersExperience
+        child={child}
+        scene={scene}
+        catalog={catalog}
+        fromBalance={fromBalance}
+        welcome={welcome}
+      />
+    );
+  }
+
+  return (
+    <LegacyHeadquartersExperience
+      child={child}
+      scene={scene}
+      highlightId={highlightId}
+      fromBalance={fromBalance}
+      welcome={welcome}
+    />
+  );
+}
+
+/** Previous layered-item HQ (non-doctor professions). Kept intact for the staged-image prototype. */
+function LegacyHeadquartersExperience({
+  child,
+  scene,
+  highlightId,
+  fromBalance,
+  welcome = false,
+}: Omit<Props, "catalog">) {
   const t = useTranslations("student.store");
   const tHq = useTranslations("student.hq");
   const tCareer = useTranslations("career");

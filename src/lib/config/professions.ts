@@ -1,6 +1,6 @@
 export type CharacterGender = "male" | "female";
 
-const KNOWN_PROFESSION_CODES = [
+export const PROFESSION_CODES = [
   "doctor",
   "engineer",
   "teacher",
@@ -9,7 +9,7 @@ const KNOWN_PROFESSION_CODES = [
   "soldier",
 ] as const;
 
-export type ProfessionCode = (typeof KNOWN_PROFESSION_CODES)[number];
+export type ProfessionCode = (typeof PROFESSION_CODES)[number];
 
 export const PROFESSION_ID_TO_CODE: Record<number, ProfessionCode> = {
   1: "doctor",
@@ -19,6 +19,10 @@ export const PROFESSION_ID_TO_CODE: Record<number, ProfessionCode> = {
   5: "astronaut",
   6: "soldier",
 };
+
+export function isProfessionCode(code: string | null | undefined): code is ProfessionCode {
+  return typeof code === "string" && (PROFESSION_CODES as readonly string[]).includes(code);
+}
 
 export function professionCodeFromId(id: number | null): ProfessionCode | null {
   if (id == null) return null;

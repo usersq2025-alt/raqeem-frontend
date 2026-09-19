@@ -19,7 +19,7 @@ export function BrandLogo({ size = "md" }: Props) {
         src="/images/brand/logo.png"
         alt={t("title")}
         width={1012}
-        height={551}
+        height={552}
         priority
         className={`w-auto object-contain ${heightClass}`}
       />

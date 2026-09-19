@@ -16,5 +16,7 @@ export default async function StorePage({ searchParams }: Props) {
     return <p className="py-16 text-center text-lg font-bold text-text-gray">{t("loadError")}</p>;
   }
 
-  return <StoreExperience childId={child.id} catalog={catalog} />;
+  return (
+    <StoreExperience childId={child.id} catalog={catalog} professionCode={child.professionCode} />
+  );
 }

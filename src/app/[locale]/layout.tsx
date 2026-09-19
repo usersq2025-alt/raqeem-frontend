@@ -2,14 +2,26 @@ import type { Metadata } from "next";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Cairo, Nunito } from "next/font/google";
+import { Cairo, IBM_Plex_Sans_Arabic, Nunito, Tajawal } from "next/font/google";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
 const cairo = Cairo({
   variable: "--font-cairo",
   subsets: ["arabic", "latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
+const tajawal = Tajawal({
+  variable: "--font-tajawal",
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "700"],
+});
+
+const plexArabic = IBM_Plex_Sans_Arabic({
+  variable: "--font-plex-ar",
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const nunito = Nunito({
@@ -52,7 +64,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       lang={locale}
       dir={isRtl ? "rtl" : "ltr"}
       suppressHydrationWarning
-      className={`${cairo.variable} ${nunito.variable} h-full antialiased`}
+      className={`${cairo.variable} ${tajawal.variable} ${plexArabic.variable} ${nunito.variable} h-full antialiased`}
     >
       <body className={`min-h-full bg-background-white ${isRtl ? "font-sans" : "font-sans-ltr"}`}>
         <NextIntlClientProvider messages={messages}>

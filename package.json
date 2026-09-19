@@ -3,10 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "sync:hq": "npx tsx scripts/sync-hq-assets.ts",
+    "predev": "npm run sync:hq",
+    "prebuild": "npm run sync:hq",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:hq": "npm run sync:hq && npx tsx src/lib/config/headquartersStages.verify.ts"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",

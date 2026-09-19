@@ -57,7 +57,7 @@ export function ProductCard({ item, index, onBuy }: Props) {
         {displayName}
       </h3>
       {state === "locked" ? (
-        <p className="mt-auto pb-1 text-center text-[12px] font-extrabold text-[#E23D3D]">{t("soon")}</p>
+        <p className="mt-auto pb-1 text-center text-[12px] font-extrabold text-[#E23D3D]">{t("lockedPath")}</p>
       ) : (
         <div className="mt-auto flex flex-col items-center gap-1.5 pt-2">
           <p className={`text-sm font-extrabold ${state === "insufficient" ? "text-[#BDBDBD]" : "text-text-navy"}`}>

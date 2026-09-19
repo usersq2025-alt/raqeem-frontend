@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { requireStudentChild } from "@/lib/server/requireStudentChild";
-import { loadHeadquarters } from "@/lib/server/loadStore";
+import { loadHeadquarters, loadStoreCatalog } from "@/lib/server/loadStore";
 import { HeadquartersExperience } from "@/components/headquarters/HeadquartersExperience";
 
 type Props = {
@@ -16,7 +16,10 @@ type Props = {
 export default async function HeadquartersPage({ searchParams }: Props) {
   const params = await searchParams;
   const child = await requireStudentChild(params.childId);
-  const scene = await loadHeadquarters(child.id);
+  const [scene, catalog] = await Promise.all([
+    loadHeadquarters(child.id),
+    loadStoreCatalog(child.id),
+  ]);
   const t = await getTranslations("student.store");
 
   if (!scene) {
@@ -30,6 +33,7 @@ export default async function HeadquartersPage({ searchParams }: Props) {
     <HeadquartersExperience
       child={child}
       scene={scene}
+      catalog={catalog}
       highlightId={Number.isFinite(highlightId) && highlightId > 0 ? highlightId : null}
       fromBalance={Number.isFinite(fromBalance) ? fromBalance : null}
       welcome={params.welcome === "1"}

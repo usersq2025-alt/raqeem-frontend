@@ -9,12 +9,19 @@ import { PurchaseConfirmModal } from "@/components/store/PurchaseConfirmModal";
 import { PointsPill } from "@/components/store/PointsPill";
 import { useStudentChrome } from "@/components/StudentChrome";
 import { withChildQuery } from "@/lib/config/subjects";
-import { purchaseItem, StoreApiError, type StoreCatalog, type StoreCatalogItem, type StoreCategory } from "@/lib/api/store";
+import { storePathForProfession, storePathIndex } from "@/lib/config/storeProgression";
+import {
+  purchaseItem,
+  StoreApiError,
+  type StoreCatalog,
+  type StoreCatalogItem,
+} from "@/lib/api/store";
 import { startViewTransition } from "@/lib/utils/viewTransition";
 
 type Props = {
   childId: number;
   catalog: StoreCatalog;
+  professionCode?: string | null;
 };
 
 function prefersReducedMotion() {
@@ -52,13 +59,11 @@ async function flyItemThen(imageEl: HTMLElement | null, then: () => void) {
   then();
 }
 
-export function StoreExperience({ childId, catalog }: Props) {
+export function StoreExperience({ childId, catalog, professionCode = null }: Props) {
   const t = useTranslations("student.store");
-  const tDesk = useTranslations("student.desktop");
   const chrome = useStudentChrome();
   const setChromePoints = chrome?.setPoints;
   const router = useRouter();
-  const [tab, setTab] = useState<StoreCategory>("equipment");
   const [balance, setBalance] = useState(catalog.pointsBalance);
   const [items, setItems] = useState(catalog.items);
   const [selected, setSelected] = useState<StoreCatalogItem | null>(null);
@@ -66,20 +71,22 @@ export function StoreExperience({ childId, catalog }: Props) {
   const [error, setError] = useState<string | null>(null);
   const flySource = useRef<HTMLElement | null>(null);
 
-  const visible = useMemo(() => items.filter((item) => item.category === tab), [items, tab]);
-  const counts = useMemo(
-    () => ({
-      equipment: items.filter((item) => item.category === "equipment").length,
-      furniture: items.filter((item) => item.category === "furniture").length,
-    }),
-    [items]
-  );
+  const path = useMemo(() => storePathForProfession(professionCode), [professionCode]);
+
+  const visible = useMemo(() => {
+    const list = [...items];
+    if (path.length === 0) return list;
+    return list.sort(
+      (a, b) => storePathIndex(path, a.slotKey) - storePathIndex(path, b.slotKey)
+    );
+  }, [items, path]);
 
   useEffect(() => {
     setChromePoints?.(balance);
   }, [balance, setChromePoints]);
 
   function openBuy(item: StoreCatalogItem, imageEl: HTMLElement | null) {
+    if (item.isLocked || !item.canPurchase) return;
     setError(null);
     flySource.current = imageEl;
     setSelected(item);
@@ -87,6 +94,10 @@ export function StoreExperience({ childId, catalog }: Props) {
 
   async function confirmBuy() {
     if (!selected || submitting) return;
+    if (selected.isLocked || !selected.canPurchase) {
+      setSelected(null);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     const fromBalance = balance;
@@ -109,7 +120,7 @@ export function StoreExperience({ childId, catalog }: Props) {
       setSelected(null);
       setSubmitting(false);
       const status = caught instanceof StoreApiError ? caught.status : 500;
-      setError(status === 409 ? t("alreadyOwned") : t("purchaseFailed"));
+      setError(status === 409 ? t("alreadyOwned") : status === 422 ? t("itemLocked") : t("purchaseFailed"));
       try {
         const fresh = await (await import("@/lib/api/store")).getStoreItems(childId);
         setBalance(fresh.pointsBalance);
@@ -124,7 +135,14 @@ export function StoreExperience({ childId, catalog }: Props) {
     <div className="md:grid md:grid-cols-[15.5rem_minmax(0,1fr)] md:items-start md:gap-7">
       <h1 className="sr-only md:hidden">{t("title")}</h1>
       <header className="mb-4 flex items-center justify-between gap-3 md:col-span-2 md:hidden" dir="ltr">
-        <Image src="/images/brand/logo.png" alt="" width={1012} height={551} className="h-11 w-auto object-contain" priority />
+        <Image
+          src="/images/brand/logo.png"
+          alt=""
+          width={1012}
+          height={551}
+          className="h-11 w-auto object-contain"
+          priority
+        />
         <PointsPill count={balance} label={t("pointsUnit")} />
       </header>
 
@@ -133,31 +151,17 @@ export function StoreExperience({ childId, catalog }: Props) {
         <div className="mt-4">
           <PointsPill count={balance} label={t("pointsUnit")} />
         </div>
-        <nav className="mt-6" aria-label={t("tabsAria")}>
-          <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-text-gray">{tDesk("storeFilters")}</p>
-          <div className="flex flex-col gap-2">
-            <FilterButton active={tab === "equipment"} count={counts.equipment} onClick={() => setTab("equipment")}>
-              {t("equipment")}
-            </FilterButton>
-            <FilterButton active={tab === "furniture"} count={counts.furniture} onClick={() => setTab("furniture")}>
-              {t("furniture")}
-            </FilterButton>
-          </div>
-        </nav>
+        <p className="mt-5 text-sm font-bold leading-relaxed text-text-gray">{t("pathHint")}</p>
       </aside>
 
       <div>
-        <div className="mb-4 flex border-b-2 border-[#EFEFEF] md:hidden">
-          <TabButton active={tab === "equipment"} onClick={() => setTab("equipment")}>
-            {t("equipment")}
-          </TabButton>
-          <TabButton active={tab === "furniture"} onClick={() => setTab("furniture")}>
-            {t("furniture")}
-          </TabButton>
-        </div>
+        <p className="mb-4 text-sm font-bold text-text-gray md:hidden">{t("pathHint")}</p>
 
         {error ? (
-          <p className="login-error-enter mb-3 rounded-2xl bg-[#FDECEC] px-3 py-2 text-center text-sm font-bold text-[#C62828]" role="alert">
+          <p
+            className="login-error-enter mb-3 rounded-2xl bg-[#FDECEC] px-3 py-2 text-center text-sm font-bold text-[#C62828]"
+            role="alert"
+          >
             {error}
           </p>
         ) : null}
@@ -184,56 +188,5 @@ export function StoreExperience({ childId, catalog }: Props) {
         }}
       />
     </div>
-  );
-}
-
-function FilterButton({
-  active,
-  count,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  count: number;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  const tDesk = useTranslations("student.desktop");
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex w-full items-center justify-between rounded-2xl px-3 py-3 text-start text-sm font-extrabold transition-colors ${
-        active ? "bg-[#FFF1E4] text-primary-orange" : "bg-white text-text-navy hover:bg-neutral-50"
-      }`}
-    >
-      <span>{children}</span>
-      <span className={`text-xs font-bold ${active ? "text-primary-orange" : "text-text-gray"}`}>
-        {tDesk("itemCount", { count })}
-      </span>
-    </button>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`relative flex-1 pb-2.5 text-center text-base font-extrabold transition-colors ${
-        active ? "text-primary-orange" : "text-text-gray"
-      }`}
-    >
-      {children}
-      {active ? <span className="absolute inset-x-6 -bottom-[2px] h-[3px] rounded-full bg-primary-orange" /> : null}
-    </button>
   );
 }

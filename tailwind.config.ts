@@ -10,10 +10,23 @@ const config: Config = {
         "text-navy": "#1A2B47",
         "text-gray": "#808080",
         "background-white": "#FFFFFF",
+        brand: {
+          navy: "#003890",
+          "navy-dark": "#002264",
+          "navy-light": "#0848A8",
+          gold: "#F8C830",
+          orange: "#F29A0C",
+          cream: "#FAF6EC",
+          teal: "#2DBEA1",
+          coral: "#EA576B",
+          purple: "#865EC9",
+        },
       },
       fontFamily: {
         sans: ["var(--font-cairo)", "var(--font-nunito)", "sans-serif"],
         "sans-ltr": ["var(--font-nunito)", "var(--font-cairo)", "sans-serif"],
+        body: ["var(--font-tajawal)", "var(--font-cairo)", "sans-serif"],
+        data: ["var(--font-plex-ar)", "var(--font-cairo)", "sans-serif"],
       },
       animation: {
         "float-slow": "float-slow 4.8s ease-in-out infinite",
