@@ -4,7 +4,9 @@
  */
 export const HQ_READY_ASSET_KEYS: readonly string[] = [
   "doctor:0",
-  "doctor:1"
+  "doctor:1",
+  "doctor:2",
+  "doctor:3"
 ];
 
 export function isHqAssetReady(profession: string, stage: number): boolean {
