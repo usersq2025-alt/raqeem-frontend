@@ -3,6 +3,7 @@
  * Lists profession:stage keys whose item + stage PNGs exist on disk.
  */
 export const HQ_READY_ASSET_KEYS: readonly string[] = [
+  "chef:0",
   "doctor:0",
   "doctor:1",
   "doctor:2",
