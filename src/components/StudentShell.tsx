@@ -6,7 +6,9 @@ import { useSearchParams } from "next/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { StudentChromeProvider } from "@/components/StudentChrome";
 import { StudentNav } from "@/components/StudentNav";
+import { ExperiencePrefsBootstrap } from "@/components/experience/ExperiencePrefsBootstrap";
 import { getChild, type ChildProfile } from "@/lib/api/children";
+import { lockGuardianMode } from "@/lib/api/guardian";
 import { getStreak, type StudentStreak } from "@/lib/api/student";
 
 type Props = {
@@ -25,6 +27,11 @@ export function StudentShell({ children }: Props) {
   const [child, setChild] = useState<ChildProfile | null>(null);
   const [streak, setStreak] = useState<StudentStreak | null>(null);
   const [points, setPoints] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!validChild) return;
+    lockGuardianMode().catch(() => undefined);
+  }, [validChild, childId]);
 
   useEffect(() => {
     if (!validChild) {
@@ -64,6 +71,7 @@ export function StudentShell({ children }: Props) {
 
   return (
     <StudentChromeProvider value={chrome}>
+      <ExperiencePrefsBootstrap />
       <div
         className={`relative min-h-screen ${
           hideNav ? "bg-[#F7FBFF]" : isPathScreen ? "bg-[#F4F7FB]" : "student-sky bg-[#F7FBFF]"

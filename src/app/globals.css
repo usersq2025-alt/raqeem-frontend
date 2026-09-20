@@ -30,6 +30,31 @@
     color: theme("colors.text-navy");
   }
 
+  html[data-raqeem-text-size="large"] {
+    font-size: 106.25%;
+  }
+
+  html[data-raqeem-text-size="xlarge"] {
+    font-size: 112.5%;
+  }
+
+  html[data-raqeem-contrast="high"] {
+    color: #0f172a;
+  }
+
+  html[data-raqeem-contrast="high"] body {
+    color: #0f172a;
+  }
+
+  html[data-raqeem-reduce-motion="true"] *,
+  html[data-raqeem-reduce-motion="true"] *::before,
+  html[data-raqeem-reduce-motion="true"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-float-slow,
     .animate-float-delayed,

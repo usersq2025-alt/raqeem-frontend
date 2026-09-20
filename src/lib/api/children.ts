@@ -10,6 +10,7 @@ export type ChildProfile = {
   professionId: number | null;
   professionCode: string | null;
   gender: ChildGender;
+  weeklyGoalLessons: number | null;
 };
 
 export type CreateChildPayload = {
@@ -118,6 +119,12 @@ export function mapChild(raw: Record<string, unknown>): ChildProfile | null {
   const genderRaw = String(raw.gender ?? "").toLowerCase();
   const gender: ChildGender = genderRaw === "female" ? "female" : "male";
 
+  const weeklyRaw = raw.weekly_goal_lessons ?? raw.weeklyGoalLessons;
+  const weeklyGoalLessons =
+    weeklyRaw === null || weeklyRaw === undefined || weeklyRaw === ""
+      ? null
+      : Number(weeklyRaw);
+
   return {
     id,
     fullName: String(raw.fullName ?? raw.full_name ?? ""),
@@ -126,6 +133,7 @@ export function mapChild(raw: Record<string, unknown>): ChildProfile | null {
     professionId: Number.isFinite(professionId) && professionId !== 0 ? professionId : null,
     professionCode: code,
     gender,
+    weeklyGoalLessons: Number.isFinite(weeklyGoalLessons) ? weeklyGoalLessons : null,
   };
 }
 
@@ -136,6 +144,20 @@ export function hasChosenProfession(child: ChildProfile): boolean {
 export async function getChild(id: number): Promise<ChildProfile | null> {
   const list = await getChildren();
   return list.find((child) => child.id === id) ?? null;
+}
+
+export async function getChildDetail(id: number): Promise<ChildProfile | null> {
+  let response: Response;
+  try {
+    response = await fetch(`/api/children/${id}`, { credentials: "include", cache: "no-store" });
+  } catch {
+    throw new ChildrenApiError("NETWORK", "NETWORK");
+  }
+  const raw = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!response.ok || !raw) {
+    throw toChildrenError(response.status, "NETWORK");
+  }
+  return mapChild(raw);
 }
 
 export async function getChildren(): Promise<ChildProfile[]> {

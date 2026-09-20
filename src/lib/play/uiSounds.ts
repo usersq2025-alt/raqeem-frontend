@@ -1,7 +1,11 @@
+import { readExperiencePrefs } from "@/lib/experience/experiencePrefs";
+
 /** Tiny pleasant UI sounds for elementary play (no asset files). */
 export function playUiTone(kind: "click" | "pop" | "success" | "soft") {
   if (typeof window === "undefined") return;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const prefs = readExperiencePrefs();
+  if (!prefs.sfx) return;
+  if (prefs.reduceMotion || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   try {
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const ctx = new Ctx();

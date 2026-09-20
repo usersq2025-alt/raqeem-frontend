@@ -1,21 +1,23 @@
 "use client";
 
 import Image from "next/image";
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useStudentChrome } from "@/components/StudentChrome";
 import { StreakBadge } from "@/components/StreakBadge";
 import { Link, usePathname } from "@/i18n/navigation";
 import { professionAvatarSrc } from "@/lib/config/professions";
+import { ParentGateModal } from "@/components/family/ParentGateModal";
 import { streakPath, withChildQuery } from "@/lib/config/subjects";
 
-export type StudentNavKey = "subjects" | "store" | "headquarters" | "home" | "settings";
+export type StudentNavKey = "subjects" | "store" | "headquarters" | "home" | "preferences";
 
 const ITEMS: Array<{ key: StudentNavKey; href: string }> = [
   { key: "subjects", href: "/subjects" },
   { key: "store", href: "/store" },
   { key: "headquarters", href: "/headquarters" },
   { key: "home", href: "/home" },
-  { key: "settings", href: "/settings" },
+  { key: "preferences", href: "/settings" },
 ];
 
 type Props = {
@@ -82,6 +84,9 @@ export function StudentNav({ childId }: Props) {
 function SidebarStudentCard() {
   const chrome = useStudentChrome();
   const t = useTranslations("student");
+  const tGate = useTranslations("parentGate");
+  const returnRef = useRef<HTMLButtonElement>(null);
+  const [gateOpen, setGateOpen] = useState(false);
   const child = chrome?.child ?? null;
   const streak = chrome?.streak ?? null;
   const points = chrome?.points ?? child?.pointsBalance ?? 0;
@@ -109,6 +114,15 @@ function SidebarStudentCard() {
           <StreakBadge days={streak.streakCurrent} isActiveToday={streak.isActiveToday} href={streakPath(child.id)} />
         </div>
       ) : null}
+      <button
+        ref={returnRef}
+        type="button"
+        className="mt-3 w-full rounded-2xl border border-primary-orange/30 bg-white px-2 py-2 text-[11px] font-extrabold leading-snug text-primary-orange transition-colors hover:bg-[#FFF1E4]"
+        onClick={() => setGateOpen(true)}
+      >
+        {tGate("returnToParent")}
+      </button>
+      <ParentGateModal open={gateOpen} onClose={() => setGateOpen(false)} returnFocusRef={returnRef} />
     </div>
   );
 }
@@ -117,7 +131,7 @@ function activeKey(pathname: string): StudentNavKey {
   if (pathname.includes("/store")) return "store";
   if (pathname.includes("/headquarters")) return "headquarters";
   if (pathname.includes("/home")) return "home";
-  if (pathname.includes("/settings")) return "settings";
+  if (pathname.includes("/settings")) return "preferences";
   return "subjects";
 }
 
@@ -195,13 +209,9 @@ function NavIcon({ name, active }: { name: StudentNavKey; active: boolean }) {
   }
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="3.1" stroke={stroke} strokeWidth="1.8" />
-      <path
-        d="M12 4.5v1.6M12 17.9v1.6M4.5 12h1.6M17.9 12h1.6M6.4 6.4l1.1 1.1M16.5 16.5l1.1 1.1M17.6 6.4l-1.1 1.1M7.5 16.5l-1.1 1.1"
-        stroke={stroke}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
+      <path d="M5 9v8a1.5 1.5 0 0 0 1.5 1.5H11V14h2v4.5h4.5A1.5 1.5 0 0 0 19 17V9" stroke={stroke} strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M9 10.5h6M9 13h4" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M8 5h8l1 4H7l1-4Z" stroke={stroke} strokeWidth="1.8" strokeLinejoin="round" />
     </svg>
   );
 }

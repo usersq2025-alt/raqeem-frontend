@@ -76,10 +76,21 @@ export function SettingsMenu() {
             className="flex w-full px-4 py-2.5 text-start text-sm font-semibold text-text-navy hover:bg-neutral-50"
             onClick={() => {
               setOpen(false);
-              router.push("/account");
+              router.push("/family/settings");
             }}
           >
-            {t("edit")}
+            {t("familySettings")}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="flex w-full px-4 py-2.5 text-start text-sm font-semibold text-text-navy hover:bg-neutral-50"
+            onClick={() => {
+              setOpen(false);
+              router.push("/family/reports");
+            }}
+          >
+            {t("reports")}
           </button>
           <button
             type="button"

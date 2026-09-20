@@ -564,6 +564,8 @@
     "childrenCount": "{count, plural, one {# child} other {# children}}",
     "settings": {
       "open": "Settings",
+      "familySettings": "Account & family settings",
+      "reports": "Family reports",
       "edit": "Edit parent profile",
       "logout": "Log out",
       "loggingOut": "Signing out..."
@@ -723,7 +725,7 @@
       "store": "Store",
       "headquarters": "HQ",
       "home": "Home",
-      "settings": "Settings"
+      "preferences": "Preferences"
     },
     "desktop": {
       "continueLearning": "Continue learning",
@@ -894,5 +896,221 @@
     "check": "Check",
     "niceTry": "That's okay — see the right answer and keep going",
     "questionProgress": "Question {current} of {total}"
+  },
+  "familySettings": {
+    "title": "Account & family settings",
+    "subtitle": "Manage your parent account, children, and learning preferences.",
+    "backToHub": "Back to children",
+    "backToSettings": "Back to settings",
+    "backToSections": "← All sections",
+    "navAria": "Settings sections",
+    "comingSoon": "This section is under development — we will enable it in an upcoming release.",
+    "guardian": {
+      "title": "Parent verification required",
+      "body": "Confirm your identity to change account or family settings. Unlock stays on this device session only.",
+      "unlock": "Unlock",
+      "unlocking": "Verifying…",
+      "pinPlaceholder": "Parent PIN",
+      "passwordPlaceholder": "Account password",
+      "required": "Unlock parent mode to save these changes.",
+      "errors": {
+        "invalidPassword": "Incorrect password.",
+        "invalidPin": "Incorrect PIN.",
+        "pinLocked": "PIN is temporarily locked. Try again later.",
+        "generic": "Could not verify. Try again."
+      }
+    },
+    "sections": {
+      "account": "Account",
+      "children": "Children",
+      "learning": "Learning",
+      "reports": "Reports",
+      "alerts": "Alerts",
+      "appearance": "Appearance",
+      "security": "Security",
+      "help": "Help"
+    },
+    "account": {
+      "nameLabel": "Full name",
+      "saveName": "Save name",
+      "saved": "Account updated.",
+      "saveError": "Could not update account.",
+      "emailGap": "Changing email or phone requires verified OTP — that flow is not available yet in the app.",
+      "memberSince": "Member since {date}",
+      "locale": "Preferred language",
+      "fullName": "Full name",
+      "emailPhoneGap": "Changing email or phone requires verified OTP — that flow is not available yet in the app."
+    },
+    "children": {
+      "edit": "Edit",
+      "enterProfile": "Enter child profile",
+      "noProfession": "Profession not chosen",
+      "editTitle": "Edit profile",
+      "nameLabel": "Child name",
+      "gradeLabel": "Grade",
+      "gradeChangeConfirm": "I understand that changing grade affects available content.",
+      "confirmGradeRequired": "Confirm the grade change to continue.",
+      "nameError": "Enter a valid name.",
+      "saveError": "Could not save changes.",
+      "guardianRequired": "Unlock parent mode first.",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "enter": "Enter child profile",
+      "add": "Add a child",
+      "name": "Child name",
+      "grade": "Grade",
+      "gradeWarn": "Changing grade may change available curriculum. Achievements and purchases are kept.",
+      "gradeConfirm": "I understand that changing grade affects available content.",
+      "points": "{count} points"
+    },
+    "learning": {
+      "pickChild": "Select a child",
+      "hint": "Weekly lesson goal applies to the selected child.",
+      "lessonsPerWeek": "{count} lessons / week",
+      "customPlaceholder": "Custom (1–21)",
+      "customSave": "Apply",
+      "saved": "Weekly goal updated.",
+      "saveError": "Could not update weekly goal.",
+      "lead": "Weekly lesson goal applies to the selected child.",
+      "goalTitle": "Weekly goal",
+      "goalHint": "Motivational only — does not block extra lessons.",
+      "presets": {
+        "3": "Light: 3",
+        "5": "Balanced: 5",
+        "7": "Active: 7"
+      },
+      "custom": "Custom",
+      "customInvalid": "Enter a number from 1 to 21."
+    },
+    "appearance": {
+      "locale": "App language",
+      "deviceNote": "Text size, contrast, and motion preferences are stored on this device only.",
+      "darkUnavailable": "Dark mode is not available in the student app yet.",
+      "lead": "Adjust how Raqeem looks on this device.",
+      "noDark": "Dark mode is not available in the student app yet.",
+      "textSize": "Text size",
+      "sizes": {
+        "default": "Normal",
+        "large": "Large",
+        "xlarge": "Larger"
+      },
+      "contrast": "Increase contrast",
+      "reduceMotion": "Reduce motion"
+    },
+    "security": {
+      "changePassword": "Change password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "updatePassword": "Update password",
+      "passwordUpdated": "Password updated.",
+      "passwordError": "Could not update password.",
+      "setPin": "Set parent PIN",
+      "changePin": "Change parent PIN",
+      "pinPassword": "Account password",
+      "newPin": "New PIN (4–6 digits)",
+      "confirmPin": "Confirm PIN",
+      "savePin": "Save PIN",
+      "pinSaved": "PIN saved.",
+      "pinMismatch": "PIN entries do not match.",
+      "pinError": "Could not save PIN.",
+      "privacy": "Privacy policy",
+      "terms": "Terms of use",
+      "logout": "Log out",
+      "pinTitle": "Set parent PIN",
+      "pinLead": "A 4–6 digit code to open parent mode from the student space.",
+      "aiNote": "Future smart-report data will only power educational recommendations."
+    },
+    "help": {
+      "contact": "Contact support",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "points": "How points & HQ work",
+      "faq": "FAQ",
+      "hq": "Headquarters explained",
+      "report": "Report a problem"
+    },
+    "lead": "Manage your parent account, children, and learning preferences.",
+    "backToFamily": "Back to children",
+    "backSections": "← All sections",
+    "saved": "Preferences saved",
+    "loadError": "Could not load settings.",
+    "comingSoonBadge": "Coming soon",
+    "cancel": "Cancel",
+    "save": "Save",
+    "reportsDisclaimer": "These recommendations are educational aids and do not replace a teacher assessment.",
+    "alertsDisclaimer": "Alert channels are not enabled yet — no fake settings are stored.",
+    "errors": {
+      "guardianLocked": "Unlock parent mode first.",
+      "saveFailed": "Could not save. Try again."
+    }
+  },
+  "experiencePrefs": {
+    "title": "Experience preferences",
+    "subtitle": "Sound and display options for this device. They do not change parent account settings.",
+    "sound": {
+      "title": "Sound",
+      "sfx": "Button & lesson sounds",
+      "music": "Background music (when available)",
+      "celebration": "Celebrations & confetti"
+    },
+    "display": {
+      "title": "Display",
+      "deviceNote": "Stored locally under raqeem:experience-prefs on this browser.",
+      "textSize": "Text size",
+      "textSize_default": "Default",
+      "textSize_large": "Large",
+      "textSize_xlarge": "Extra large",
+      "contrast": "Contrast",
+      "contrast_default": "Default",
+      "contrast_high": "High",
+      "reduceMotion": "Reduce motion"
+    },
+    "language": {
+      "title": "Language",
+      "hint": "Applies to menus and lessons on this device."
+    },
+    "help": {
+      "title": "Help",
+      "howTo": "How Raqeem works",
+      "report": "Report a problem",
+      "reportHint": "For account changes, ask a parent to use family settings from the children hub."
+    },
+    "saved": "Preferences saved"
+  },
+  "parentGate": {
+    "title": "Enter parent mode",
+    "subtitle": "Confirm you are the parent or guardian to leave this child profile.",
+    "returnToParent": "Return to parent account",
+    "pinLabel": "Parent PIN",
+    "passwordLabel": "Account password",
+    "cancel": "Cancel",
+    "confirm": "Continue",
+    "verifying": "Verifying…",
+    "suggestPinBody": "Set a quick PIN next time so you do not need your full password.",
+    "suggestPinCta": "Set a PIN now",
+    "suggestPinSkip": "Skip for now",
+    "newPinLabel": "New PIN (4–6 digits)",
+    "confirmPinLabel": "Confirm PIN",
+    "savePin": "Save PIN",
+    "savingPin": "Saving…",
+    "errors": {
+      "invalidPassword": "Incorrect password.",
+      "invalidPin": "Incorrect PIN.",
+      "pinLocked": "PIN is temporarily locked.",
+      "pinMismatch": "PIN entries do not match.",
+      "pinFormat": "PIN must be 4–6 digits.",
+      "generic": "Could not verify. Try again.",
+      "locked": "PIN is temporarily locked.",
+      "setupFailed": "Could not verify. Try again."
+    },
+    "lead": "Confirm you are the parent or guardian to leave this child profile.",
+    "setupPinLead": "Set a quick PIN next time so you do not need your full password.",
+    "suggestPin": "Set a quick PIN next time so you do not need your full password.",
+    "passwordPlaceholder": "Password",
+    "continue": "Continue",
+    "checking": "Verifying…",
+    "usePassword": "Use password instead",
+    "skipPin": "Skip for now"
   }
 }
