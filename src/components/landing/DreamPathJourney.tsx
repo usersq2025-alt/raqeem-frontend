@@ -8,9 +8,8 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
-import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { LANDING_SHOTS, LANDING_STEPS } from "@/config/landing";
+import { LANDING_STEPS } from "@/config/landing";
 import {
   BuildStepIcon,
   CareerStepIcon,
@@ -89,7 +88,6 @@ export function DreamPathJourney() {
         introPlayed.current = true;
         const total = LANDING_STEPS.length - 1;
         let frame = 0;
-        const timers: number[] = [];
 
         const tick = () => {
           if (interactedRef.current) return;
@@ -97,19 +95,17 @@ export function DreamPathJourney() {
           if (frame <= total) {
             setActive(frame);
             setProgress(frame / total);
-            timers.push(window.setTimeout(tick, 300));
+            window.setTimeout(tick, 300);
           } else {
-            timers.push(
-              window.setTimeout(() => {
-                if (!interactedRef.current) {
-                  setActive(0);
-                  setProgress(0);
-                }
-              }, 360)
-            );
+            window.setTimeout(() => {
+              if (!interactedRef.current) {
+                setActive(0);
+                setProgress(0);
+              }
+            }, 360);
           }
         };
-        timers.push(window.setTimeout(tick, 260));
+        window.setTimeout(tick, 260);
         observer.disconnect();
       },
       { threshold: 0.35 }
@@ -171,7 +167,7 @@ export function DreamPathJourney() {
           </p>
         </div>
 
-        {/* Desktop interactive path */}
+        {/* Desktop path + text card */}
         <div className="mt-8 hidden md:block">
           <div
             role="tablist"
@@ -216,10 +212,7 @@ export function DreamPathJourney() {
               </svg>
             </div>
 
-            <div
-              className="mt-1 grid grid-cols-4 gap-2"
-              style={{ direction: isRtl ? "rtl" : "ltr" }}
-            >
+            <div className="mt-1 grid grid-cols-4 gap-2" style={{ direction: isRtl ? "rtl" : "ltr" }}>
               {LANDING_STEPS.map((step, index) => {
                 const Icon = STEP_ICONS[step.icon];
                 const color = STEP_COLORS[step.accent];
@@ -238,9 +231,7 @@ export function DreamPathJourney() {
                     aria-selected={selected}
                     aria-controls={panelId}
                     tabIndex={selected ? 0 : -1}
-                    className={`dream-path-station group relative flex min-h-11 flex-col items-center px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF6EC] ${
-                      selected ? "dream-path-station--active" : ""
-                    }`}
+                    className="dream-path-station group relative flex min-h-11 flex-col items-center px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF6EC]"
                     onClick={() => select(index)}
                   >
                     <span
@@ -293,38 +284,32 @@ export function DreamPathJourney() {
             </div>
           </div>
 
-          <div
+          <article
             id={panelId}
             role="tabpanel"
             aria-labelledby={`${baseId}-tab-${activeStep.key}`}
-            className="dream-path-panel mt-5 grid min-h-[13.75rem] grid-cols-1 gap-5 rounded-[28px] bg-white p-5 shadow-[0_16px_36px_-24px_rgba(0,34,100,0.35)] ring-1 ring-brand-navy/8 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-7 lg:p-6"
+            className="dream-path-panel mt-5 rounded-[28px] bg-white p-5 text-start shadow-[0_16px_36px_-24px_rgba(0,34,100,0.35)] ring-1 ring-brand-navy/8 sm:p-6"
           >
-            <div key={activeStep.key} className="dream-path-fade flex flex-col justify-center text-start">
+            <div key={activeStep.key} className="dream-path-fade">
               <p className="font-data text-xs font-extrabold tracking-wide text-brand-orange">
                 {t("stepLabel", { n: active + 1 })}
               </p>
               <h3 className="mt-1 text-xl font-extrabold text-brand-navy-dark lg:text-2xl">
                 {t(`steps.${activeStep.key}.title`)}
               </h3>
-              <p className="mt-2 font-body text-base font-medium leading-[1.8] text-[#3A5270] lg:text-lg">
+              <p className="mt-2 max-w-3xl font-body text-base font-medium leading-[1.8] text-[#3A5270] lg:text-lg">
                 {t(`steps.${activeStep.key}.body`)}
               </p>
-            </div>
-            <div
-              key={`scene-${activeStep.key}`}
-              className="dream-path-fade dream-path-scene relative min-h-[11rem] overflow-hidden rounded-[22px] bg-brand-cream/80 ring-1 ring-brand-navy/8"
-            >
-              <StepScene stepKey={activeStep.key} isRtl={isRtl} />
             </div>
             <div className="sr-only">
               {LANDING_STEPS.map((step) => (
                 <p key={step.key}>{t(`steps.${step.key}.body`)}</p>
               ))}
             </div>
-          </div>
+          </article>
         </div>
 
-        {/* Mobile vertical path */}
+        {/* Mobile: path stations + text card under each */}
         <ol className="relative mt-7 space-y-3 md:hidden">
           <div className="dream-path-mobile-rail" aria-hidden="true">
             <span style={{ height: `${(active / Math.max(1, LANDING_STEPS.length - 1)) * 100}%` }} />
@@ -375,9 +360,6 @@ export function DreamPathJourney() {
                     <p className="font-body text-base font-medium leading-[1.8] text-[#3A5270]">
                       {t(`steps.${step.key}.body`)}
                     </p>
-                    <div className="dream-path-scene mt-3 h-36 overflow-hidden rounded-[18px] bg-brand-cream/80 ring-1 ring-brand-navy/8">
-                      {expanded ? <StepScene stepKey={step.key} isRtl={isRtl} /> : null}
-                    </div>
                   </div>
                 </div>
               </li>
@@ -406,88 +388,4 @@ function pointOnPath(t: number): { x: number; y: number } {
     x: samples[i].x + (samples[i + 1].x - samples[i].x) * f,
     y: samples[i].y + (samples[i + 1].y - samples[i].y) * f,
   };
-}
-
-function StepScene({
-  stepKey,
-  isRtl,
-}: {
-  stepKey: (typeof LANDING_STEPS)[number]["key"];
-  isRtl: boolean;
-}) {
-  if (stepKey === "create") {
-    return (
-      <div className="flex h-full items-center justify-center gap-2 p-4">
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            className="flex h-20 w-14 flex-col items-center rounded-2xl bg-white p-2 shadow-sm ring-1 ring-brand-navy/10"
-            style={{ transform: `translateY(${(1 - i) * 6}px) rotate(${(i - 1) * 4}deg)` }}
-          >
-            <span className="h-7 w-7 rounded-full bg-[#E8F3FF]" />
-            <span className="mt-2 h-1.5 w-8 rounded-full bg-brand-navy/15" />
-            <span className="mt-1 h-1.5 w-6 rounded-full bg-brand-navy/10" />
-          </div>
-        ))}
-        <span className="ms-1 flex h-10 w-10 items-center justify-center rounded-full bg-brand-gold text-lg font-black text-brand-navy-dark shadow-sm">
-          +
-        </span>
-      </div>
-    );
-  }
-
-  if (stepKey === "career") {
-    return (
-      <div className="relative flex h-full items-center justify-center p-4">
-        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm ring-2 ring-brand-gold/50">
-          <StarIcon className="h-7 w-7 text-brand-gold" />
-        </span>
-        <span className="absolute start-6 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-[#FFE8F0] text-[#EA576B]">
-          <CareerStepIcon className="h-5 w-5" />
-        </span>
-        <span className="absolute end-7 top-8 flex h-9 w-9 items-center justify-center rounded-full bg-[#E7F7F4] text-[#2DBEA1]">
-          <BuildStepIcon className="h-4 w-4" />
-        </span>
-        <span className="absolute bottom-5 start-1/2 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full bg-[#EDE7FF] text-[#865EC9]">
-          <SparkIcon className="h-4 w-4" />
-        </span>
-      </div>
-    );
-  }
-
-  if (stepKey === "review") {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 p-5">
-        <div className="relative h-3 w-[85%] rounded-full bg-brand-navy/10">
-          <span className="absolute inset-y-0 start-0 w-2/3 rounded-full bg-gradient-to-l from-[#F8C830] to-[#F29A0C]" />
-          <span className="absolute top-1/2 start-[18%] h-5 w-5 -translate-y-1/2 rounded-full bg-white ring-2 ring-[#2DBEA1]" />
-          <span className="absolute top-1/2 start-[42%] h-5 w-5 -translate-y-1/2 rounded-full bg-[#F8C830] ring-2 ring-white" />
-          <span className="absolute top-1/2 start-[66%] h-4 w-4 -translate-y-1/2 rounded-full bg-white ring-2 ring-brand-navy/20" />
-        </div>
-        <div className="flex gap-1.5">
-          {[0, 1, 2, 3].map((i) => (
-            <StarIcon key={i} className={`h-4 w-4 ${i < 3 ? "text-brand-gold" : "text-brand-navy/20"}`} />
-          ))}
-        </div>
-        <ReviewStepIcon className="h-8 w-8 text-[#2DBEA1]" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative flex h-full items-center justify-center gap-2 p-3">
-      <div className="relative h-[7.5rem] w-[42%] overflow-hidden rounded-2xl bg-white ring-1 ring-brand-navy/10">
-        <Image src={LANDING_SHOTS.hqBefore} alt="" width={320} height={214} className="h-full w-full object-cover" unoptimized />
-      </div>
-      <span
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-gold text-sm font-black text-brand-navy-dark"
-        aria-hidden="true"
-      >
-        {isRtl ? "←" : "→"}
-      </span>
-      <div className="relative h-[7.5rem] w-[42%] overflow-hidden rounded-2xl bg-white ring-1 ring-brand-navy/10">
-        <Image src={LANDING_SHOTS.hqAfter} alt="" width={320} height={214} className="h-full w-full object-cover" unoptimized />
-      </div>
-    </div>
-  );
 }
