@@ -2,10 +2,17 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import type { SubjectProgress } from "@/lib/api/student";
-import { SUBJECT_TINTS, subjectCoverSrc, withChildQuery } from "@/lib/config/subjects";
+import {
+  SUBJECT_ACCENTS,
+  SUBJECT_TINTS,
+  subjectCoverSrc,
+  withChildQuery,
+} from "@/lib/config/subjects";
 import { useMountedViewTransitionName } from "@/lib/utils/useMountedViewTransitionName";
 import { useRouter } from "@/i18n/navigation";
+import { SubjectLessonProgress } from "@/components/SubjectLessonProgress";
 
 type Props = {
   subject: SubjectProgress;
@@ -19,6 +26,22 @@ export function SubjectCard({ subject, childId, index }: Props) {
   const href = withChildQuery(`/subjects/${subject.subjectId}/units`, childId);
   const cover = subjectCoverSrc(subject.key, subject.iconUrl);
   const coverTransition = useMountedViewTransitionName(`subject-cover-${subject.subjectId}`);
+  const accent = SUBJECT_ACCENTS[subject.key];
+  const percentage =
+    subject.totalLessons > 0
+      ? Math.min(100, Math.round((subject.completedLessons / subject.totalLessons) * 100))
+      : 0;
+  const [fill, setFill] = useState(0);
+
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setFill(percentage);
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => setFill(percentage));
+    return () => window.cancelAnimationFrame(frame);
+  }, [percentage]);
 
   return (
     <button
@@ -34,13 +57,38 @@ export function SubjectCard({ subject, childId, index }: Props) {
         style={coverTransition}
       >
         <Image src={cover} alt="" width={220} height={220} unoptimized className="h-full w-full object-contain" />
+        {percentage >= 100 ? (
+          <span
+            className="absolute -bottom-0.5 -end-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-[0_4px_10px_-4px_rgba(26,43,71,0.45)]"
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none">
+              <path
+                d="M4.5 10.5 8 14l7.5-8"
+                stroke={accent}
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+        ) : null}
       </span>
       <span className="text-[0.95rem] font-extrabold leading-tight text-text-navy sm:text-lg">
         {t(`subjects.${subject.key}`)}
       </span>
-      <span className="mt-1 text-[11px] font-semibold text-text-gray sm:text-sm">
-        {t("lessonsCount", { completed: subject.completedLessons, total: subject.totalLessons })}
-      </span>
+      <SubjectLessonProgress
+        completed={subject.completedLessons}
+        total={subject.totalLessons}
+        percentage={percentage}
+        fill={fill}
+        accent={accent}
+        label={t("lessonsCount", {
+          completed: subject.completedLessons,
+          total: subject.totalLessons,
+        })}
+        className="mt-2.5 w-full"
+      />
     </button>
   );
 }

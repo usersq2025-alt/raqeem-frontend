@@ -55,6 +55,7 @@
     .subject-card,
     .streak-flame-lit,
     .unit-progress-fill,
+    .subject-progress-fill,
     .store-card,
     .purchase-modal-backdrop,
     .purchase-modal-panel,
@@ -632,6 +633,11 @@
 .unit-progress-fill {
   width: 0;
   transition: width 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.subject-progress-fill {
+  width: 0;
+  transition: width 0.85s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .streak-flame-lit {

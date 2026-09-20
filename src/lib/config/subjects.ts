@@ -32,6 +32,17 @@ export const SUBJECT_TINTS: Record<SubjectKey, string> = {
   science: "bg-[#E7F7F4]",
 };
 
+/** Strong accent used for subject progress fills (pairs with SUBJECT_TINTS). */
+export const SUBJECT_ACCENTS: Record<SubjectKey, string> = {
+  arabic: "#5B8DEF",
+  english: "#E86A9A",
+  french: "#8B7AE8",
+  math: "#3DB87A",
+  religion: "#E5A82E",
+  social: "#E8895A",
+  science: "#2BB3A0",
+};
+
 export const UNIT_ACCENTS = ["#7C9CFF", "#F48FB1", "#7ED3B2", "#F6C15B", "#C9A0FF", "#FF9F7A", "#6EC8E6"] as const;
 
 export function subjectKeyFromRow(row: {

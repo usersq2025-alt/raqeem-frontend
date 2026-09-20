@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import type { ChildProfile } from "@/lib/api/children";
 import type { StudentStreak, SubjectProgress } from "@/lib/api/student";
 import { StreakBadge } from "@/components/StreakBadge";
 import { SubjectCard } from "@/components/SubjectCard";
+import { SubjectLessonProgress } from "@/components/SubjectLessonProgress";
 import { professionAvatarSrc } from "@/lib/config/professions";
-import { subjectCoverSrc, streakPath, withChildQuery } from "@/lib/config/subjects";
+import { SUBJECT_ACCENTS, subjectCoverSrc, streakPath, withChildQuery } from "@/lib/config/subjects";
 import { useMountedViewTransitionName } from "@/lib/utils/useMountedViewTransitionName";
 import { Link } from "@/i18n/navigation";
 
@@ -16,6 +18,25 @@ type Props = {
   subjects: SubjectProgress[];
   streak: StudentStreak;
 };
+
+function useAnimatedFill(percentage: number): number {
+  const [fill, setFill] = useState(0);
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setFill(percentage);
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => setFill(percentage));
+    return () => window.cancelAnimationFrame(frame);
+  }, [percentage]);
+  return fill;
+}
+
+function subjectPercentage(subject: SubjectProgress): number {
+  if (subject.totalLessons <= 0) return 0;
+  return Math.min(100, Math.round((subject.completedLessons / subject.totalLessons) * 100));
+}
 
 export function SubjectsHome({ child, subjects, streak }: Props) {
   const t = useTranslations("student");
@@ -34,10 +55,14 @@ export function SubjectsHome({ child, subjects, streak }: Props) {
     },
     { completed: 0, total: 0 }
   );
+  const totalsPct = totals.total > 0 ? Math.min(100, Math.round((totals.completed / totals.total) * 100)) : 0;
+  const totalsFill = useAnimatedFill(totalsPct);
   const nextSubject =
     subjects.find((subject) => subject.completedLessons < subject.totalLessons && subject.totalLessons > 0) ??
     subjects.find((subject) => subject.totalLessons > 0) ??
     null;
+  const nextPct = nextSubject ? subjectPercentage(nextSubject) : 0;
+  const nextFill = useAnimatedFill(nextPct);
   const recent = [...subjects]
     .filter((subject) => subject.completedLessons > 0)
     .sort((a, b) => b.completedLessons / Math.max(b.totalLessons, 1) - a.completedLessons / Math.max(a.totalLessons, 1))
@@ -110,12 +135,22 @@ export function SubjectsHome({ child, subjects, streak }: Props) {
                   className="h-full w-full object-contain"
                 />
               </span>
-              <span className="min-w-0">
+              <span className="min-w-0 flex-1">
                 <span className="block text-sm font-extrabold text-text-navy">{t(`subjects.${nextSubject.key}`)}</span>
-                <span className="mt-0.5 block text-xs font-bold text-text-gray">
-                  {t("lessonsCount", { completed: nextSubject.completedLessons, total: nextSubject.totalLessons })}
-                </span>
-                <span className="mt-1 block text-xs font-extrabold text-primary-orange">{tDesk("openSubject")}</span>
+                <SubjectLessonProgress
+                  completed={nextSubject.completedLessons}
+                  total={nextSubject.totalLessons}
+                  percentage={nextPct}
+                  fill={nextFill}
+                  accent={SUBJECT_ACCENTS[nextSubject.key]}
+                  label={t("lessonsCount", {
+                    completed: nextSubject.completedLessons,
+                    total: nextSubject.totalLessons,
+                  })}
+                  className="mt-1.5"
+                  compact
+                />
+                <span className="mt-1.5 block text-xs font-extrabold text-primary-orange">{tDesk("openSubject")}</span>
               </span>
             </Link>
           ) : (
@@ -136,15 +171,15 @@ export function SubjectsHome({ child, subjects, streak }: Props) {
 
         <section className="rounded-[24px] bg-white p-4 shadow-[0_14px_32px_-22px_rgba(26,43,71,0.4)]">
           <h2 className="text-sm font-extrabold text-text-navy">{tDesk("progressOverview")}</h2>
-          <p className="mt-2 text-sm font-extrabold text-text-navy">
-            {tDesk("lessonsDone", { completed: totals.completed, total: totals.total })}
-          </p>
-          <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-neutral-100">
-            <div
-              className="h-full rounded-full bg-primary-orange"
-              style={{ width: `${totals.total > 0 ? Math.min(100, Math.round((totals.completed / totals.total) * 100)) : 0}%` }}
-            />
-          </div>
+          <SubjectLessonProgress
+            completed={totals.completed}
+            total={totals.total}
+            percentage={totalsPct}
+            fill={totalsFill}
+            accent="#F5A623"
+            label={tDesk("lessonsDone", { completed: totals.completed, total: totals.total })}
+            className="mt-3"
+          />
         </section>
 
         <section className="rounded-[24px] bg-white p-4 shadow-[0_14px_32px_-22px_rgba(26,43,71,0.4)]">
@@ -154,23 +189,45 @@ export function SubjectsHome({ child, subjects, streak }: Props) {
           ) : (
             <ul className="mt-3 flex flex-col gap-2">
               {recent.map((subject) => (
-                <li key={subject.subjectId}>
-                  <Link
-                    href={withChildQuery(`/subjects/${subject.subjectId}/units`, child.id)}
-                    className="flex items-center justify-between gap-2 rounded-2xl bg-neutral-50 px-3 py-2"
-                  >
-                    <span className="text-sm font-extrabold text-text-navy">{t(`subjects.${subject.key}`)}</span>
-                    <span className="text-xs font-bold text-text-gray">
-                      {subject.completedLessons}/{subject.totalLessons}
-                    </span>
-                  </Link>
-                </li>
+                <RecentSubjectRow key={subject.subjectId} subject={subject} childId={child.id} />
               ))}
             </ul>
           )}
         </section>
       </aside>
     </div>
+  );
+}
+
+function RecentSubjectRow({ subject, childId }: { subject: SubjectProgress; childId: number }) {
+  const t = useTranslations("student");
+  const pct = subjectPercentage(subject);
+  const fill = useAnimatedFill(pct);
+  const accent = SUBJECT_ACCENTS[subject.key];
+
+  return (
+    <li>
+      <Link
+        href={withChildQuery(`/subjects/${subject.subjectId}/units`, childId)}
+        className="flex flex-col gap-1.5 rounded-2xl bg-neutral-50 px-3 py-2.5"
+      >
+        <span className="flex items-center justify-between gap-2">
+          <span className="text-sm font-extrabold text-text-navy">{t(`subjects.${subject.key}`)}</span>
+        </span>
+        <SubjectLessonProgress
+          completed={subject.completedLessons}
+          total={subject.totalLessons}
+          percentage={pct}
+          fill={fill}
+          accent={accent}
+          label={t("lessonsCount", {
+            completed: subject.completedLessons,
+            total: subject.totalLessons,
+          })}
+          compact
+        />
+      </Link>
+    </li>
   );
 }
 
