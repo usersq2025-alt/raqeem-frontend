@@ -57,8 +57,10 @@ export const LANDING_SUBJECTS: ReadonlyArray<{
 export const LANDING_SHOTS = {
   studentPath: "/images/landing/student-lesson-path.png",
   parentHub: "/images/landing/raqeem-parent-multiple-children-showcase-v2.png",
-  hqBefore: "/images/headquarters/doctor/stages/stage-00-empty.png",
-  hqAfter: "/images/headquarters/doctor/stages/stage-12-achievement-shelf.png",
+  /** Empty clinic — landing before state (dedicated copy to avoid HQ cache collisions). */
+  hqBefore: "/images/landing/hq-before-empty.png",
+  /** Fully furnished clinic — landing after state. */
+  hqAfter: "/images/landing/hq-after-complete.png",
 } as const;
 
 export const LANDING_SHOWCASE_TABS = [
