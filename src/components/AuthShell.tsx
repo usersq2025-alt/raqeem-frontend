@@ -35,26 +35,30 @@ export function AuthShell({
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-lg flex-col px-5 py-5 md:max-w-none md:items-center md:justify-center md:px-6 md:py-10">
         <article className={`relative w-full md:rounded-[28px] md:bg-white md:p-8 md:shadow-[0_20px_60px_-24px_rgba(26,43,71,0.25)] ${celebration ? "md:max-w-[460px]" : "md:max-w-[440px]"}`}>
-          <div className="relative mb-5 flex items-center justify-center">
-            {showBack ? (
-              <Link
-                href={backHref}
-                className={`absolute start-0 flex h-10 w-10 items-center justify-center rounded-full text-text-navy hover:bg-neutral-100 ${alwaysShowBack ? "" : "md:hidden"}`}
-                aria-label={backLabel}
-              >
-                <svg viewBox="0 0 24 24" className="h-5 w-5 rtl:rotate-180" fill="none" aria-hidden="true">
-                  <path
-                    d="M15 5 8 12l7 7"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </Link>
-            ) : null}
-            <BrandLogo size="sm" />
-            <div className="absolute end-0">
+          <div className="mb-5 grid grid-cols-[auto_1fr_auto] items-center gap-3">
+            <div className="justify-self-start">
+              {showBack ? (
+                <Link
+                  href={backHref}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full text-text-navy hover:bg-neutral-100 ${alwaysShowBack ? "" : "md:hidden"}`}
+                  aria-label={backLabel}
+                >
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 rtl:rotate-180" fill="none" aria-hidden="true">
+                    <path
+                      d="M15 5 8 12l7 7"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </Link>
+              ) : null}
+            </div>
+            <div className="flex justify-center">
+              <BrandLogo size="sm" />
+            </div>
+            <div className="justify-self-end">
               <LanguageSwitcher />
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { SESSION_COOKIE_NAME, type SessionPayload } from "@/lib/auth/sessionCookie";
 
-const MAX_AGE = 60 * 60 * 24 * 30;
+const MAX_AGE = 60 * 60 * 24 * 365;
 
 export async function POST(request: Request) {
   const body = (await request.json()) as Partial<SessionPayload>;
