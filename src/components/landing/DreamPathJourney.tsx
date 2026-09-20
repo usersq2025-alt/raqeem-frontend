@@ -36,8 +36,16 @@ const STEP_COLORS = {
 /** Soft cubic path in viewBox 0..1000 × 0..180 (geometry drawn LTR, flipped in RTL). */
 const PATH_D = "M 70 118 C 220 40, 380 160, 500 88 S 780 30, 930 108";
 
+const AUTO_ADVANCE_MS = 50_000;
+const STEP_COUNT = LANDING_STEPS.length;
+const LAST_INDEX = STEP_COUNT - 1;
+
 function clampIndex(index: number): number {
-  return Math.min(LANDING_STEPS.length - 1, Math.max(0, index));
+  return Math.min(LAST_INDEX, Math.max(0, index));
+}
+
+function progressFor(index: number): number {
+  return LAST_INDEX <= 0 ? 0 : clampIndex(index) / LAST_INDEX;
 }
 
 export function DreamPathJourney() {
@@ -45,100 +53,84 @@ export function DreamPathJourney() {
   const locale = useLocale();
   const isRtl = locale === "ar" || locale.startsWith("ar-");
   const [active, setActive] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const interactedRef = useRef(false);
-  const [, setInteractedTick] = useState(0);
+  const [pinned, setPinned] = useState(false);
+  const [inView, setInView] = useState(false);
   const baseId = useId();
   const sectionRef = useRef<HTMLElement>(null);
-  const introPlayed = useRef(false);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const activeRef = useRef(0);
 
-  const markInteracted = useCallback(() => {
-    if (!interactedRef.current) {
-      interactedRef.current = true;
-      setInteractedTick((n) => n + 1);
-    }
-  }, []);
+  activeRef.current = active;
 
-  const select = useCallback(
-    (index: number, fromUser = true) => {
+  /** User click/keyboard: pin that station (click same pinned station again to resume autoplay). */
+  const selectStation = useCallback(
+    (index: number) => {
       const next = clampIndex(index);
+      if (pinned && activeRef.current === next) {
+        setPinned(false);
+        return;
+      }
       setActive(next);
-      setProgress(next / (LANDING_STEPS.length - 1));
-      if (fromUser) markInteracted();
+      setPinned(true);
     },
-    [markInteracted]
+    [pinned]
   );
 
   useEffect(() => {
-    if (interactedRef.current || introPlayed.current) return;
     const el = sectionRef.current;
     if (!el) return;
 
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      introPlayed.current = true;
-      setProgress(0);
-      return;
-    }
-
     const observer = new IntersectionObserver(
       (entries) => {
-        if (!entries[0]?.isIntersecting || introPlayed.current || interactedRef.current) return;
-        introPlayed.current = true;
-        const total = LANDING_STEPS.length - 1;
-        let frame = 0;
-
-        const tick = () => {
-          if (interactedRef.current) return;
-          frame += 1;
-          if (frame <= total) {
-            setActive(frame);
-            setProgress(frame / total);
-            window.setTimeout(tick, 300);
-          } else {
-            window.setTimeout(() => {
-              if (!interactedRef.current) {
-                setActive(0);
-                setProgress(0);
-              }
-            }, 360);
-          }
-        };
-        window.setTimeout(tick, 260);
-        observer.disconnect();
+        setInView(Boolean(entries[0]?.isIntersecting));
       },
-      { threshold: 0.35 }
+      { threshold: 0.25 }
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    if (pinned || !inView) return;
+
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+
+    const timer = window.setInterval(() => {
+      const next = (activeRef.current + 1) % STEP_COUNT;
+      setActive(next);
+    }, AUTO_ADVANCE_MS);
+
+    return () => window.clearInterval(timer);
+  }, [pinned, inView]);
+
   function onTabKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     const key = event.key;
     if (key !== "ArrowLeft" && key !== "ArrowRight" && key !== "Home" && key !== "End") return;
     event.preventDefault();
-    markInteracted();
 
     if (key === "Home") {
-      select(0);
+      selectStation(0);
       tabRefs.current[0]?.focus();
       return;
     }
     if (key === "End") {
-      select(LANDING_STEPS.length - 1);
-      tabRefs.current[LANDING_STEPS.length - 1]?.focus();
+      selectStation(LAST_INDEX);
+      tabRefs.current[LAST_INDEX]?.focus();
       return;
     }
 
     const delta = key === "ArrowLeft" ? (isRtl ? 1 : -1) : isRtl ? -1 : 1;
     const next = clampIndex(active + delta);
-    select(next);
+    selectStation(next);
     tabRefs.current[next]?.focus();
   }
 
   const activeStep = LANDING_STEPS[active] ?? LANDING_STEPS[0];
   const panelId = `${baseId}-panel`;
+  const progress = progressFor(active);
   const progressPct = Math.round(progress * 100);
 
   return (
@@ -230,9 +222,10 @@ export function DreamPathJourney() {
                     id={tabId}
                     aria-selected={selected}
                     aria-controls={panelId}
+                    aria-pressed={selected && pinned}
                     tabIndex={selected ? 0 : -1}
                     className="dream-path-station group relative flex min-h-11 flex-col items-center px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF6EC]"
-                    onClick={() => select(index)}
+                    onClick={() => selectStation(index)}
                   >
                     <span
                       className={`relative flex h-14 w-14 items-center justify-center rounded-full bg-white transition-[transform,box-shadow] duration-300 ease-out ${
@@ -242,7 +235,11 @@ export function DreamPathJourney() {
                       }`}
                       style={
                         selected
-                          ? { boxShadow: `0 0 0 7px ${color}20, 0 14px 28px -14px ${color}99` }
+                          ? {
+                              boxShadow: pinned
+                                ? `0 0 0 7px ${color}28, 0 14px 28px -14px ${color}99`
+                                : `0 0 0 7px ${color}20, 0 14px 28px -14px ${color}99`,
+                            }
                           : { boxShadow: "0 10px 22px -16px rgba(0,34,100,0.4)" }
                       }
                     >
@@ -312,7 +309,7 @@ export function DreamPathJourney() {
         {/* Mobile: path stations + text card under each */}
         <ol className="relative mt-7 space-y-3 md:hidden">
           <div className="dream-path-mobile-rail" aria-hidden="true">
-            <span style={{ height: `${(active / Math.max(1, LANDING_STEPS.length - 1)) * 100}%` }} />
+            <span style={{ height: `${progress * 100}%` }} />
           </div>
           {LANDING_STEPS.map((step, index) => {
             const Icon = STEP_ICONS[step.icon];
@@ -330,8 +327,9 @@ export function DreamPathJourney() {
                   style={expanded ? { boxShadow: `0 0 0 5px ${color}22` } : undefined}
                   aria-expanded={expanded}
                   aria-controls={itemPanelId}
+                  aria-pressed={expanded && pinned}
                   aria-label={t(`steps.${step.key}.title`)}
-                  onClick={() => select(index)}
+                  onClick={() => selectStation(index)}
                 >
                   <span className="absolute -top-1 -end-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-gold px-0.5 font-data text-[0.65rem] font-extrabold text-brand-navy-dark">
                     {completed ? "✓" : index + 1}
@@ -347,7 +345,7 @@ export function DreamPathJourney() {
                     className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-3 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-inset"
                     aria-expanded={expanded}
                     aria-controls={itemPanelId}
-                    onClick={() => select(index)}
+                    onClick={() => selectStation(index)}
                   >
                     <span className="text-base font-extrabold text-brand-navy-dark">
                       {t(`steps.${step.key}.title`)}
