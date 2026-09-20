@@ -6,6 +6,7 @@ import type { StudentStreak } from "@/lib/api/student";
 import { StreakBadge } from "@/components/StreakBadge";
 import { Button } from "@/components/ui/Button";
 import { withChildQuery } from "@/lib/config/subjects";
+import { withLatinNumerals } from "@/lib/i18n/latinNumerals";
 
 type Props = {
   childId: number;
@@ -21,14 +22,15 @@ export function StreakCalendarExperience({ childId, streak }: Props) {
   const active = new Set(streak.activityDates);
   const weekStart = locale.startsWith("ar") ? 6 : 0;
   const matrix = useMemo(() => buildMonth(cursor.year, cursor.month, weekStart), [cursor.month, cursor.year, weekStart]);
+  const intlLocale = withLatinNumerals(locale);
   const weekdayLabels = useMemo(() => {
-    const formatter = new Intl.DateTimeFormat(locale, { weekday: "short" });
+    const formatter = new Intl.DateTimeFormat(intlLocale, { weekday: "short" });
     return Array.from({ length: 7 }, (_, index) => {
       const date = new Date(2024, 8, 1 + ((index + weekStart) % 7));
       return formatter.format(date);
     });
-  }, [locale, weekStart]);
-  const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(
+  }, [intlLocale, weekStart]);
+  const monthLabel = new Intl.DateTimeFormat(intlLocale, { month: "long", year: "numeric" }).format(
     new Date(cursor.year, cursor.month, 1)
   );
   const todayKey = toKey(today);

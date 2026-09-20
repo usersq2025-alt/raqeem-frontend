@@ -49,7 +49,9 @@ export function PointsPill({ count, from, label }: Props) {
       <span className="inline-flex h-5 w-5 items-center justify-center text-base leading-none" aria-hidden="true">
         ★
       </span>
-      <span className="tabular-nums text-[#E6A800]">{value}</span>
+      <span lang="en" dir="ltr" className="latin-nums tabular-nums text-[#E6A800]">
+        {value}
+      </span>
       <span className="text-text-gray">{label}</span>
     </span>
   );

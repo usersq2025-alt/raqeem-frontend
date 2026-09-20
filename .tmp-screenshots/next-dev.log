@@ -1,0 +1,16 @@
+▲ Next.js 16.3.3 (Turbopack)
+- Local:         http://localhost:3015
+- Network:       http://10.2.0.2:3015
+- Environments: .env.local
+✓ Ready in 870ms
+✓ Running next.config.ts took 51ms
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3000
+- PID:          27240
+- Dir:          C:\laragon\www\raqeem-frontend
+- Log:          .next\dev\logs\next-development.log
+
+You can access the existing server at http://localhost:3000,
+or run taskkill /PID 27240 /F to stop it and start a new one.
+[?25h

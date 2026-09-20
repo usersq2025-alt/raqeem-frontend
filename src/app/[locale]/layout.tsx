@@ -4,6 +4,7 @@ import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Cairo, IBM_Plex_Sans_Arabic, Nunito, Tajawal } from "next/font/google";
 import { routing } from "@/i18n/routing";
+import { LATIN_NUMBER_FORMATS } from "@/lib/i18n/latinNumerals";
 import "../globals.css";
 
 const cairo = Cairo({
@@ -77,10 +78,10 @@ export default async function LocaleLayout({ children, params }: Props) {
       lang={locale}
       dir={isRtl ? "rtl" : "ltr"}
       suppressHydrationWarning
-      className={`${cairo.variable} ${tajawal.variable} ${plexArabic.variable} ${nunito.variable} h-full antialiased`}
+      className={`${cairo.variable} ${tajawal.variable} ${plexArabic.variable} ${nunito.variable} h-full antialiased${isRtl ? " numerals-latn" : ""}`}
     >
       <body className={`min-h-full bg-background-white ${isRtl ? "font-sans" : "font-sans-ltr"}`}>
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider locale={locale} messages={messages} formats={LATIN_NUMBER_FORMATS}>
           {children}
         </NextIntlClientProvider>
       </body>

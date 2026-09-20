@@ -84,7 +84,9 @@ export function ProductCard({ item, index, onBuy }: Props) {
           <p
             className={`text-sm font-extrabold ${state === "insufficient" ? "text-[#BDBDBD]" : "text-text-navy"}`}
           >
-            <span className="tabular-nums">{item.pricePoints}</span>
+            <span lang="en" dir="ltr" className="latin-nums tabular-nums">
+              {item.pricePoints}
+            </span>
           </p>
           <button
             type="button"

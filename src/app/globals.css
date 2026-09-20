@@ -6,6 +6,23 @@
     scroll-behavior: smooth;
   }
 
+  /*
+   * Unify numerals to Western digits (0-9) on Arabic screens.
+   * Cairo / Tajawal / Plex Arabic otherwise substitute Eastern digits (٠-٩) via OpenType `locl`.
+   */
+  html.numerals-latn,
+  html.numerals-latn *:not(svg):not(svg *) {
+    -webkit-font-feature-settings: "locl" 0, "lnum" 1, "tnum" 1;
+    font-feature-settings: "locl" 0, "lnum" 1, "tnum" 1;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .latin-nums {
+    -webkit-font-feature-settings: "locl" 0, "lnum" 1, "tnum" 1 !important;
+    font-feature-settings: "locl" 0, "lnum" 1, "tnum" 1 !important;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
   body {
     min-height: 100vh;
     overflow-x: hidden;

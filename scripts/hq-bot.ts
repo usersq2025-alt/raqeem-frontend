@@ -245,6 +245,7 @@ function uiHtml(): string {
   <main>
     <h1>بوت المقر المحلي</h1>
     <p class="lead">اختر الأداة من البروتوكول، ارفع صورة الأداة وصورة المقر، والبوت يسميها ويضعها ويشغّل المزامنة. السعر جاهز من المتجر.</p>
+    <p id="serverStatus" class="warn" style="margin-top:0">جاري التحقق من السيرفر المحلي…</p>
 
     <label for="stage">الأداة / المرحلة</label>
     <select id="stage"></select>
@@ -270,11 +271,62 @@ function uiHtml(): string {
     const logEl = document.getElementById('log');
     const stageEl = document.getElementById('stage');
     const metaEl = document.getElementById('meta');
+    const statusEl = document.getElementById('serverStatus');
     let stages = [];
+    let deployPoll = null;
 
     function log(msg) {
       logEl.textContent = (logEl.textContent === 'جاهز.' ? '' : logEl.textContent + '\\n') + msg;
       logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function explainFetchError(e) {
+      const msg = e && e.message ? e.message : String(e);
+      if (msg === 'Failed to fetch' || msg === 'NetworkError when attempting to fetch resource.') {
+        return 'Failed to fetch — السيرفر المحلي متوقف أو أُغلق. شغّل HQ-BOT-UI.bat واترك نافذة CMD مفتوحة، ثم أعد تحميل هذه الصفحة.';
+      }
+      return msg;
+    }
+
+    async function pingServer() {
+      try {
+        const res = await fetch('/api/health', { cache: 'no-store' });
+        if (!res.ok) throw new Error('bad status');
+        statusEl.style.color = '#0f3d34';
+        statusEl.textContent = 'السيرفر المحلي يعمل على http://127.0.0.1:3921 — اترك نافذة CMD مفتوحة.';
+        return true;
+      } catch {
+        statusEl.style.color = 'var(--warn)';
+        statusEl.textContent = 'السيرفر المحلي غير متصل. شغّل HQ-BOT-UI.bat واترك النافذة مفتوحة.';
+        return false;
+      }
+    }
+
+    async function waitDeploy() {
+      log('النشر يعمل في الخلفية (قد يستغرق 1–3 دقائق)… راقب نافذة CMD أيضًا.');
+      for (let i = 0; i < 90; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        try {
+          const res = await fetch('/api/deploy-status', { cache: 'no-store' });
+          const data = await res.json();
+          if (data.status === 'running') {
+            if (i % 5 === 0) log('… ما زال النشر جاريًا');
+            continue;
+          }
+          if (data.status === 'ok') {
+            log('اكتمل النشر بنجاح.');
+            return;
+          }
+          if (data.status === 'error') {
+            throw new Error(data.error || 'فشل النشر');
+          }
+          // idle with no recent run
+          if (i > 2) return;
+        } catch (e) {
+          throw e;
+        }
+      }
+      throw new Error('انتهت مهلة انتظار النشر — تحقق من نافذة CMD');
     }
 
     function refreshMeta() {
@@ -329,6 +381,7 @@ function uiHtml(): string {
       logEl.textContent = '';
       log('رفع ومعالجة…');
       try {
+        if (!(await pingServer())) throw new Error('Failed to fetch');
         const body = {
           profession: 'doctor',
           stage,
@@ -343,10 +396,13 @@ function uiHtml(): string {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'فشل');
-        log(JSON.stringify(data, null, 2));
+        log(JSON.stringify({ ok: data.ok, result: data.result, deploy: data.deploy }, null, 2));
         await loadStages();
+        if (deploy && data.deploy && data.deploy.started) {
+          await waitDeploy();
+        }
       } catch (e) {
-        log('ERROR: ' + (e && e.message ? e.message : e));
+        log('ERROR: ' + explainFetchError(e));
       } finally {
         btn.disabled = false;
       }
@@ -356,8 +412,9 @@ function uiHtml(): string {
       const btn = document.getElementById('deployOnly');
       btn.disabled = true;
       logEl.textContent = '';
-      log('نشر الملفات الحالية…');
+      log('طلب النشر…');
       try {
+        if (!(await pingServer())) throw new Error('Failed to fetch');
         const res = await fetch('/api/deploy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -366,20 +423,46 @@ function uiHtml(): string {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'فشل النشر');
         log(JSON.stringify(data, null, 2));
+        if (data.deploy && data.deploy.started) await waitDeploy();
       } catch (e) {
-        log('ERROR: ' + (e && e.message ? e.message : e));
+        log('ERROR: ' + explainFetchError(e));
       } finally {
         btn.disabled = false;
       }
     });
 
-    loadStages().catch(e => log('فشل تحميل المراحل: ' + e.message));
+    pingServer();
+    setInterval(() => { void pingServer(); }, 8000);
+    loadStages().catch(e => log('فشل تحميل المراحل: ' + explainFetchError(e)));
   </script>
 </body>
 </html>`;
 }
 
 function startUiServer() {
+  let deployState: { status: "idle" | "running" | "ok" | "error"; error?: string } = {
+    status: "idle",
+  };
+
+  const runDeployBackground = (message: string) => {
+    if (deployState.status === "running") {
+      throw new Error("نشر آخر ما زال جاريًا — انتظر حتى ينتهي");
+    }
+    deployState = { status: "running" };
+    console.log("[deploy] starting:", message);
+    setImmediate(() => {
+      try {
+        startFrontendDeploy(message);
+        deployState = { status: "ok" };
+        console.log("[deploy] OK");
+      } catch (e) {
+        const error = e instanceof Error ? e.message : String(e);
+        deployState = { status: "error", error };
+        console.error("[deploy] FAIL:", error);
+      }
+    });
+  };
+
   const server = createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", `http://127.0.0.1:${UI_PORT}`);
 
@@ -398,6 +481,16 @@ function startUiServer() {
         return;
       }
 
+      if (req.method === "GET" && url.pathname === "/api/health") {
+        sendJson(200, { ok: true, port: UI_PORT });
+        return;
+      }
+
+      if (req.method === "GET" && url.pathname === "/api/deploy-status") {
+        sendJson(200, deployState);
+        return;
+      }
+
       if (req.method === "GET" && url.pathname === "/api/stages") {
         const profession = (url.searchParams.get("profession") || "doctor") as ProfessionCode;
         sendJson(200, { stages: listPlaceableStages(profession) });
@@ -412,8 +505,8 @@ function startUiServer() {
         const raw = Buffer.concat(chunks).toString("utf8");
         const body = (raw ? JSON.parse(raw) : {}) as { message?: string };
         try {
-          startFrontendDeploy(body.message || "hq: deploy current headquarters assets");
-          sendJson(200, { ok: true, deploy: { ok: true } });
+          runDeployBackground(body.message || "hq: deploy current headquarters assets");
+          sendJson(200, { ok: true, deploy: { started: true } });
         } catch (e) {
           sendJson(500, {
             ok: false,
@@ -457,11 +550,12 @@ function startUiServer() {
           sync: true,
         });
 
-        let deploy: { ok: boolean; error?: string } | null = null;
+        // Respond immediately — never block the browser on long VPS deploy.
+        let deploy: { started?: boolean; ok?: boolean; error?: string } | null = null;
         if (body.deploy) {
           try {
-            startFrontendDeploy(`hq: place ${profession} stage ${stage}`);
-            deploy = { ok: true };
+            runDeployBackground(`hq: place ${profession} stage ${stage}`);
+            deploy = { started: true };
           } catch (e) {
             deploy = { ok: false, error: e instanceof Error ? e.message : String(e) };
           }
@@ -477,6 +571,8 @@ function startUiServer() {
     }
   });
 
+  server.requestTimeout = 0;
+  server.headersTimeout = 0;
   server.listen(UI_PORT, "127.0.0.1", () => {
     const href = `http://127.0.0.1:${UI_PORT}`;
     console.log(`بوت المقر يعمل: ${href}`);
