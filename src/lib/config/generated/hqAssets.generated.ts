@@ -19,6 +19,7 @@ export const HQ_READY_ASSET_KEYS: readonly string[] = [
   "doctor:11",
   "doctor:12",
   "engineer:0",
+  "soldier:0",
   "teacher:0"
 ];
 
