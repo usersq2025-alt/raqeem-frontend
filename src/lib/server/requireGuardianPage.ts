@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
 import { requireParentSession } from "@/lib/server/requireParentSession";
+import { getMockGuardianState } from "@/lib/server/parentLaravel";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_AUTH !== "false";
@@ -19,19 +20,19 @@ export async function requireGuardianPage(): Promise<GuardianPageContext> {
   const session = await requireParentSession();
 
   if (USE_MOCK) {
+    const state = getMockGuardianState();
     return {
       session,
       guardian: {
-        pinSet: false,
-        unlocked: true,
-        pinLocked: false,
-        unlockTtlMinutes: 15,
+        pinSet: state.pin_set,
+        unlocked: state.unlocked,
+        pinLocked: state.pin_locked,
+        unlockTtlMinutes: state.unlock_ttl_minutes,
       },
     };
   }
 
-  const cookieStore = await cookies();
-  const token = parseSessionCookie(cookieStore.get(SESSION_COOKIE_NAME)?.value)?.token;
+  const token = parseSessionCookie((await cookies()).get(SESSION_COOKIE_NAME)?.value)?.token;
   if (!token) {
     return {
       session,

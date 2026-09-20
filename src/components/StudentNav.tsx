@@ -27,13 +27,16 @@ type Props = {
 export function StudentNav({ childId }: Props) {
   const t = useTranslations("student.nav");
   const tBrand = useTranslations("student");
+  const tGate = useTranslations("parentGate");
   const pathname = usePathname();
   const active = activeKey(pathname);
+  const mobileReturnRef = useRef<HTMLButtonElement>(null);
+  const [mobileGateOpen, setMobileGateOpen] = useState(false);
 
   return (
     <>
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-100 bg-white/95 px-2 pb-[max(0.55rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-100 bg-white/95 px-2 pb-[max(0.55rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur md:hidden"
         aria-label={t("aria")}
       >
         <ul className="flex items-stretch justify-between">
@@ -43,6 +46,21 @@ export function StudentNav({ childId }: Props) {
             </li>
           ))}
         </ul>
+        <div className="mt-1 flex justify-center px-2">
+          <button
+            ref={mobileReturnRef}
+            type="button"
+            className="min-h-9 w-full max-w-sm rounded-2xl border border-primary-orange/35 bg-[#FFF8F1] px-3 text-[11px] font-extrabold text-primary-orange focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
+            onClick={() => setMobileGateOpen(true)}
+          >
+            {tGate("returnToParent")}
+          </button>
+        </div>
+        <ParentGateModal
+          open={mobileGateOpen}
+          onClose={() => setMobileGateOpen(false)}
+          returnFocusRef={mobileReturnRef}
+        />
       </nav>
 
       <aside

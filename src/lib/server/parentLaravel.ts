@@ -5,7 +5,24 @@ import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCooki
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_AUTH !== "false";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
-function mockParentLaravel(path: string, body?: unknown): NextResponse {
+/** In-memory guardian unlock for mock auth (server process only). */
+let mockGuardianUnlocked = true;
+let mockPinSet = false;
+
+export function getMockGuardianState() {
+  return {
+    pin_set: mockPinSet,
+    unlocked: mockGuardianUnlocked,
+    pin_locked: false,
+    unlock_ttl_minutes: 15,
+  };
+}
+
+function mockParentLaravel(
+  path: string,
+  body?: unknown,
+  sessionParent?: { id: number; full_name?: string | null; email?: string | null }
+): NextResponse {
   if (path.includes("/parent/guardian-mode/verify-password")) {
     const password =
       body && typeof body === "object" && "password" in body
@@ -14,11 +31,12 @@ function mockParentLaravel(path: string, body?: unknown): NextResponse {
     if (!password) {
       return NextResponse.json({ message: "INVALID_CREDENTIALS", code: "INVALID_CREDENTIALS" }, { status: 422 });
     }
+    mockGuardianUnlocked = true;
     return NextResponse.json({
       message: "UNLOCKED",
       unlocked: true,
-      pin_set: false,
-      suggest_pin_setup: true,
+      pin_set: mockPinSet,
+      suggest_pin_setup: !mockPinSet,
       unlock_ttl_minutes: 15,
     });
   }
@@ -31,28 +49,26 @@ function mockParentLaravel(path: string, body?: unknown): NextResponse {
     if (!/^\d{4,6}$/.test(pin)) {
       return NextResponse.json({ message: "INVALID", code: "INVALID" }, { status: 422 });
     }
-    // Demo PIN for local mock: 1234
     if (pin !== "1234") {
       return NextResponse.json({ message: "INVALID", code: "INVALID" }, { status: 422 });
     }
+    mockGuardianUnlocked = true;
     return NextResponse.json({ message: "UNLOCKED", unlocked: true, unlock_ttl_minutes: 15 });
   }
 
   if (path.includes("/parent/guardian-mode/set-pin")) {
+    mockPinSet = true;
+    mockGuardianUnlocked = true;
     return NextResponse.json({ message: "PIN_SET", pin_set: true, unlocked: true });
   }
 
   if (path.includes("/parent/guardian-mode/lock")) {
+    mockGuardianUnlocked = false;
     return NextResponse.json({ message: "LOCKED", unlocked: false });
   }
 
   if (path.includes("/parent/guardian-mode") && !path.includes("verify") && !path.includes("set-pin")) {
-    return NextResponse.json({
-      pin_set: false,
-      unlocked: false,
-      pin_locked: false,
-      unlock_ttl_minutes: 15,
-    });
+    return NextResponse.json(getMockGuardianState());
   }
 
   if (path.includes("/parent/account/change-password")) {
@@ -60,16 +76,20 @@ function mockParentLaravel(path: string, body?: unknown): NextResponse {
   }
 
   if (path.includes("/parent/account")) {
+    const nameFromBody =
+      body && typeof body === "object" && "full_name" in body
+        ? String((body as { full_name?: unknown }).full_name ?? "")
+        : "";
     return NextResponse.json({
-      id: 1,
+      id: sessionParent?.id ?? 1,
       public_id: "RQMP-000001",
-      full_name: "ولي الأمر",
-      email: "parent@example.com",
+      full_name: nameFromBody || sessionParent?.full_name || "ولي الأمر",
+      email: sessionParent?.email ?? "parent@example.com",
       phone: null,
       preferred_locale: "ar",
       created_at: new Date().toISOString(),
-      pin_set: false,
-      guardian_unlocked: true,
+      pin_set: mockPinSet,
+      guardian_unlocked: mockGuardianUnlocked,
     });
   }
 
@@ -91,7 +111,7 @@ export async function parentLaravelGet(path: string, timeoutMs: number): Promise
   }
 
   if (USE_MOCK) {
-    return mockParentLaravel(path);
+    return mockParentLaravel(path, undefined, session.parent);
   }
 
   try {
@@ -139,7 +159,7 @@ async function parentLaravelWrite(
   }
 
   if (USE_MOCK) {
-    return mockParentLaravel(path, body);
+    return mockParentLaravel(path, body, session.parent);
   }
 
   try {

@@ -47,7 +47,7 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
+    <div className="w-full min-w-0 max-w-full space-y-4 md:mx-auto md:max-w-2xl">
       <header className="rounded-[28px] bg-white p-5 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.35)] sm:p-6">
         <h1 className="text-2xl font-extrabold text-text-navy">{t("title")}</h1>
         <p className="mt-1.5 text-sm font-medium leading-relaxed text-text-gray sm:text-base">{t("subtitle")}</p>
@@ -85,16 +85,18 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
         <h2 className="text-lg font-extrabold text-text-navy">{t("display.title")}</h2>
         <fieldset className="mt-4">
           <legend className="text-sm font-extrabold text-text-navy">{t("display.textSize")}</legend>
-          <div className="mt-2 grid grid-cols-3 gap-2">
+          <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label={t("display.textSize")}>
             {(["default", "large", "xlarge"] as TextSizePref[]).map((size) => (
               <button
                 key={size}
                 type="button"
-                className={`min-h-11 rounded-2xl px-2 text-sm font-extrabold ${
+                role="radio"
+                className={`min-h-11 rounded-2xl px-2 text-sm font-extrabold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold ${
                   prefs.textSize === size
                     ? "bg-[#FFF1E4] text-primary-orange ring-2 ring-brand-gold"
-                    : "bg-neutral-50 text-text-navy"
+                    : "bg-neutral-50 text-text-navy hover:bg-neutral-100"
                 }`}
+                aria-checked={prefs.textSize === size}
                 aria-pressed={prefs.textSize === size}
                 onClick={() => update({ textSize: size })}
               >
@@ -106,14 +108,18 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
         <fieldset className="mt-4">
           <legend className="text-sm font-extrabold text-text-navy">{t("display.contrast")}</legend>
           <p className="mt-1 text-xs font-medium text-text-gray">{t("display.contrastHint")}</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="mt-2 grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("display.contrast")}>
             {(["default", "high"] as ContrastPref[]).map((c) => (
               <button
                 key={c}
                 type="button"
-                className={`min-h-11 rounded-2xl text-sm font-extrabold ${
-                  prefs.contrast === c ? "bg-[#FFF1E4] text-primary-orange ring-2 ring-brand-gold" : "bg-neutral-50"
+                role="radio"
+                className={`min-h-11 rounded-2xl text-sm font-extrabold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold ${
+                  prefs.contrast === c
+                    ? "bg-[#FFF1E4] text-primary-orange ring-2 ring-brand-gold"
+                    : "bg-neutral-50 hover:bg-neutral-100"
                 }`}
+                aria-checked={prefs.contrast === c}
                 aria-pressed={prefs.contrast === c}
                 onClick={() => update({ contrast: c })}
               >
@@ -133,11 +139,13 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
 
       <section className="rounded-[28px] bg-white p-5 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.28)]">
         <h2 className="text-lg font-extrabold text-text-navy">{t("language.title")}</h2>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label={t("language.title")}>
           <button
             type="button"
-            className={`min-h-11 rounded-2xl px-4 text-sm font-extrabold ${
-              locale.startsWith("ar") ? "bg-[#FFF1E4] text-primary-orange" : "bg-neutral-50"
+            role="radio"
+            aria-checked={locale.startsWith("ar")}
+            className={`min-h-11 rounded-2xl px-4 text-sm font-extrabold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold ${
+              locale.startsWith("ar") ? "bg-[#FFF1E4] text-primary-orange" : "bg-neutral-50 hover:bg-neutral-100"
             }`}
             onClick={() => setLocale("ar")}
           >
@@ -145,8 +153,10 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
           </button>
           <button
             type="button"
-            className={`min-h-11 rounded-2xl px-4 text-sm font-extrabold ${
-              locale.startsWith("en") ? "bg-[#FFF1E4] text-primary-orange" : "bg-neutral-50"
+            role="radio"
+            aria-checked={locale.startsWith("en")}
+            className={`min-h-11 rounded-2xl px-4 text-sm font-extrabold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold ${
+              locale.startsWith("en") ? "bg-[#FFF1E4] text-primary-orange" : "bg-neutral-50 hover:bg-neutral-100"
             }`}
             onClick={() => setLocale("en")}
           >

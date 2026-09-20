@@ -31,8 +31,7 @@ function LanguageSwitcherControl() {
         ].join(" ")}
         aria-current={locale === "ar" ? "true" : undefined}
       >
-        <span className="sm:hidden">AR</span>
-        <span className="hidden sm:inline">{t("langAr")}</span>
+        <span>{t("langAr")}</span>
       </Link>
       <span className="px-0.5 text-brand-navy/25 sm:px-1" aria-hidden="true">
         |
@@ -49,8 +48,7 @@ function LanguageSwitcherControl() {
         ].join(" ")}
         aria-current={locale === "en" ? "true" : undefined}
       >
-        <span className="sm:hidden">EN</span>
-        <span className="hidden sm:inline">{t("langEn")}</span>
+        <span>{t("langEn")}</span>
       </Link>
     </div>
   );

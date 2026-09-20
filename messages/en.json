@@ -912,6 +912,7 @@
       "unlocking": "Verifying…",
       "pinPlaceholder": "Parent PIN",
       "passwordPlaceholder": "Account password",
+      "passwordHint": "You have not set a parent PIN yet, so we ask for the same login password you use for Raqeem.",
       "required": "Unlock parent mode to save these changes.",
       "errors": {
         "invalidPassword": "Incorrect password.",
@@ -939,6 +940,8 @@
       "memberSince": "Member since {date}",
       "locale": "Preferred language",
       "fullName": "Full name",
+      "unnamed": "Parent",
+      "noEmail": "No email on file yet",
       "emailPhoneGap": "Changing email or phone requires verified OTP — that flow is not available yet in the app."
     },
     "children": {
@@ -957,7 +960,9 @@
       "save": "Save",
       "saving": "Saving…",
       "enter": "Enter child profile",
-      "add": "Add a child",
+      "manage": "Manage child profile",
+      "add": "Add a new child",
+      "empty": "No children linked to this account yet.",
       "name": "Child name",
       "grade": "Grade",
       "gradeWarn": "Changing grade may change available curriculum. Achievements and purchases are kept.",
@@ -975,10 +980,11 @@
       "lead": "Weekly lesson goal applies to the selected child.",
       "goalTitle": "Weekly goal",
       "goalHint": "Motivational only — does not block extra lessons.",
+      "needChild": "Add a child first to set a weekly goal.",
       "presets": {
-        "3": "Light: 3",
-        "5": "Balanced: 5",
-        "7": "Active: 7"
+        "3": "Light: 3 lessons",
+        "5": "Balanced: 5 lessons",
+        "7": "Active: 7 lessons"
       },
       "custom": "Custom",
       "customInvalid": "Enter a number from 1 to 21."
@@ -1034,6 +1040,8 @@
     "backToFamily": "Back to children",
     "backSections": "← All sections",
     "saved": "Preferences saved",
+    "savedChanges": "Changes saved",
+    "retry": "Retry",
     "loadError": "Could not load settings.",
     "comingSoonBadge": "Coming soon",
     "cancel": "Cancel",
@@ -1045,18 +1053,29 @@
       "saveFailed": "Could not save. Try again."
     }
   },
+  "familyHelp": {
+    "title": "Family help",
+    "lead": "Short answers about Raqeem, points, and headquarters.",
+    "back": "Back to settings",
+    "faqTitle": "Frequently asked questions",
+    "faqBody": "Create one parent account, add a profile for each child, and choose a profession and grade. The child learns in student space while account settings stay under your control.",
+    "pointsTitle": "How points work",
+    "pointsBody": "Children earn points by completing lessons and challenges. Points are used in the store and headquarters to motivate progress and are not school grades.",
+    "hqTitle": "Professional headquarters",
+    "hqBody": "Headquarters is a space the child decorates around their chosen profession. Progress there reflects learning achievements in a visual, playful way."
+  },
   "experiencePrefs": {
     "title": "Experience preferences",
     "subtitle": "Sound and display options for this device. They do not change parent account settings.",
     "sound": {
       "title": "Sound",
       "sfx": "Button & lesson sounds",
-      "celebration": "Celebrations & confetti",
+      "celebration": "Celebration sounds and effects",
       "lead": "Effects play during lessons and celebrations. Background music is not available yet."
     },
     "display": {
       "title": "Display",
-      "deviceNote": "Stored locally under raqeem:experience-prefs on this browser.",
+      "deviceNote": "Saved on this device only and does not change the parent account.",
       "textSize": "Text size",
       "textSize_default": "Default",
       "textSize_large": "Large",
@@ -1077,7 +1096,7 @@
       "report": "Report a problem",
       "reportHint": "For account changes, ask a parent to use family settings from the children hub."
     },
-    "saved": "Preferences saved"
+    "saved": "Preference saved on this device"
   },
   "parentGate": {
     "title": "Enter parent mode",
