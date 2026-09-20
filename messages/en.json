@@ -1051,8 +1051,8 @@
     "sound": {
       "title": "Sound",
       "sfx": "Button & lesson sounds",
-      "music": "Background music (when available)",
-      "celebration": "Celebrations & confetti"
+      "celebration": "Celebrations & confetti",
+      "lead": "Effects play during lessons and celebrations. Background music is not available yet."
     },
     "display": {
       "title": "Display",
@@ -1064,7 +1064,8 @@
       "contrast": "Contrast",
       "contrast_default": "Default",
       "contrast_high": "High",
-      "reduceMotion": "Reduce motion"
+      "reduceMotion": "Reduce motion",
+      "contrastHint": "High contrast darkens text and strengthens borders."
     },
     "language": {
       "title": "Language",
@@ -1102,7 +1103,8 @@
       "pinFormat": "PIN must be 4–6 digits.",
       "generic": "Could not verify. Try again.",
       "locked": "PIN is temporarily locked.",
-      "setupFailed": "Could not verify. Try again."
+      "setupFailed": "Could not verify. Try again.",
+      "unavailable": "Could not reach the verification service. Check the server and try again."
     },
     "lead": "Confirm you are the parent or guardian to leave this child profile.",
     "setupPinLead": "Set a quick PIN next time so you do not need your full password.",
@@ -1111,6 +1113,7 @@
     "continue": "Continue",
     "checking": "Verifying…",
     "usePassword": "Use password instead",
-    "skipPin": "Skip for now"
+    "skipPin": "Skip for now",
+    "passwordHint": "You have not set a parent PIN yet, so we ask for the same login password you use for Raqeem."
   }
 }

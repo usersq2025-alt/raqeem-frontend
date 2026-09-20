@@ -4,8 +4,12 @@ import { readExperiencePrefs } from "@/lib/experience/experiencePrefs";
 export function playUiTone(kind: "click" | "pop" | "success" | "soft") {
   if (typeof window === "undefined") return;
   const prefs = readExperiencePrefs();
-  if (!prefs.sfx) return;
   if (prefs.reduceMotion || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (kind === "success") {
+    if (!prefs.celebration) return;
+  } else if (!prefs.sfx) {
+    return;
+  }
   try {
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const ctx = new Ctx();

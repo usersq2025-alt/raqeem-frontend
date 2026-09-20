@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import {
   applyExperiencePrefs,
@@ -12,7 +12,7 @@ import {
   type TextSizePref,
   type ContrastPref,
 } from "@/lib/experiencePrefs";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { playUiTone } from "@/lib/play/uiSounds";
 
 type Props = { childId: number };
 
@@ -60,20 +60,29 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
 
       <section className="rounded-[28px] bg-white p-5 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.28)]">
         <h2 className="text-lg font-extrabold text-text-navy">{t("sound.title")}</h2>
+        <p className="mt-1 text-sm font-medium text-text-gray">{t("sound.lead")}</p>
         <ul className="mt-4 space-y-3">
-          <ToggleRow label={t("sound.sfx")} checked={prefs.sfx} onChange={(sfx) => update({ sfx })} />
-          <ToggleRow label={t("sound.music")} checked={prefs.music} onChange={(music) => update({ music })} />
+          <ToggleRow
+            label={t("sound.sfx")}
+            checked={prefs.sfx}
+            onChange={(sfx) => {
+              update({ sfx });
+              if (sfx) playUiTone("click");
+            }}
+          />
           <ToggleRow
             label={t("sound.celebration")}
             checked={prefs.celebration}
-            onChange={(celebration) => update({ celebration })}
+            onChange={(celebration) => {
+              update({ celebration });
+              if (celebration) playUiTone("success");
+            }}
           />
         </ul>
       </section>
 
       <section className="rounded-[28px] bg-white p-5 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.28)]">
         <h2 className="text-lg font-extrabold text-text-navy">{t("display.title")}</h2>
-        <p className="mt-1 text-sm text-text-gray">{t("display.deviceNote")}</p>
         <fieldset className="mt-4">
           <legend className="text-sm font-extrabold text-text-navy">{t("display.textSize")}</legend>
           <div className="mt-2 grid grid-cols-3 gap-2">
@@ -96,13 +105,14 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
         </fieldset>
         <fieldset className="mt-4">
           <legend className="text-sm font-extrabold text-text-navy">{t("display.contrast")}</legend>
+          <p className="mt-1 text-xs font-medium text-text-gray">{t("display.contrastHint")}</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {(["default", "high"] as ContrastPref[]).map((c) => (
               <button
                 key={c}
                 type="button"
                 className={`min-h-11 rounded-2xl text-sm font-extrabold ${
-                  prefs.contrast === c ? "bg-[#FFF1E4] text-primary-orange" : "bg-neutral-50"
+                  prefs.contrast === c ? "bg-[#FFF1E4] text-primary-orange ring-2 ring-brand-gold" : "bg-neutral-50"
                 }`}
                 aria-pressed={prefs.contrast === c}
                 onClick={() => update({ contrast: c })}
@@ -123,7 +133,6 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
 
       <section className="rounded-[28px] bg-white p-5 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.28)]">
         <h2 className="text-lg font-extrabold text-text-navy">{t("language.title")}</h2>
-        <p className="mt-1 text-sm text-text-gray">{t("language.hint")}</p>
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
@@ -144,26 +153,6 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
             English
           </button>
         </div>
-        <div className="mt-3">
-          <LanguageSwitcher />
-        </div>
-      </section>
-
-      <section className="rounded-[28px] bg-white p-5 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.28)]">
-        <h2 className="text-lg font-extrabold text-text-navy">{t("help.title")}</h2>
-        <ul className="mt-3 space-y-2">
-          <li>
-            <Link href="/contact" className="flex min-h-11 items-center rounded-2xl bg-neutral-50 px-4 text-sm font-extrabold text-text-navy">
-              {t("help.howTo")}
-            </Link>
-          </li>
-          <li>
-            <Link href="/contact" className="flex min-h-11 items-center rounded-2xl bg-neutral-50 px-4 text-sm font-extrabold text-text-navy">
-              {t("help.report")}
-            </Link>
-            <p className="mt-1 px-1 text-xs font-medium text-text-gray">{t("help.reportHint")}</p>
-          </li>
-        </ul>
       </section>
     </div>
   );

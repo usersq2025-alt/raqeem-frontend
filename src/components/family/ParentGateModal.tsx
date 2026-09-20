@@ -4,7 +4,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { Button } from "@/components/ui/Button";
 import { FieldInput, LockIcon } from "@/components/ui/FieldInput";
 import {
   getGuardianStatus,
@@ -54,7 +53,7 @@ export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
         if (!cancelled) setStatus(next);
       })
       .catch(() => {
-        if (!cancelled) setStatus(null);
+        if (!cancelled) setStatus({ pinSet: false, unlocked: false, pinLocked: false, unlockTtlMinutes: 15, pin_set: false, pin_locked: false, unlock_ttl_minutes: 15 });
       });
     return () => {
       cancelled = true;
@@ -113,8 +112,9 @@ export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
           ? String((caught as { code: string }).code)
           : "NETWORK";
       if (code === "INVALID_CREDENTIALS") setError(t("errors.invalidPassword"));
-      else if (code === "INVALID_PIN" || code === "WRONG_PIN") setError(t("errors.invalidPin"));
+      else if (code === "INVALID" || code === "INVALID_PIN" || code === "WRONG_PIN") setError(t("errors.invalidPin"));
       else if (code === "LOCKED") setError(t("errors.pinLocked"));
+      else if (code === "NETWORK" || code === "501" || code === "mock") setError(t("errors.unavailable"));
       else setError(t("errors.generic"));
     } finally {
       setBusy(false);
@@ -158,19 +158,29 @@ export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
   const usePin = Boolean(status?.pinSet);
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-[#1A2B47]/45 px-4 pb-8 pt-10 sm:items-center sm:pb-10">
+    <div
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-[#1A2B47]/50 px-4 pb-6 pt-10 sm:items-center sm:pb-10"
+      onClick={(event) => {
+        if (event.target === event.currentTarget && !busy) onClose();
+      }}
+    >
       <div
         ref={panelRef}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="w-full max-w-md rounded-[28px] bg-white px-5 pb-5 pt-6 shadow-[0_24px_50px_-24px_rgba(26,43,71,0.55)] outline-none"
+        className="w-full max-w-[22rem] overflow-hidden rounded-[28px] bg-white p-5 shadow-[0_24px_50px_-24px_rgba(26,43,71,0.55)] outline-none sm:max-w-md sm:p-6"
       >
         <h2 id={titleId} className="text-center text-xl font-extrabold text-text-navy">
           {t("title")}
         </h2>
-        <p className="mt-2 text-center text-sm font-semibold text-text-gray">{t("subtitle")}</p>
+        <p className="mt-2 text-center text-sm font-semibold leading-relaxed text-text-gray">{t("subtitle")}</p>
+        {!usePin && step === "auth" ? (
+          <p className="mt-3 rounded-2xl bg-[#FFF8F1] px-3 py-2 text-center text-xs font-semibold leading-relaxed text-text-navy">
+            {t("passwordHint")}
+          </p>
+        ) : null}
 
         {step === "auth" ? (
           <form className="mt-5 space-y-3" onSubmit={handleSubmitAuth}>
@@ -214,13 +224,22 @@ export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
               <p className="text-sm font-semibold text-red-600">{t("errors.pinLocked")}</p>
             ) : null}
             {error ? <p className="text-sm font-semibold text-red-600">{error}</p> : null}
-            <div className="flex gap-2 pt-1">
-              <Button type="button" variant="secondary" className="flex-1" disabled={busy} onClick={onClose}>
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button
+                type="button"
+                disabled={busy}
+                className="min-h-12 w-full rounded-full border-2 border-primary-orange bg-white px-3 text-sm font-extrabold text-primary-orange disabled:opacity-45"
+                onClick={onClose}
+              >
                 {t("cancel")}
-              </Button>
-              <Button type="submit" className="flex-1" disabled={busy || Boolean(status?.pinLocked)}>
+              </button>
+              <button
+                type="submit"
+                disabled={busy || Boolean(status?.pinLocked) || (usePin ? pin.length < 4 : password.length < 1)}
+                className="min-h-12 w-full rounded-full bg-primary-orange px-3 text-sm font-extrabold text-white disabled:opacity-45"
+              >
                 {busy ? t("verifying") : t("confirm")}
-              </Button>
+              </button>
             </div>
           </form>
         ) : null}
@@ -229,12 +248,20 @@ export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
           <div className="mt-5 space-y-3">
             <p className="text-sm font-semibold leading-relaxed text-text-gray">{t("suggestPinBody")}</p>
             <div className="flex flex-col gap-2">
-              <Button type="button" onClick={() => setStep("setPin")}>
+              <button
+                type="button"
+                className="min-h-12 w-full rounded-full bg-primary-orange text-sm font-extrabold text-white"
+                onClick={() => setStep("setPin")}
+              >
                 {t("suggestPinCta")}
-              </Button>
-              <Button type="button" variant="secondary" onClick={finishToHub}>
+              </button>
+              <button
+                type="button"
+                className="min-h-12 w-full rounded-full border-2 border-primary-orange bg-white text-sm font-extrabold text-primary-orange"
+                onClick={finishToHub}
+              >
                 {t("suggestPinSkip")}
-              </Button>
+              </button>
             </div>
           </div>
         ) : null}
@@ -290,9 +317,13 @@ export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
               />
             </div>
             {error ? <p className="text-sm font-semibold text-red-600">{error}</p> : null}
-            <Button type="submit" className="w-full" disabled={busy}>
+            <button
+              type="submit"
+              disabled={busy}
+              className="min-h-12 w-full rounded-full bg-primary-orange text-sm font-extrabold text-white disabled:opacity-45"
+            >
               {busy ? t("savingPin") : t("savePin")}
-            </Button>
+            </button>
           </form>
         ) : null}
       </div>
