@@ -2203,7 +2203,106 @@
   }
 }
 
-/* —— How-it-works journey path —— */
+/* —— How-it-works: Dream Path Journey —— */
+.dream-path-section {
+  background:
+    radial-gradient(ellipse 48% 42% at 88% 8%, rgba(248, 200, 48, 0.11), transparent 62%),
+    radial-gradient(ellipse 42% 38% at 8% 92%, rgba(45, 190, 161, 0.08), transparent 60%),
+    #faf6ec;
+}
+
+.dream-path-glow {
+  position: absolute;
+  border-radius: 58% 42% 48% 52% / 42% 58% 42% 58%;
+  pointer-events: none;
+}
+
+.dream-path-glow-a {
+  top: -3rem;
+  right: -4rem;
+  width: 13rem;
+  height: 10rem;
+  background: #f8c830;
+  opacity: 0.12;
+}
+
+.dream-path-glow-b {
+  bottom: -3rem;
+  left: -3.5rem;
+  width: 12rem;
+  height: 9rem;
+  background: #2dbea1;
+  opacity: 0.1;
+}
+
+.dream-path-mirror {
+  transform: scaleX(-1);
+}
+
+.dream-path-progress {
+  transition: stroke-dashoffset 320ms ease;
+}
+
+.dream-path-pointer {
+  width: 0;
+  height: 0;
+  border-left: 0.45rem solid transparent;
+  border-right: 0.45rem solid transparent;
+  border-top: 0.55rem solid #f29a0c;
+}
+
+.dream-path-fade {
+  animation: dream-path-fade 300ms ease both;
+}
+
+.dream-path-mobile-rail {
+  pointer-events: none;
+  position: absolute;
+  inset-inline-start: 1.25rem;
+  top: 1.4rem;
+  bottom: 1.4rem;
+  width: 0.28rem;
+  border-radius: 999px;
+  background: rgba(0, 56, 144, 0.12);
+  overflow: hidden;
+}
+
+.dream-path-mobile-rail > span {
+  display: block;
+  width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(180deg, #f8c830, #f29a0c);
+  transition: height 320ms ease;
+}
+
+@keyframes dream-path-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dream-path-progress,
+  .dream-path-mobile-rail > span,
+  .dream-path-station span {
+    transition: none !important;
+  }
+
+  .dream-path-fade {
+    animation: none !important;
+  }
+
+  .dream-path-station--active span {
+    transform: none !important;
+  }
+}
+
+/* Legacy journey classes kept for any residual references */
 .journey-section {
   background:
     radial-gradient(ellipse 48% 42% at 88% 8%, rgba(248, 200, 48, 0.1), transparent 62%),
@@ -2316,7 +2415,6 @@
   box-shadow: 0 0 0 3px rgba(250, 246, 236, 0.9);
 }
 
-/* Chevrons pointing left = next step in RTL reading flow (right → left) */
 .journey-rail-arrow {
   position: absolute;
   top: 50%;

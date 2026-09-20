@@ -48,6 +48,9 @@
     },
     "how": {
       "title": "How does your child's journey begin on Raqeem?",
+      "badge": "Four simple steps",
+      "pathLabel": "Interactive dream path",
+      "stepLabel": "Step {n}",
       "subtitle": "Four simple steps that turn lesson review into a journey where your child progresses and builds their dream.",
       "summaryLine": "Create their profile, choose a career, review lessons, then watch their HQ grow.",
       "steps": {

@@ -17,21 +17,17 @@ import {
   LANDING_SAFETY_POINTS,
   LANDING_SHOTS,
   LANDING_SHOWCASE_TABS,
-  LANDING_STEPS,
   LANDING_SUBJECTS,
   LANDING_VALUE_CARDS,
   RAQEEM_CONTACT_EMAIL,
 } from "@/config/landing";
 import { LandingCta } from "@/components/landing/LandingCta";
 import { BeforeAfterCompare } from "@/components/landing/BeforeAfterCompare";
+import { DreamPathJourney } from "@/components/landing/DreamPathJourney";
 import {
   BookIcon,
-  BuildStepIcon,
-  CareerStepIcon,
-  ChildStepIcon,
   GiftIcon,
   LockIcon,
-  ReviewStepIcon,
   ShieldIcon,
   SparkIcon,
   UsersIcon,
@@ -217,115 +213,7 @@ export function ValueCardsSection() {
 }
 
 export function HowItWorksSection() {
-  const t = useTranslations("welcome.how");
-  const [open, setOpen] = useState(0);
-  const baseId = useId();
-
-  const icons = {
-    child: ChildStepIcon,
-    career: CareerStepIcon,
-    review: ReviewStepIcon,
-    build: BuildStepIcon,
-  } as const;
-
-  const accents = {
-    navy: { ring: "ring-[#003890]/25", iconBg: "bg-[#003890]/10 text-[#003890]" },
-    coral: { ring: "ring-[#EA576B]/30", iconBg: "bg-[#EA576B]/12 text-[#EA576B]" },
-    teal: { ring: "ring-[#2DBEA1]/30", iconBg: "bg-[#2DBEA1]/12 text-[#2DBEA1]" },
-    purple: { ring: "ring-[#865EC9]/30", iconBg: "bg-[#865EC9]/12 text-[#865EC9]" },
-  } as const;
-
-  return (
-    <section id="how" className="journey-section relative z-10 scroll-mt-24 overflow-hidden py-9 sm:py-11 md:py-12">
-      <div className={`relative z-10 mx-auto ${LANDING_MAX_WIDTH} px-5 sm:px-8 lg:px-10`}>
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-sans text-[1.75rem] font-black leading-tight text-[#002264] sm:text-[2rem] md:text-[2.2rem]">
-            {t("title")}
-          </h2>
-          <p className="mx-auto mt-2 max-w-xl font-body text-base font-medium leading-[1.8] text-[#334E6E] sm:text-lg">
-            {t("summaryLine")}
-          </p>
-        </div>
-
-        {/* Desktop interactive path */}
-        <ol className="relative mt-7 hidden md:grid md:grid-cols-4 md:gap-3 lg:gap-4">
-          <div className="journey-rail !top-[2.75rem]" aria-hidden="true">
-            <span className="journey-rail-line" />
-          </div>
-          {LANDING_STEPS.map((step, index) => {
-            const Icon = icons[step.icon];
-            const accent = accents[step.accent];
-            return (
-              <li key={step.key} className="relative flex flex-col pt-6">
-                <article
-                  className={`journey-card relative flex h-full min-h-[13.5rem] flex-col rounded-[24px] bg-white px-4 pb-5 pt-9 ring-1 ${accent.ring}`}
-                >
-                  <span className="absolute left-1/2 top-0 z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
-                    <span className={`inline-flex h-14 w-14 items-center justify-center rounded-full ${accent.iconBg}`}>
-                      <Icon className="h-7 w-7" />
-                    </span>
-                    <span className="-mt-1.5 inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[#F8C830] px-1.5 font-data text-xs font-extrabold text-[#002264] ring-4 ring-[#FAF6EC]">
-                      {index + 1}
-                    </span>
-                  </span>
-                  <h3 className="mt-6 text-center text-base font-extrabold text-[#002264] lg:text-lg">
-                    {t(`steps.${step.key}.title`)}
-                  </h3>
-                  <p className="mt-2 flex-1 text-center font-body text-base font-medium leading-[1.7] text-[#3A5270]">
-                    {t(`steps.${step.key}.body`)}
-                  </p>
-                </article>
-              </li>
-            );
-          })}
-        </ol>
-
-        {/* Mobile timeline accordion */}
-        <ol className="relative mt-6 space-y-3 md:hidden">
-          <div className="journey-mobile-rail !top-4 !bottom-4" aria-hidden="true" />
-          {LANDING_STEPS.map((step, index) => {
-            const Icon = icons[step.icon];
-            const accent = accents[step.accent];
-            const expanded = open === index;
-            const panelId = `${baseId}-mob-${step.key}`;
-            return (
-              <li key={step.key} className="relative ps-12">
-                <span className="absolute start-0 top-3 z-10 flex flex-col items-center">
-                  <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full ${accent.iconBg}`}>
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <span className="mt-1 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-[#F8C830] px-1 font-data text-[0.7rem] font-extrabold text-[#002264]">
-                    {index + 1}
-                  </span>
-                </span>
-                <div className={`rounded-[22px] bg-white ring-1 ${accent.ring}`}>
-                  <button
-                    type="button"
-                    className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-3 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-inset"
-                    aria-expanded={expanded}
-                    aria-controls={panelId}
-                    onClick={() => setOpen(index)}
-                  >
-                    <h3 className="text-lg font-extrabold text-[#002264]">{t(`steps.${step.key}.title`)}</h3>
-                    <span aria-hidden="true" className="text-brand-navy/50">
-                      {expanded ? "−" : "+"}
-                    </span>
-                  </button>
-                  <div
-                    id={panelId}
-                    hidden={!expanded}
-                    className="border-t border-brand-navy/8 px-4 pb-4 pt-2 font-body text-base font-medium leading-[1.8] text-[#3A5270]"
-                  >
-                    {t(`steps.${step.key}.body`)}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      </div>
-    </section>
-  );
+  return <DreamPathJourney />;
 }
 
 export function ProductJourneyShowcase() {
