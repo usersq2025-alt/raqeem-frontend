@@ -58,7 +58,7 @@ export const LANDING_SHOTS = {
   studentPath: "/images/landing/student-lesson-path.png",
   parentHub: "/images/landing/raqeem-parent-multiple-children-showcase-v2.png",
   hqBefore: "/images/headquarters/doctor/stages/stage-00-empty.png",
-  hqAfter: "/images/headquarters/doctor/stages/stage-01-heartbeat-rug.png",
+  hqAfter: "/images/headquarters/doctor/stages/stage-12-achievement-shelf.png",
 } as const;
 
 export const LANDING_SHOWCASE_TABS = [

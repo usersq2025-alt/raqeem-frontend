@@ -85,10 +85,12 @@
       "tabsLabel": "Product experience sections",
       "soon": "In development",
       "compare": {
-        "before": "Before",
-        "after": "After",
+        "before": "Before building",
+        "after": "After building",
         "toggleLabel": "Compare the empty HQ with the furnished HQ",
-        "sliderLabel": "Drag to compare the empty clinic with the furnished clinic"
+        "sliderLabel": "Interactive comparison: drag the handle between before and after building",
+        "hint": "Drag the handle to see how your child builds their dream HQ",
+        "valueText": "Handle at {percent}%"
       },
       "tabs": {
         "progress": {

@@ -6,6 +6,7 @@
     "sync:hq": "npx tsx scripts/sync-hq-assets.ts",
     "hq:bot": "npx tsx scripts/hq-bot.ts",
     "hq:place": "npx tsx scripts/hq-bot.ts",
+    "dup:bot": "npx tsx scripts/dup-bot.ts",
     "predev": "npm run sync:hq",
     "prebuild": "npm run sync:hq",
     "dev": "next dev",

@@ -47,3 +47,6 @@ __pycache__/
 # local HQ bot drop zone (optional)
 /hq-inbox/*
 !/hq-inbox/.gitkeep
+
+# duplication bot reports
+/reports/

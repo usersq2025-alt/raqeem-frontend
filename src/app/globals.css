@@ -2414,11 +2414,25 @@
 
 .landing-compare {
   cursor: ew-resize;
+  touch-action: none;
+  overscroll-behavior-x: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.landing-compare img {
+  -webkit-user-drag: none;
+}
+
+.landing-compare-handle {
+  touch-action: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .landing-compare,
   .landing-compare * {
     transition: none !important;
+    animation: none !important;
   }
 }
 
