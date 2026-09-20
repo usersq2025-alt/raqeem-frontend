@@ -50,3 +50,7 @@ __pycache__/
 
 # duplication bot reports
 /reports/
+
+# leftover editor/agent scratch files
+.tmp*
+**/.tmp*

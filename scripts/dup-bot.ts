@@ -127,6 +127,10 @@ function ignoreCsv(): string {
     "**/messages/*.json",
     "**/src/lib/config/generated/**",
     "**/scripts/hq-bot-ui.html",
+    "**/.tmp*",
+    "**/.tmp-*/**",
+    "**/reports/**",
+    "**/config/database.php",
   ].join(",");
 }
 
