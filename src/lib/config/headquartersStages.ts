@@ -19,6 +19,10 @@ import {
   isHqAssetReady,
 } from "@/lib/config/generated/hqAssets.generated";
 import {
+  getRemoteHeadquartersStages,
+  isRemoteHqAssetReady,
+} from "@/lib/api/headquartersCatalog";
+import {
   PROFESSION_CODES,
   type ProfessionCode,
   isProfessionCode,
@@ -58,6 +62,8 @@ export function getStagesForProfession(
   profession: string | null | undefined
 ): HeadquartersStageDefinition[] {
   if (!isProfessionCode(profession)) return [];
+  const remote = getRemoteHeadquartersStages(profession);
+  if (remote && remote.length > 0) return remote;
   return HEADQUARTERS_STAGES_BY_PROFESSION[profession] ?? [];
 }
 
@@ -69,6 +75,8 @@ export function findStageByNumber(
 }
 
 export function stageHasAssets(stage: HeadquartersStageDefinition): boolean {
+  const remote = isRemoteHqAssetReady(stage.profession, stage.stage);
+  if (remote !== null) return remote;
   return isHqAssetReady(stage.profession, stage.stage);
 }
 

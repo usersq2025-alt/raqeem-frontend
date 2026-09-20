@@ -77,13 +77,13 @@ check("after owning heartbeat_rug, stage becomes 1", () => {
   );
 });
 
-check("stage 2 is not offered while assets missing", () => {
-  assert.equal(isHqAssetReady("doctor", 2), false);
+check("stage 2+ ready when disk assets exist", () => {
+  assert.equal(isHqAssetReady("doctor", 2), true);
   const resolved = resolveHeadquartersStage(["heartbeat_rug"], "doctor");
-  assert.equal(resolved.nextStage, null);
-  assert.equal(resolved.nextRequiredStoreSlotKey, null);
-  assert.equal(resolved.nextStagePendingAssets, true);
-  assert.equal(getNextRequiredItem(["heartbeat_rug"], "doctor"), null);
+  assert.equal(resolved.nextRequiredStoreSlotKey, "doctor_desk");
+  assert.equal(resolved.nextStage?.storeSlotKey, "doctor_desk");
+  assert.equal(resolved.nextStagePendingAssets, false);
+  assert.equal(getNextRequiredItem(["heartbeat_rug"], "doctor"), "doctor_desk");
 });
 
 check("enabled disk assets for stages 0 and 1 exist", () => {
@@ -102,9 +102,12 @@ check("doctor store path lists all 12 purchase keys", () => {
   assert.equal(pathKeys[11], "achievement_shelf");
 });
 
-check("other professions do not expose doctor path", () => {
-  assert.deepEqual(getStorePathForProfession("engineer"), []);
-  assert.equal(getNextStage([], "engineer"), null);
+check("engineer path has five sequential tools", () => {
+  const pathKeys = getStorePathForProfession("engineer");
+  assert.equal(pathKeys.length, 5);
+  assert.equal(pathKeys[0], "drafting_table");
+  assert.equal(pathKeys[4], "teaching_robot_arm");
+  assert.equal(getNextRequiredItem([], "engineer"), null); // assets not ready yet
 });
 
 check("non-path ownership does not advance stage", () => {

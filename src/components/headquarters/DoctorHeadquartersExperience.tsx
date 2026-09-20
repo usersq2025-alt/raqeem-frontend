@@ -22,10 +22,15 @@ import {
   DOCTOR_HEARTBEAT_RUG_FALLBACK_PRICE,
   findStageByNumber,
   getStagesForProfession,
+  getStorePathForProfession,
   resolveHeadquartersStage,
   type HeadquartersStageDefinition,
 } from "@/lib/config/headquartersStages";
-import { professionAvatarSrc } from "@/lib/config/professions";
+import {
+  isProfessionCode,
+  professionAvatarSrc,
+  type ProfessionCode,
+} from "@/lib/config/professions";
 import { withChildQuery } from "@/lib/config/subjects";
 
 type Props = {
@@ -38,8 +43,6 @@ type Props = {
 
 type ViewPhase = "idle" | "celebrating" | "success";
 
-const PROFESSION = "doctor" as const;
-
 function prefersReducedMotion() {
   if (typeof window === "undefined") return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -49,6 +52,22 @@ function stageAltKey(stage: number): "stage0Alt" | "stage1Alt" {
   return stage >= 1 ? "stage1Alt" : "stage0Alt";
 }
 
+function resolveProfession(child: ChildProfile, scene: HeadquartersSceneData): ProfessionCode {
+  const code = child.professionCode ?? scene.professionCode;
+  return isProfessionCode(code) ? code : "doctor";
+}
+
+function ownedKeysForProfession(
+  items: HeadquartersSceneData["items"],
+  profession: ProfessionCode
+): string[] {
+  const path = new Set(getStorePathForProfession(profession));
+  return items
+    .map((item) => item.slotKey)
+    .filter((key): key is string => typeof key === "string" && key.length > 0 && path.has(key));
+}
+
+/** Staged HQ room experience — one cumulative stage image per profession path. */
 export function DoctorHeadquartersExperience({
   child,
   scene,
@@ -64,15 +83,14 @@ export function DoctorHeadquartersExperience({
   const chrome = useStudentChrome();
   const setChromePoints = chrome?.setPoints;
 
+  const profession = resolveProfession(child, scene);
+
   const [pointsBalance, setPointsBalance] = useState(scene.pointsBalance);
-  const [ownedKeys, setOwnedKeys] = useState(() => scene.items.map((item) => item.slotKey));
+  const [ownedKeys, setOwnedKeys] = useState(() => ownedKeysForProfession(scene.items, profession));
   const [catalogItems, setCatalogItems] = useState(catalog?.items ?? []);
   const [catalogError, setCatalogError] = useState(catalog == null);
   const [displayStage, setDisplayStage] = useState(() =>
-    resolveHeadquartersStage(
-      scene.items.map((item) => item.slotKey),
-      PROFESSION
-    ).currentStage
+    resolveHeadquartersStage(ownedKeysForProfession(scene.items, profession), profession).currentStage
   );
   const [prevStageForFade, setPrevStageForFade] = useState<number | null>(null);
   const [phase, setPhase] = useState<ViewPhase>("idle");
@@ -86,19 +104,45 @@ export function DoctorHeadquartersExperience({
   const buyButtonRef = useRef<HTMLButtonElement>(null);
   const purchaseLock = useRef(false);
 
+  const [catalogRevision, setCatalogRevision] = useState(0);
+
+  useEffect(() => {
+    setOwnedKeys(ownedKeysForProfession(scene.items, profession));
+    setDisplayStage(
+      resolveHeadquartersStage(ownedKeysForProfession(scene.items, profession), profession).currentStage
+    );
+  }, [profession, scene.items]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { fetchHeadquartersCatalog } = await import("@/lib/api/headquartersCatalog");
+      const remote = await fetchHeadquartersCatalog(profession);
+      if (!cancelled && remote) setCatalogRevision((n) => n + 1);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profession]);
+
   const avatar = professionAvatarSrc(child.professionCode, child.gender) ?? "/images/brand/logo.png";
   const professionLabel =
-    child.professionCode === "doctor" ? tCareer(`presets.doctor.${child.gender}`) : "";
+    isProfessionCode(child.professionCode)
+      ? tCareer(`presets.${child.professionCode}.${child.gender}`)
+      : "";
 
-  const allStages = useMemo(() => getStagesForProfession(PROFESSION), []);
+  const allStages = useMemo(
+    () => getStagesForProfession(profession),
+    [profession, catalogRevision]
+  );
   const resolved = useMemo(
-    () => resolveHeadquartersStage(ownedKeys, PROFESSION),
-    [ownedKeys]
+    () => resolveHeadquartersStage(ownedKeys, profession),
+    [ownedKeys, profession, catalogRevision]
   );
   const activeStageDef =
-    findStageByNumber(PROFESSION, displayStage) ?? allStages[0] ?? resolved.stage;
+    findStageByNumber(profession, displayStage) ?? allStages[0] ?? resolved.stage;
   const fadeFromDef =
-    prevStageForFade != null ? findStageByNumber(PROFESSION, prevStageForFade) : null;
+    prevStageForFade != null ? findStageByNumber(profession, prevStageForFade) : null;
   const nextStage = resolved.nextStage;
 
   const nextItem = useMemo(() => {
@@ -109,7 +153,7 @@ export function DoctorHeadquartersExperience({
 
   const nextPrice =
     nextItem?.pricePoints ??
-    (resolved.nextRequiredStoreSlotKey === "heartbeat_rug"
+    (profession === "doctor" && resolved.nextRequiredStoreSlotKey === "heartbeat_rug"
       ? DOCTOR_HEARTBEAT_RUG_FALLBACK_PRICE
       : null);
 
@@ -155,12 +199,12 @@ export function DoctorHeadquartersExperience({
         getStoreItems(child.id),
       ]);
       setPointsBalance(freshHq.pointsBalance);
-      setOwnedKeys(freshHq.items.map((item) => item.slotKey));
+      setOwnedKeys(ownedKeysForProfession(freshHq.items, profession));
       setCatalogItems(freshCatalog.items);
       setCatalogError(false);
       const nextResolved = resolveHeadquartersStage(
-        freshHq.items.map((item) => item.slotKey),
-        PROFESSION
+        ownedKeysForProfession(freshHq.items, profession),
+        profession
       );
       setDisplayStage(nextResolved.currentStage);
       return nextResolved;
@@ -199,7 +243,7 @@ export function DoctorHeadquartersExperience({
       const nextOwned = Array.from(
         new Set([...ownedKeys, result.slotKey ?? nextItem.slotKey ?? ""].filter(Boolean))
       );
-      const nextResolved = resolveHeadquartersStage(nextOwned, PROFESSION);
+      const nextResolved = resolveHeadquartersStage(nextOwned, profession);
 
       setPointsBalance(result.pointsBalance);
       setOwnedKeys(nextOwned);
@@ -538,6 +582,7 @@ function DoctorStageViewport({
             className="hq-stage-fade-out absolute inset-0 h-full w-full object-contain"
             sizes="(max-width: 768px) 100vw, 70vw"
             priority
+            unoptimized={/^https?:\/\//.test(fadeFrom.stageImage)}
           />
         ) : null}
 
@@ -550,6 +595,7 @@ function DoctorStageViewport({
           className={`relative h-full w-full object-contain ${fadeFrom ? "hq-stage-fade-in" : ""}`}
           sizes="(max-width: 768px) 100vw, 70vw"
           priority
+          unoptimized={/^https?:\/\//.test(stage.stageImage)}
           onLoad={onImageReady}
           onError={onImageError}
         />

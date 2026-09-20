@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>بوت المقر — رقيم</title>
+  <style>
+    :root {
+      --bg: #faf6ec;
+      --ink: #1a2a4a;
+      --muted: #5a6a84;
+      --card: #fffdf7;
+      --accent: #2dbea1;
+      --accent-ink: #0f3d34;
+      --line: rgba(26,42,74,.12);
+      --warn: #c45c26;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 60% 40% at 100% 0%, rgba(45,190,161,.14), transparent 55%),
+        radial-gradient(ellipse 50% 35% at 0% 100%, rgba(248,200,48,.14), transparent 50%),
+        var(--bg);
+      padding: 1.5rem 1.25rem 3rem;
+    }
+    main {
+      max-width: 860px; margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1.35rem 1.25rem 1.6rem;
+      box-shadow: 0 12px 40px rgba(26,42,74,.06);
+    }
+    h1 { margin: 0 0 .35rem; font-size: 1.4rem; }
+    p.lead { margin: 0 0 1rem; color: var(--muted); line-height: 1.55; }
+    label { display: block; font-weight: 700; margin: .85rem 0 .4rem; font-size: .92rem; }
+    select, input[type=file], input[type=text], textarea, button { font: inherit; }
+    select, input[type=text], textarea {
+      width: 100%; padding: .65rem .75rem;
+      border: 1px solid var(--line); border-radius: 10px;
+      background: #fff; color: var(--ink);
+    }
+    textarea { min-height: 64px; resize: vertical; }
+    .tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin: 1rem 0 .75rem; }
+    .tabs button {
+      background: #eef2f7; color: var(--ink); font-weight: 700; padding: .55rem .85rem;
+    }
+    .tabs button.active { background: var(--accent); color: #05352c; }
+    .panel {
+      margin-top: 1rem; padding: .85rem;
+      border: 1px solid var(--line); border-radius: 14px; background: #fff;
+    }
+    .tools { display: grid; gap: .45rem; max-height: 300px; overflow: auto; margin-top: .5rem; }
+    .tool {
+      display: flex; gap: .55rem; align-items: flex-start;
+      padding: .45rem .5rem; border-radius: 10px; background: rgba(45,190,161,.06);
+    }
+    .tool input { margin-top: .2rem; }
+    .tool .meta { font-size: .82rem; color: var(--muted); line-height: 1.4; }
+    .row { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .75rem; align-items: center; }
+    .row label { margin: 0; font-weight: 600; display: flex; gap: .4rem; align-items: center; }
+    button {
+      border: 0; border-radius: 12px; padding: .75rem 1rem;
+      background: var(--accent); color: #05352c;
+      font-weight: 800; cursor: pointer;
+    }
+    button.secondary { background: #1a2a4a; color: #fff; }
+    button.danger { background: #c45c26; color: #fff; }
+    button:disabled { opacity: .55; cursor: wait; }
+    button.linkish { background: transparent; color: var(--accent-ink); padding: .35rem .5rem; font-weight: 700; }
+    .upload-card, .edit-card {
+      border: 1px solid var(--line); border-radius: 12px; padding: .75rem; margin-top: .65rem; background: #fff;
+    }
+    .upload-card h3, .edit-card h3 { margin: 0 0 .35rem; font-size: .98rem; }
+    .upload-card .hint, .edit-card .hint { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+    .edit-grid { display: grid; gap: .45rem; }
+    #log {
+      margin-top: 1rem; white-space: pre-wrap; direction: ltr; text-align: left;
+      font-family: ui-monospace, Consolas, monospace; font-size: .8rem;
+      background: #0f1a2e; color: #d7e6ff; padding: .85rem 1rem; border-radius: 12px;
+      min-height: 4rem; max-height: 260px; overflow: auto;
+    }
+    .warn { color: var(--warn); font-size: .85rem; margin-top: .45rem; }
+    .ok { color: var(--accent-ink); font-size: .85rem; }
+    .hidden { display: none !important; }
+    .step-title { font-weight: 800; margin: 1rem 0 .35rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>بوت المقر المحلي</h1>
+    <p class="lead">رفع الصور، تحديث الموجود، وتعديل قائمة الأدوات لكل مهنة.</p>
+    <p id="serverStatus" class="warn">جاري التحقق من السيرفر المحلي…</p>
+
+    <label for="profession">المهنة</label>
+    <select id="profession"></select>
+
+    <div class="tabs">
+      <button type="button" class="active" data-tab="upload">رفع / تحديث صور</button>
+      <button type="button" data-tab="catalog">تعديل قائمة الأدوات</button>
+    </div>
+
+    <div id="tabUpload">
+      <div class="panel" id="emptyPanel">
+        <div class="step-title" style="margin-top:0">المقر الفارغ (قبل أي شراء)</div>
+        <p class="lead" style="margin-bottom:.5rem;font-size:.9rem">تظهر أول مرة قبل شراء أي أداة. الحجم المفضّل 1024×682 PNG. يمكنك استبدالها لاحقًا بنفس الزر.</p>
+        <p id="emptyStatus" style="margin:.25rem 0 .5rem;font-size:.85rem;color:var(--muted)"></p>
+        <label for="emptyFile">صورة المقر الفارغ</label>
+        <input id="emptyFile" type="file" accept="image/png,.png" />
+        <div class="row" style="margin-top:.65rem">
+          <label><input id="deployEmpty" type="checkbox" /> نشر بعد الوضع</label>
+          <button type="button" id="placeEmpty">وضع / تحديث المقر الفارغ</button>
+        </div>
+      </div>
+
+      <div id="stepPick">
+        <div class="step-title">أدوات المقر</div>
+        <div class="row">
+          <button type="button" class="linkish" id="selectMissing">غير الجاهز فقط</button>
+          <button type="button" class="linkish" id="selectReady">الجاهز فقط (للتحديث)</button>
+          <button type="button" class="linkish" id="selectAll">الكل</button>
+          <button type="button" class="linkish" id="clearAll">إلغاء</button>
+        </div>
+        <div class="panel"><div class="tools" id="tools"></div></div>
+        <div class="row" style="margin-top:1rem">
+          <button type="button" id="toUpload" disabled>التالي: رفع / تحديث الصور</button>
+        </div>
+      </div>
+
+      <div id="stepUpload" class="hidden">
+        <p class="step-title">رفع أو تحديث الصور</p>
+        <p class="lead" style="margin-bottom:.5rem">يمكنك رفع أداة+مقر، أو تحديث أحدهما فقط. الترك فارغًا يعني عدم تغيير ذلك الملف.</p>
+        <div id="uploadList"></div>
+        <div class="row">
+          <label><input id="deploy" type="checkbox" /> نشر إلى السيرفر بعد الانتهاء</label>
+        </div>
+        <p class="warn">النشر يدفع GitHub ثم يشغّل deploy-frontend.</p>
+        <div class="row">
+          <button type="button" class="secondary" id="backPick">رجوع</button>
+          <button type="button" id="placeAll">حفظ الصور + مزامنة</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="tabCatalog" class="hidden">
+      <p class="lead">عدّل الأسماء، أضف أداة، أو احذف. الحفظ يحدّث ملف البروتوكول ومسار المتجر في الـ backend عند الإمكان.</p>
+      <label for="professionLabel">عنوان المهنة</label>
+      <input id="professionLabel" type="text" />
+      <div id="catalogList"></div>
+      <div class="row">
+        <button type="button" class="secondary" id="addTool">+ إضافة أداة</button>
+        <button type="button" id="saveCatalog">حفظ قائمة الأدوات</button>
+      </div>
+      <p class="warn">slug لاتيني بشرطات (مثال: drafting-table). حذف أداة يحذف صورها من المجلد إن وُجدت.</p>
+    </div>
+
+    <div id="log">جاهز.</div>
+  </main>
+  <script>
+    const logEl = document.getElementById('log');
+    const statusEl = document.getElementById('serverStatus');
+    const professionEl = document.getElementById('profession');
+    const toolsEl = document.getElementById('tools');
+    const uploadList = document.getElementById('uploadList');
+    const stepPick = document.getElementById('stepPick');
+    const stepUpload = document.getElementById('stepUpload');
+    const toUploadBtn = document.getElementById('toUpload');
+    const catalogList = document.getElementById('catalogList');
+    const professionLabelEl = document.getElementById('professionLabel');
+
+    let stages = [];
+    let selectedStages = new Set();
+    let emptyRoom = null;
+    let catalogTools = [];
+
+    function log(msg) {
+      logEl.textContent = (logEl.textContent === 'جاهز.' ? '' : logEl.textContent + '\n') + msg;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function explainFetchError(e) {
+      const msg = e && e.message ? e.message : String(e);
+      if (msg === 'Failed to fetch' || msg.includes('NetworkError')) {
+        return 'Failed to fetch — السيرفر المحلي متوقف. شغّل البوت واترك CMD مفتوحة.';
+      }
+      return msg;
+    }
+
+    async function pingServer() {
+      try {
+        const res = await fetch('/api/health', { cache: 'no-store' });
+        if (!res.ok) throw new Error('bad');
+        statusEl.className = 'ok';
+        statusEl.textContent = 'السيرفر المحلي يعمل — اترك نافذة CMD مفتوحة.';
+        return true;
+      } catch {
+        statusEl.className = 'warn';
+        statusEl.textContent = 'السيرفر المحلي غير متصل.';
+        return false;
+      }
+    }
+
+    function syncNextEnabled() {
+      toUploadBtn.disabled = selectedStages.size === 0;
+    }
+
+    function renderEmptyStatus() {
+      const el = document.getElementById('emptyStatus');
+      if (!emptyRoom) {
+        el.textContent = 'لا مسار مقر فارغ لهذه المهنة.';
+        return;
+      }
+      el.textContent = (emptyRoom.onDisk ? 'جاهز ✓ — ' : 'غير مرفوع ✗ — ') + emptyRoom.stageImage;
+    }
+
+    function renderTools() {
+      toolsEl.innerHTML = stages.map((s) => {
+        const checked = selectedStages.has(s.stage) ? 'checked' : '';
+        const disk = s.ready
+          ? 'جاهز ✓ (يمكن التحديث)'
+          : ('أداة ' + (s.itemOnDisk ? '✓' : '✗') + ' / مقر ' + (s.stageOnDisk ? '✓' : '✗'));
+        const price = s.pricePoints != null ? s.pricePoints + ' نقطة' : '—';
+        return (
+          '<label class="tool">' +
+            '<input type="checkbox" data-stage="' + s.stage + '" ' + checked + ' />' +
+            '<span><strong>' + String(s.stage).padStart(2,'0') + ' — ' + s.nameAr + '</strong>' +
+            '<div class="meta">' + price + ' · ' + disk + '<br>' + s.itemImage + '</div></span>' +
+          '</label>'
+        );
+      }).join('');
+      toolsEl.querySelectorAll('input[type=checkbox]').forEach((box) => {
+        box.addEventListener('change', () => {
+          const stage = Number(box.getAttribute('data-stage'));
+          if (box.checked) selectedStages.add(stage);
+          else selectedStages.delete(stage);
+          syncNextEnabled();
+        });
+      });
+      syncNextEnabled();
+    }
+
+    function renderCatalog() {
+      catalogList.innerHTML = catalogTools.map((t, i) => (
+        '<div class="edit-card" data-index="' + i + '">' +
+          '<h3>مرحلة ' + (i + 1) + '</h3>' +
+          '<div class="edit-grid">' +
+            '<label>الاسم العربي</label><input type="text" data-field="nameAr" value="' + escapeAttr(t.nameAr) + '" />' +
+            '<label>الوصف</label><textarea data-field="descriptionAr">' + escapeHtml(t.descriptionAr || '') + '</textarea>' +
+            '<label>slug (لاتيني)</label><input type="text" data-field="slug" value="' + escapeAttr(t.slug) + '" />' +
+            '<div class="hint">slot: ' + (t.slot || '') + ' · ' + (t.itemImage || '') + '</div>' +
+            '<div class="row">' +
+              '<button type="button" class="linkish" data-act="up">↑</button>' +
+              '<button type="button" class="linkish" data-act="down">↓</button>' +
+              '<button type="button" class="danger" data-act="del">حذف</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>'
+      )).join('');
+
+      catalogList.querySelectorAll('.edit-card').forEach((card) => {
+        const idx = Number(card.getAttribute('data-index'));
+        card.querySelectorAll('[data-field]').forEach((input) => {
+          input.addEventListener('input', () => {
+            const field = input.getAttribute('data-field');
+            catalogTools[idx][field] = input.value;
+          });
+        });
+        card.querySelectorAll('[data-act]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const act = btn.getAttribute('data-act');
+            if (act === 'del') {
+              if (!confirm('حذف هذه الأداة من القائمة؟')) return;
+              catalogTools.splice(idx, 1);
+              renderCatalog();
+            } else if (act === 'up' && idx > 0) {
+              const tmp = catalogTools[idx - 1];
+              catalogTools[idx - 1] = catalogTools[idx];
+              catalogTools[idx] = tmp;
+              renderCatalog();
+            } else if (act === 'down' && idx < catalogTools.length - 1) {
+              const tmp = catalogTools[idx + 1];
+              catalogTools[idx + 1] = catalogTools[idx];
+              catalogTools[idx] = tmp;
+              renderCatalog();
+            }
+          });
+        });
+      });
+    }
+
+    function escapeAttr(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    }
+    function escapeHtml(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    }
+
+    async function loadProfessions() {
+      const res = await fetch('/api/professions');
+      const data = await res.json();
+      const current = professionEl.value;
+      professionEl.innerHTML = (data.professions || []).map((p) => {
+        const emptyMark = p.emptyOnDisk ? ' · مقر فارغ ✓' : ' · مقر فارغ ✗';
+        return '<option value="' + p.code + '">' + p.labelAr + ' (' + p.stageCount + ' أدوات' + emptyMark + ')</option>';
+      }).join('');
+      if (current) professionEl.value = current;
+    }
+
+    async function loadStages() {
+      const profession = professionEl.value || 'doctor';
+      const res = await fetch('/api/stages?profession=' + encodeURIComponent(profession));
+      const data = await res.json();
+      stages = data.stages || [];
+      emptyRoom = data.emptyRoom || null;
+      selectedStages = new Set();
+      renderEmptyStatus();
+      renderTools();
+    }
+
+    async function loadCatalog() {
+      const profession = professionEl.value || 'doctor';
+      const res = await fetch('/api/catalog?profession=' + encodeURIComponent(profession));
+      const data = await res.json();
+      professionLabelEl.value = data.labelAr || '';
+      catalogTools = (data.tools || []).map((t) => ({
+        slug: t.slug,
+        slot: t.slot,
+        nameAr: t.nameAr,
+        descriptionAr: t.descriptionAr || '',
+        itemImage: t.itemImage,
+        stageImage: t.stageImage,
+      }));
+      renderCatalog();
+    }
+
+    function selectedStageDefs() {
+      return stages.filter((s) => selectedStages.has(s.stage)).sort((a, b) => a.stage - b.stage);
+    }
+
+    function renderUploadCards() {
+      const list = selectedStageDefs();
+      uploadList.innerHTML = list.map((s) => (
+        '<div class="upload-card" data-stage="' + s.stage + '">' +
+          '<h3>' + String(s.stage).padStart(2,'0') + ' — ' + s.nameAr +
+          (s.ready ? ' <span class="ok">(تحديث)</span>' : '') + '</h3>' +
+          '<div class="hint">item: ' + s.itemImage + '<br>stage: ' + s.stageImage + '</div>' +
+          '<label>صورة الأداة (اتركها فارغة إن لم ترد تغييرها)</label>' +
+          '<input type="file" accept="image/png,.png" data-kind="item" />' +
+          '<label>صورة المقر التراكمية (اتركها فارغة إن لم ترد تغييرها)</label>' +
+          '<input type="file" accept="image/png,.png" data-kind="room" />' +
+        '</div>'
+      )).join('');
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => {
+          const s = String(r.result || '');
+          const i = s.indexOf(',');
+          resolve(i >= 0 ? s.slice(i + 1) : s);
+        };
+        r.onerror = reject;
+        r.readAsDataURL(file);
+      });
+    }
+
+    async function waitDeploy() {
+      log('النشر يعمل في الخلفية…');
+      for (let i = 0; i < 90; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        const res = await fetch('/api/deploy-status', { cache: 'no-store' });
+        const data = await res.json();
+        if (data.status === 'running') {
+          if (i % 5 === 0) log('… النشر ما زال جاريًا');
+          continue;
+        }
+        if (data.status === 'ok') { log('اكتمل النشر.'); return; }
+        if (data.status === 'error') throw new Error(data.error || 'فشل النشر');
+        if (i > 2) return;
+      }
+      throw new Error('انتهت مهلة انتظار النشر');
+    }
+
+    document.querySelectorAll('.tabs button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tabs button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.getAttribute('data-tab');
+        document.getElementById('tabUpload').classList.toggle('hidden', tab !== 'upload');
+        document.getElementById('tabCatalog').classList.toggle('hidden', tab !== 'catalog');
+        if (tab === 'catalog') void loadCatalog();
+      });
+    });
+
+    document.getElementById('selectAll').onclick = () => {
+      selectedStages = new Set(stages.map((s) => s.stage));
+      renderTools();
+    };
+    document.getElementById('clearAll').onclick = () => {
+      selectedStages = new Set();
+      renderTools();
+    };
+    document.getElementById('selectMissing').onclick = () => {
+      selectedStages = new Set(stages.filter((s) => !s.ready).map((s) => s.stage));
+      renderTools();
+    };
+    document.getElementById('selectReady').onclick = () => {
+      selectedStages = new Set(stages.filter((s) => s.ready).map((s) => s.stage));
+      renderTools();
+    };
+
+    professionEl.addEventListener('change', async () => {
+      await loadStages();
+      if (!document.getElementById('tabCatalog').classList.contains('hidden')) {
+        await loadCatalog();
+      }
+    });
+
+    document.getElementById('placeEmpty').addEventListener('click', async () => {
+      const btn = document.getElementById('placeEmpty');
+      const fileInput = document.getElementById('emptyFile');
+      const deploy = document.getElementById('deployEmpty').checked;
+      const profession = professionEl.value;
+      const file = fileInput && fileInput.files && fileInput.files[0];
+      btn.disabled = true;
+      try {
+        if (!(await pingServer())) throw new Error('Failed to fetch');
+        if (!file) throw new Error('اختر صورة المقر الفارغ أولاً');
+        log('وضع المقر الفارغ لـ ' + profession + '…');
+        const res = await fetch('/api/place-empty', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            profession,
+            stageBase64: await fileToBase64(file),
+            deploy,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'فشل');
+        log(JSON.stringify(data, null, 2));
+        await loadProfessions();
+        professionEl.value = profession;
+        await loadStages();
+        fileInput.value = '';
+        if (deploy && data.deploy && data.deploy.started) await waitDeploy();
+        log('تم وضع/تحديث المقر الفارغ.');
+      } catch (e) {
+        log('ERROR: ' + explainFetchError(e));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    toUploadBtn.addEventListener('click', () => {
+      if (selectedStages.size === 0) return;
+      stepPick.classList.add('hidden');
+      stepUpload.classList.remove('hidden');
+      renderUploadCards();
+      log('جاهز لرفع/تحديث ' + selectedStages.size + ' أداة/أدوات.');
+    });
+
+    document.getElementById('backPick').addEventListener('click', () => {
+      stepUpload.classList.add('hidden');
+      stepPick.classList.remove('hidden');
+    });
+
+    document.getElementById('placeAll').addEventListener('click', async () => {
+      const btn = document.getElementById('placeAll');
+      const deploy = document.getElementById('deploy').checked;
+      const profession = professionEl.value;
+      const cards = [...uploadList.querySelectorAll('.upload-card')];
+      btn.disabled = true;
+      logEl.textContent = '';
+      try {
+        if (!(await pingServer())) throw new Error('Failed to fetch');
+        const jobs = [];
+        for (const card of cards) {
+          const stage = Number(card.getAttribute('data-stage'));
+          const itemInput = card.querySelector('input[data-kind="item"]');
+          const roomInput = card.querySelector('input[data-kind="room"]');
+          const item = itemInput && itemInput.files && itemInput.files[0];
+          const room = roomInput && roomInput.files && roomInput.files[0];
+          if (!item && !room) {
+            throw new Error('المرحلة ' + stage + ': اختر صورة الأداة أو المقر (أو كليهما)');
+          }
+          const kind = item && room ? 'both' : item ? 'item' : 'stage';
+          jobs.push({
+            profession,
+            stage,
+            kind,
+            itemBase64: item ? await fileToBase64(item) : undefined,
+            stageBase64: room ? await fileToBase64(room) : undefined,
+          });
+        }
+
+        log('حفظ ' + jobs.length + ' أداة…');
+        const res = await fetch('/api/place-batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobs, deploy }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'فشل');
+        log(JSON.stringify(data, null, 2));
+        await loadStages();
+        if (deploy && data.deploy && data.deploy.started) await waitDeploy();
+        log('تم. يمكنك الرجوع لاختيار أدوات أخرى.');
+      } catch (e) {
+        log('ERROR: ' + explainFetchError(e));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('addTool').addEventListener('click', () => {
+      const n = catalogTools.length + 1;
+      catalogTools.push({
+        slug: 'new-tool-' + n,
+        slot: 'new_tool_' + n,
+        nameAr: 'أداة جديدة ' + n,
+        descriptionAr: '',
+      });
+      renderCatalog();
+    });
+
+    document.getElementById('saveCatalog').addEventListener('click', async () => {
+      const btn = document.getElementById('saveCatalog');
+      const profession = professionEl.value;
+      btn.disabled = true;
+      try {
+        if (!(await pingServer())) throw new Error('Failed to fetch');
+        const tools = catalogTools.map((t) => ({
+          slug: t.slug,
+          slot: t.slot,
+          nameAr: t.nameAr,
+          descriptionAr: t.descriptionAr,
+        }));
+        log('حفظ قائمة أدوات ' + profession + '…');
+        const res = await fetch('/api/catalog', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            profession,
+            labelAr: professionLabelEl.value,
+            tools,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'فشل');
+        log(JSON.stringify(data, null, 2));
+        await loadProfessions();
+        professionEl.value = profession;
+        await loadStages();
+        await loadCatalog();
+        log('تم حفظ القائمة.' + (data.backendSynced ? ' (مزامنة backend ✓)' : ' (تنبيه: backend لم يُحدَّث)'));
+      } catch (e) {
+        log('ERROR: ' + explainFetchError(e));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    (async function init() {
+      await pingServer();
+      setInterval(() => { void pingServer(); }, 8000);
+      try {
+        await loadProfessions();
+        await loadStages();
+      } catch (e) {
+        log('فشل التحميل: ' + explainFetchError(e));
+      }
+    })();
+  </script>
+</body>
+</html>

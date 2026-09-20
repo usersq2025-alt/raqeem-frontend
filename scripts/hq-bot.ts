@@ -1,22 +1,31 @@
 /**
- * Local HQ assets bot — pick a protocol tool, drop PNGs, place + sync (+ optional deploy).
+ * Local HQ assets bot — multi-profession protocol, multi-select upload, place + sync (+ optional deploy).
  *
- *   npm run hq:bot              → interactive CLI (file dialogs on Windows)
+ *   npm run hq:bot              → interactive CLI
  *   npm run hq:bot -- --ui      → browser UI at http://127.0.0.1:3921
  *   npm run hq:place -- --profession doctor --stage 2 --item path --room path
  */
 import { createServer } from "node:http";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { spawnSync } from "node:child_process";
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
+import { fileURLToPath } from "node:url";
 import type { ProfessionCode } from "../src/lib/config/professions";
 import {
+  getEmptyRoomInfo,
   listPlaceableStages,
+  listProfessions,
+  placeEmptyRoom,
   placeHqAssets,
   startFrontendDeploy,
 } from "./hq-place-lib";
+import { listCatalogTools, readPathsData, saveProfessionTools } from "./hq-catalog-lib";
 
 const UI_PORT = 3921;
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const UI_HTML_PATH = path.join(SCRIPT_DIR, "hq-bot-ui.html");
 
 function parseArgs(argv: string[]) {
   const out: Record<string, string | boolean> = {};
@@ -44,11 +53,7 @@ $d.Title = '${title.replace(/'/g, "''")}'
 $d.Multiselect = $false
 if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $d.FileName }
 `;
-  const r = spawnSync(
-    "powershell",
-    ["-NoProfile", "-STA", "-Command", ps],
-    { encoding: "utf8" }
-  );
+  const r = spawnSync("powershell", ["-NoProfile", "-STA", "-Command", ps], { encoding: "utf8" });
   const file = (r.stdout ?? "").trim();
   return file || null;
 }
@@ -57,7 +62,7 @@ async function runCliPlace(args: Record<string, string | boolean>) {
   const profession = String(args.profession ?? "doctor") as ProfessionCode;
   const stage = Number(args.stage);
   if (!Number.isFinite(stage) || stage < 1) {
-    throw new Error("استخدم --stage برقم مرحلة صحيح (1–12)");
+    throw new Error("استخدم --stage برقم مرحلة صحيح");
   }
   const item = args.item ? String(args.item) : null;
   const room = args.room ? String(args.room) : args.stageImg ? String(args.stageImg) : null;
@@ -89,46 +94,43 @@ function printResult(result: ReturnType<typeof placeHqAssets>) {
   console.log(`المهنة: ${result.profession}`);
   console.log(`المرحلة: ${result.stage} — ${result.nameAr ?? ""}`);
   if (result.pricePoints != null) {
-    console.log(`السعر (مرجع): ${result.pricePoints} نقطة — من المتجر، لا يُدخل يدويًا`);
+    console.log(`السعر (مرجع): ${result.pricePoints} نقطة`);
   }
   if (result.written.length) {
     console.log("كُتب:");
     for (const w of result.written) console.log(`  + ${w}`);
   }
   if (result.skipped.length) {
-    console.log("تخطي (موجود مسبقًا):");
+    console.log("تخطي:");
     for (const s of result.skipped) console.log(`  ~ ${s}`);
   }
-  console.log(
-    result.readyAfterSync
-      ? "جاهزية sync:hq: نعم — المرحلة مفعّلة للشراء بعد النشر/التحديث."
-      : "جاهزية sync:hq: لا — تأكد من وجود صورتي الأداة والمقر."
-  );
+  console.log(result.readyAfterSync ? "جاهزية sync:hq: نعم" : "جاهزية sync:hq: لا");
 }
 
 async function runInteractive() {
   const rl = readline.createInterface({ input, output });
-  const profession: ProfessionCode = "doctor";
-  const stages = listPlaceableStages(profession);
-
+  const professions = listProfessions();
   console.log("========================================");
-  console.log("  بوت المقر المحلي — عيادة الطبيب");
+  console.log("  بوت المقر المحلي");
   console.log("========================================\n");
-  console.log("المراحل من البروتوكول (السعر جاهز في المتجر):\n");
-
-  for (const s of stages) {
-    const mark = s.ready ? "✓" : s.itemOnDisk || s.stageOnDisk ? "…" : "·";
-    const price = s.pricePoints != null ? `${s.pricePoints} نقطة` : "—";
-    const disk = s.ready
-      ? "جاهز"
-      : `أداة=${s.itemOnDisk ? "✓" : "✗"} مقر=${s.stageOnDisk ? "✓" : "✗"}`;
-    console.log(
-      `  ${mark} ${String(s.stage).padStart(2, "0")}  ${s.nameAr}  |  ${price}  |  ${disk}`
-    );
+  for (const p of professions) {
+    console.log(`  ${p.code}  ${p.labelAr}  (${p.stageCount})`);
+  }
+  const professionRaw = (await rl.question("\nرمز المهنة [doctor]: ")).trim() || "doctor";
+  const profession = professionRaw as ProfessionCode;
+  const stages = listPlaceableStages(profession);
+  if (stages.length === 0) {
+    rl.close();
+    throw new Error(`لا مراحل للمهنة: ${profession}`);
   }
 
-  console.log("");
-  const stageRaw = (await rl.question("رقم المرحلة (أو q للخروج): ")).trim();
+  console.log("\nالمراحل:\n");
+  for (const s of stages) {
+    const mark = s.ready ? "✓" : "·";
+    console.log(`  ${mark} ${String(s.stage).padStart(2, "0")}  ${s.nameAr}`);
+  }
+
+  const stageRaw = (await rl.question("\nرقم المرحلة (أو q): ")).trim();
   if (stageRaw.toLowerCase() === "q" || stageRaw === "") {
     rl.close();
     return;
@@ -140,16 +142,13 @@ async function runInteractive() {
     throw new Error(`مرحلة غير معروفة: ${stageRaw}`);
   }
 
-  console.log(`\nاخترت: ${def.nameAr} (${def.storeSlotKey}) — سعر ${def.pricePoints} نقطة`);
-  console.log("افتح نافذة اختيار صورة الأداة (PNG بخلفية شفافة)…");
   let itemPath = await windowsPickPng(`صورة الأداة — ${def.nameAr}`);
   if (!itemPath) {
-    itemPath = (await rl.question("مسار صورة الأداة يدويًا: ")).trim().replace(/^"|"$/g, "");
+    itemPath = (await rl.question("مسار صورة الأداة: ")).trim().replace(/^"|"$/g, "");
   }
-  console.log("افتح نافذة اختيار صورة المقر التراكمية…");
-  let roomPath = await windowsPickPng(`صورة المقر — مرحلة ${def.stage}`);
+  let roomPath = await windowsPickPng(`صورة المقر — ${def.nameAr}`);
   if (!roomPath) {
-    roomPath = (await rl.question("مسار صورة المقر يدويًا: ")).trim().replace(/^"|"$/g, "");
+    roomPath = (await rl.question("مسار صورة المقر: ")).trim().replace(/^"|"$/g, "");
   }
 
   const result = placeHqAssets({
@@ -162,281 +161,12 @@ async function runInteractive() {
   });
   printResult(result);
 
-  const deployAns = (await rl.question("\nنشر إلى السيرفر الآن؟ (y/N): ")).trim().toLowerCase();
+  const deployAns = (await rl.question("\nنشر الآن؟ (y/N): ")).trim().toLowerCase();
   rl.close();
   if (deployAns === "y" || deployAns === "yes" || deployAns === "ن") {
-    startFrontendDeploy(`hq: place ${profession} stage ${stage} (${def.itemSlug})`);
+    startFrontendDeploy(`hq: place ${profession} stage ${stage}`);
     console.log("اكتمل النشر.");
-  } else {
-    console.log("تم محليًا فقط. للتجربة: npm run dev — وللنشر لاحقًا: push-and-deploy.bat");
   }
-}
-
-function uiHtml(): string {
-  return `<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>بوت المقر — رقيم</title>
-  <style>
-    :root {
-      --bg: #faf6ec;
-      --ink: #1a2a4a;
-      --muted: #5a6a84;
-      --card: #fffdf7;
-      --accent: #2dbea1;
-      --accent-ink: #0f3d34;
-      --line: rgba(26,42,74,.12);
-      --warn: #c45c26;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; min-height: 100vh;
-      font-family: "Segoe UI", Tahoma, sans-serif;
-      color: var(--ink);
-      background:
-        radial-gradient(ellipse 60% 40% at 100% 0%, rgba(45,190,161,.14), transparent 55%),
-        radial-gradient(ellipse 50% 35% at 0% 100%, rgba(248,200,48,.14), transparent 50%),
-        var(--bg);
-      padding: 2rem 1.25rem 3rem;
-    }
-    main {
-      max-width: 640px; margin: 0 auto;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 1.5rem 1.35rem 1.75rem;
-      box-shadow: 0 12px 40px rgba(26,42,74,.06);
-    }
-    h1 { margin: 0 0 .35rem; font-size: 1.45rem; }
-    p.lead { margin: 0 0 1.25rem; color: var(--muted); line-height: 1.55; }
-    label { display: block; font-weight: 700; margin: 1rem 0 .4rem; font-size: .92rem; }
-    select, input[type=file] {
-      width: 100%; padding: .65rem .75rem;
-      border: 1px solid var(--line); border-radius: 10px;
-      background: #fff; color: var(--ink); font: inherit;
-    }
-    .meta {
-      margin-top: .55rem; padding: .65rem .75rem;
-      background: rgba(45,190,161,.08); border-radius: 10px;
-      font-size: .9rem; color: var(--accent-ink); line-height: 1.5;
-    }
-    .row { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
-    .row label { margin: 0; font-weight: 600; display: flex; gap: .4rem; align-items: center; }
-    button {
-      margin-top: 1.25rem; width: 100%;
-      border: 0; border-radius: 12px; padding: .85rem 1rem;
-      background: var(--accent); color: #05352c;
-      font-weight: 800; font-size: 1rem; cursor: pointer;
-    }
-    button:disabled { opacity: .55; cursor: wait; }
-    #log {
-      margin-top: 1.1rem; white-space: pre-wrap; direction: ltr; text-align: left;
-      font-family: ui-monospace, Consolas, monospace; font-size: .82rem;
-      background: #0f1a2e; color: #d7e6ff; padding: .85rem 1rem; border-radius: 12px;
-      min-height: 4.5rem; max-height: 240px; overflow: auto;
-    }
-    .hint { font-size: .82rem; color: var(--muted); margin-top: .35rem; }
-    .warn { color: var(--warn); font-size: .85rem; margin-top: .5rem; }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>بوت المقر المحلي</h1>
-    <p class="lead">اختر الأداة من البروتوكول، ارفع صورة الأداة وصورة المقر، والبوت يسميها ويضعها ويشغّل المزامنة. السعر جاهز من المتجر.</p>
-    <p id="serverStatus" class="warn" style="margin-top:0">جاري التحقق من السيرفر المحلي…</p>
-
-    <label for="stage">الأداة / المرحلة</label>
-    <select id="stage"></select>
-    <div class="meta" id="meta">—</div>
-
-    <label for="item">صورة الأداة (PNG شفاف)</label>
-    <input id="item" type="file" accept="image/png,.png" />
-
-    <label for="room">صورة المقر التراكمية (PNG)</label>
-    <input id="room" type="file" accept="image/png,.png" />
-    <p class="hint">أبعاد المقر المتوقعة: 1024×682</p>
-
-    <div class="row">
-      <label><input id="deploy" type="checkbox" /> نشر إلى السيرفر بعد الوضع</label>
-    </div>
-    <p class="warn">النشر يدفع GitHub ثم يشغّل deploy-frontend على VPS.</p>
-
-    <button id="go" type="button">وضع الصور + مزامنة</button>
-    <button id="deployOnly" type="button" style="margin-top:.6rem;background:#1a2a4a;color:#fff">نشر الملفات الحالية فقط (بدون رفع جديد)</button>
-    <div id="log">جاهز.</div>
-  </main>
-  <script>
-    const logEl = document.getElementById('log');
-    const stageEl = document.getElementById('stage');
-    const metaEl = document.getElementById('meta');
-    const statusEl = document.getElementById('serverStatus');
-    let stages = [];
-    let deployPoll = null;
-
-    function log(msg) {
-      logEl.textContent = (logEl.textContent === 'جاهز.' ? '' : logEl.textContent + '\\n') + msg;
-      logEl.scrollTop = logEl.scrollHeight;
-    }
-
-    function explainFetchError(e) {
-      const msg = e && e.message ? e.message : String(e);
-      if (msg === 'Failed to fetch' || msg === 'NetworkError when attempting to fetch resource.') {
-        return 'Failed to fetch — السيرفر المحلي متوقف أو أُغلق. شغّل HQ-BOT-UI.bat واترك نافذة CMD مفتوحة، ثم أعد تحميل هذه الصفحة.';
-      }
-      return msg;
-    }
-
-    async function pingServer() {
-      try {
-        const res = await fetch('/api/health', { cache: 'no-store' });
-        if (!res.ok) throw new Error('bad status');
-        statusEl.style.color = '#0f3d34';
-        statusEl.textContent = 'السيرفر المحلي يعمل على http://127.0.0.1:3921 — اترك نافذة CMD مفتوحة.';
-        return true;
-      } catch {
-        statusEl.style.color = 'var(--warn)';
-        statusEl.textContent = 'السيرفر المحلي غير متصل. شغّل HQ-BOT-UI.bat واترك النافذة مفتوحة.';
-        return false;
-      }
-    }
-
-    async function waitDeploy() {
-      log('النشر يعمل في الخلفية (قد يستغرق 1–3 دقائق)… راقب نافذة CMD أيضًا.');
-      for (let i = 0; i < 90; i++) {
-        await new Promise((r) => setTimeout(r, 2000));
-        try {
-          const res = await fetch('/api/deploy-status', { cache: 'no-store' });
-          const data = await res.json();
-          if (data.status === 'running') {
-            if (i % 5 === 0) log('… ما زال النشر جاريًا');
-            continue;
-          }
-          if (data.status === 'ok') {
-            log('اكتمل النشر بنجاح.');
-            return;
-          }
-          if (data.status === 'error') {
-            throw new Error(data.error || 'فشل النشر');
-          }
-          // idle with no recent run
-          if (i > 2) return;
-        } catch (e) {
-          throw e;
-        }
-      }
-      throw new Error('انتهت مهلة انتظار النشر — تحقق من نافذة CMD');
-    }
-
-    function refreshMeta() {
-      const s = stages.find(x => String(x.stage) === stageEl.value);
-      if (!s) { metaEl.textContent = '—'; return; }
-      const disk = s.ready ? 'الصور موجودة ✓' : ('أداة ' + (s.itemOnDisk?'✓':'✗') + ' / مقر ' + (s.stageOnDisk?'✓':'✗'));
-      metaEl.innerHTML =
-        '<strong>' + s.nameAr + '</strong><br>' +
-        'المفتاح: ' + s.storeSlotKey + ' · slug: ' + s.itemSlug + '<br>' +
-        'السعر: ' + (s.pricePoints ?? '—') + ' نقطة (من المتجر)<br>' +
-        'على القرص: ' + disk + '<br>' +
-        'مسار الأداة: ' + s.itemImage + '<br>' +
-        'مسار المقر: ' + s.stageImage;
-    }
-
-    async function loadStages() {
-      const res = await fetch('/api/stages?profession=doctor');
-      const data = await res.json();
-      stages = data.stages || [];
-      stageEl.innerHTML = stages.map(s => {
-        const mark = s.ready ? '✓' : '·';
-        return '<option value="' + s.stage + '">' + mark + ' ' + String(s.stage).padStart(2,'0') + ' — ' + s.nameAr + ' (' + s.pricePoints + ' نقطة)</option>';
-      }).join('');
-      const firstMissing = stages.find(s => !s.ready);
-      if (firstMissing) stageEl.value = String(firstMissing.stage);
-      refreshMeta();
-    }
-
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => {
-          const s = String(r.result || '');
-          const i = s.indexOf(',');
-          resolve(i >= 0 ? s.slice(i + 1) : s);
-        };
-        r.onerror = reject;
-        r.readAsDataURL(file);
-      });
-    }
-
-    stageEl.addEventListener('change', refreshMeta);
-
-    document.getElementById('go').addEventListener('click', async () => {
-      const item = document.getElementById('item').files[0];
-      const room = document.getElementById('room').files[0];
-      const deploy = document.getElementById('deploy').checked;
-      const stage = Number(stageEl.value);
-      if (!item || !room) { alert('اختر صورتي الأداة والمقر'); return; }
-      const btn = document.getElementById('go');
-      btn.disabled = true;
-      logEl.textContent = '';
-      log('رفع ومعالجة…');
-      try {
-        if (!(await pingServer())) throw new Error('Failed to fetch');
-        const body = {
-          profession: 'doctor',
-          stage,
-          deploy,
-          itemBase64: await fileToBase64(item),
-          stageBase64: await fileToBase64(room),
-        };
-        const res = await fetch('/api/place', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'فشل');
-        log(JSON.stringify({ ok: data.ok, result: data.result, deploy: data.deploy }, null, 2));
-        await loadStages();
-        if (deploy && data.deploy && data.deploy.started) {
-          await waitDeploy();
-        }
-      } catch (e) {
-        log('ERROR: ' + explainFetchError(e));
-      } finally {
-        btn.disabled = false;
-      }
-    });
-
-    document.getElementById('deployOnly').addEventListener('click', async () => {
-      const btn = document.getElementById('deployOnly');
-      btn.disabled = true;
-      logEl.textContent = '';
-      log('طلب النشر…');
-      try {
-        if (!(await pingServer())) throw new Error('Failed to fetch');
-        const res = await fetch('/api/deploy', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'hq: deploy current headquarters assets' }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'فشل النشر');
-        log(JSON.stringify(data, null, 2));
-        if (data.deploy && data.deploy.started) await waitDeploy();
-      } catch (e) {
-        log('ERROR: ' + explainFetchError(e));
-      } finally {
-        btn.disabled = false;
-      }
-    });
-
-    pingServer();
-    setInterval(() => { void pingServer(); }, 8000);
-    loadStages().catch(e => log('فشل تحميل المراحل: ' + explainFetchError(e)));
-  </script>
-</body>
-</html>`;
 }
 
 function startUiServer() {
@@ -446,7 +176,7 @@ function startUiServer() {
 
   const runDeployBackground = (message: string) => {
     if (deployState.status === "running") {
-      throw new Error("نشر آخر ما زال جاريًا — انتظر حتى ينتهي");
+      throw new Error("نشر آخر ما زال جاريًا");
     }
     deployState = { status: "running" };
     console.log("[deploy] starting:", message);
@@ -474,10 +204,19 @@ function startUiServer() {
       res.end(JSON.stringify(body));
     };
 
+    const readBody = async (): Promise<string> => {
+      const chunks: Buffer[] = [];
+      for await (const chunk of req) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      }
+      return Buffer.concat(chunks).toString("utf8");
+    };
+
     try {
       if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/index.html")) {
+        const html = readFileSync(UI_HTML_PATH, "utf8");
         res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-        res.end(uiHtml());
+        res.end(html);
         return;
       }
 
@@ -491,77 +230,194 @@ function startUiServer() {
         return;
       }
 
+      if (req.method === "GET" && url.pathname === "/api/professions") {
+        sendJson(200, { professions: listProfessions() });
+        return;
+      }
+
       if (req.method === "GET" && url.pathname === "/api/stages") {
         const profession = (url.searchParams.get("profession") || "doctor") as ProfessionCode;
-        sendJson(200, { stages: listPlaceableStages(profession) });
+        sendJson(200, {
+          stages: listPlaceableStages(profession),
+          emptyRoom: getEmptyRoomInfo(profession),
+        });
+        return;
+      }
+
+      if (req.method === "POST" && url.pathname === "/api/place-empty") {
+        const body = JSON.parse(await readBody()) as {
+          profession?: ProfessionCode;
+          stageBase64?: string;
+          deploy?: boolean;
+        };
+        const profession = (body.profession || "doctor") as ProfessionCode;
+        if (!body.stageBase64) {
+          sendJson(400, { error: "صورة المقر الفارغ مطلوبة" });
+          return;
+        }
+        const result = placeEmptyRoom({
+          profession,
+          stageBytes: Buffer.from(body.stageBase64, "base64"),
+          overwrite: true,
+          sync: true,
+        });
+        let deploy: { started?: boolean; error?: string } | null = null;
+        if (body.deploy) {
+          try {
+            runDeployBackground(`hq: empty room ${profession}`);
+            deploy = { started: true };
+          } catch (e) {
+            deploy = { error: e instanceof Error ? e.message : String(e) };
+          }
+        }
+        sendJson(200, { ok: true, result, deploy });
         return;
       }
 
       if (req.method === "POST" && url.pathname === "/api/deploy") {
-        const chunks: Buffer[] = [];
-        for await (const chunk of req) {
-          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-        }
-        const raw = Buffer.concat(chunks).toString("utf8");
+        const raw = await readBody();
         const body = (raw ? JSON.parse(raw) : {}) as { message?: string };
         try {
           runDeployBackground(body.message || "hq: deploy current headquarters assets");
           sendJson(200, { ok: true, deploy: { started: true } });
         } catch (e) {
-          sendJson(500, {
-            ok: false,
-            error: e instanceof Error ? e.message : String(e),
-          });
+          sendJson(500, { ok: false, error: e instanceof Error ? e.message : String(e) });
         }
         return;
       }
 
-      if (req.method === "POST" && url.pathname === "/api/place") {
-        const chunks: Buffer[] = [];
-        for await (const chunk of req) {
-          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      if (req.method === "GET" && url.pathname === "/api/catalog") {
+        const profession = (url.searchParams.get("profession") || "doctor") as ProfessionCode;
+        const data = readPathsData();
+        sendJson(200, {
+          profession,
+          labelAr: data.labelsAr[profession] ?? profession,
+          tools: listCatalogTools(profession),
+        });
+        return;
+      }
+
+      if (req.method === "POST" && url.pathname === "/api/catalog") {
+        const body = JSON.parse(await readBody()) as {
+          profession?: ProfessionCode;
+          labelAr?: string;
+          tools?: Array<{ slug: string; nameAr: string; descriptionAr: string; slot?: string }>;
+        };
+        const profession = (body.profession || "doctor") as ProfessionCode;
+        if (!Array.isArray(body.tools)) {
+          sendJson(400, { error: "tools مطلوبة" });
+          return;
         }
-        const raw = Buffer.concat(chunks).toString("utf8");
-        const body = JSON.parse(raw) as {
+        const result = saveProfessionTools({
+          profession,
+          labelAr: body.labelAr,
+          tools: body.tools,
+        });
+        sendJson(200, { ok: true, ...result });
+        return;
+      }
+
+      if (req.method === "POST" && url.pathname === "/api/place") {
+        const body = JSON.parse(await readBody()) as {
           profession?: ProfessionCode;
           stage?: number;
           deploy?: boolean;
+          kind?: "item" | "stage" | "both";
           itemBase64?: string;
           stageBase64?: string;
         };
-
         const profession = (body.profession || "doctor") as ProfessionCode;
         const stage = Number(body.stage);
+        const kind = body.kind || "both";
         if (!Number.isFinite(stage)) {
           sendJson(400, { error: "stage مطلوب" });
           return;
         }
-        if (!body.itemBase64 || !body.stageBase64) {
-          sendJson(400, { error: "الصورتان مطلوبتان" });
+        if ((kind === "item" || kind === "both") && !body.itemBase64) {
+          sendJson(400, { error: "صورة الأداة مطلوبة" });
           return;
         }
-
+        if ((kind === "stage" || kind === "both") && !body.stageBase64) {
+          sendJson(400, { error: "صورة المقر مطلوبة" });
+          return;
+        }
         const result = placeHqAssets({
           profession,
           stage,
-          itemBytes: Buffer.from(body.itemBase64, "base64"),
-          stageBytes: Buffer.from(body.stageBase64, "base64"),
+          kind,
+          itemBytes: body.itemBase64 ? Buffer.from(body.itemBase64, "base64") : null,
+          stageBytes: body.stageBase64 ? Buffer.from(body.stageBase64, "base64") : null,
           overwrite: true,
           sync: true,
         });
-
-        // Respond immediately — never block the browser on long VPS deploy.
-        let deploy: { started?: boolean; ok?: boolean; error?: string } | null = null;
+        let deploy: { started?: boolean; error?: string } | null = null;
         if (body.deploy) {
           try {
             runDeployBackground(`hq: place ${profession} stage ${stage}`);
             deploy = { started: true };
           } catch (e) {
-            deploy = { ok: false, error: e instanceof Error ? e.message : String(e) };
+            deploy = { error: e instanceof Error ? e.message : String(e) };
+          }
+        }
+        sendJson(200, { ok: true, result, deploy });
+        return;
+      }
+
+      if (req.method === "POST" && url.pathname === "/api/place-batch") {
+        const body = JSON.parse(await readBody()) as {
+          deploy?: boolean;
+          jobs?: Array<{
+            profession: ProfessionCode;
+            stage: number;
+            kind?: "item" | "stage" | "both";
+            itemBase64?: string;
+            stageBase64?: string;
+          }>;
+        };
+        const jobs = body.jobs ?? [];
+        if (jobs.length === 0) {
+          sendJson(400, { error: "لا توجد أدوات للوضع" });
+          return;
+        }
+
+        const results: ReturnType<typeof placeHqAssets>[] = [];
+        for (let i = 0; i < jobs.length; i++) {
+          const job = jobs[i];
+          const kind = job.kind || "both";
+          if ((kind === "item" || kind === "both") && !job.itemBase64) {
+            sendJson(400, { error: `المرحلة ${job.stage}: صورة الأداة مطلوبة` });
+            return;
+          }
+          if ((kind === "stage" || kind === "both") && !job.stageBase64) {
+            sendJson(400, { error: `المرحلة ${job.stage}: صورة المقر مطلوبة` });
+            return;
+          }
+          const sync = i === jobs.length - 1;
+          results.push(
+            placeHqAssets({
+              profession: job.profession,
+              stage: Number(job.stage),
+              kind,
+              itemBytes: job.itemBase64 ? Buffer.from(job.itemBase64, "base64") : null,
+              stageBytes: job.stageBase64 ? Buffer.from(job.stageBase64, "base64") : null,
+              overwrite: true,
+              sync,
+            })
+          );
+        }
+
+        let deploy: { started?: boolean; error?: string } | null = null;
+        if (body.deploy) {
+          try {
+            const codes = [...new Set(jobs.map((j) => `${j.profession}:${j.stage}`))];
+            runDeployBackground(`hq: place batch ${codes.join(",")}`);
+            deploy = { started: true };
+          } catch (e) {
+            deploy = { error: e instanceof Error ? e.message : String(e) };
           }
         }
 
-        sendJson(200, { ok: true, result, deploy });
+        sendJson(200, { ok: true, count: results.length, results, deploy });
         return;
       }
 
@@ -598,7 +454,7 @@ async function main() {
     console.log(`Usage:
   npm run hq:bot
   npm run hq:bot -- --ui
-  npm run hq:place -- --profession doctor --stage 2 --item .\\tool.png --room .\\room.png [--deploy]
+  npm run hq:place -- --profession engineer --stage 1 --item .\\a.png --room .\\b.png [--deploy]
 `);
     return;
   }

@@ -134,7 +134,7 @@ export function HeadquartersScene({ scene, studentId, highlightId, editable = fa
       ) : null}
       <div ref={stageRef} className="hq-stage">
         <img
-          src="/images/headquarters/room.png?v=1"
+          src="/images/headquarters/doctor/stages/stage-00-empty.png"
           alt=""
           className="pointer-events-none block h-auto w-full select-none"
           draggable={false}

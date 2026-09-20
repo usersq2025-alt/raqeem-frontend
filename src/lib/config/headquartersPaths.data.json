@@ -1,0 +1,264 @@
+{
+  "labelsAr": {
+    "doctor": "الطبيب — العيادة",
+    "engineer": "المهندس — المكتب الهندسي",
+    "teacher": "المعلّم — الصف الدراسي",
+    "chef": "الطاهي — المطبخ الاحترافي",
+    "astronaut": "رائد الفضاء — المحطة الفضائية",
+    "soldier": "الجندي — مركز القيادة والخدمة"
+  },
+  "paths": {
+    "doctor": {
+      "roomNumber": 1,
+      "tools": [
+        {
+          "slug": "heartbeat-rug",
+          "slot": "heartbeat_rug",
+          "nameAr": "سجادة نبض القلب",
+          "descriptionAr": "أضف لمسة طبية مميزة إلى أرضية عيادتك."
+        },
+        {
+          "slug": "doctor-desk",
+          "slot": "doctor_desk",
+          "nameAr": "مكتب الطبيب",
+          "descriptionAr": "أضف مكتبًا خاصًا لإدارة عيادتك."
+        },
+        {
+          "slug": "doctor-chair",
+          "slot": "doctor_chair",
+          "nameAr": "كرسي الطبيب",
+          "descriptionAr": "اجلس مرتاحًا أثناء استقبال مرضاك."
+        },
+        {
+          "slug": "medical-tablet",
+          "slot": "medical_tablet",
+          "nameAr": "الجهاز اللوحي الطبي",
+          "descriptionAr": "تابع ملفات المرضى بسهولة."
+        },
+        {
+          "slug": "stethoscope",
+          "slot": "stethoscope",
+          "nameAr": "سماعة الطبيب",
+          "descriptionAr": "أداة الفحص الأساسية لعيادتك."
+        },
+        {
+          "slug": "medicine-cabinet",
+          "slot": "medicine_cabinet",
+          "nameAr": "خزانة الأدوية",
+          "descriptionAr": "نظم أدويتك في مكان آمن ومرتب."
+        },
+        {
+          "slug": "exam-bed",
+          "slot": "exam_bed",
+          "nameAr": "سرير الفحص",
+          "descriptionAr": "جهّز مكانًا مريحًا للفحص."
+        },
+        {
+          "slug": "exam-lamp",
+          "slot": "exam_lamp",
+          "nameAr": "مصباح الفحص",
+          "descriptionAr": "أضئ منطقة الفحص بوضوح."
+        },
+        {
+          "slug": "microscope",
+          "slot": "microscope",
+          "nameAr": "المجهر",
+          "descriptionAr": "استكشف التفاصيل الدقيقة."
+        },
+        {
+          "slug": "anatomy-model",
+          "slot": "anatomy_model",
+          "nameAr": "النموذج التشريحي",
+          "descriptionAr": "تعلّم وتدرّب على بنية الجسم."
+        },
+        {
+          "slug": "diagnostic-station",
+          "slot": "diagnostic_station",
+          "nameAr": "محطة القياس والتشخيص",
+          "descriptionAr": "اجمع أدوات القياس في محطة واحدة."
+        },
+        {
+          "slug": "achievement-shelf",
+          "slot": "achievement_shelf",
+          "nameAr": "رف الإنجازات واللمسات النهائية",
+          "descriptionAr": "اعرض إنجازاتك وأكمل لمسات العيادة."
+        }
+      ]
+    },
+    "engineer": {
+      "roomNumber": 1,
+      "tools": [
+        {
+          "slug": "drafting-table",
+          "slot": "drafting_table",
+          "nameAr": "طاولة رسم هندسي",
+          "descriptionAr": "تؤسس مساحة العمل الرئيسية."
+        },
+        {
+          "slug": "engineering-computer",
+          "slot": "engineering_computer",
+          "nameAr": "حاسوب هندسي بشاشة كبيرة",
+          "descriptionAr": "يضيف مركز التصميم الرقمي."
+        },
+        {
+          "slug": "blueprints-board",
+          "slot": "blueprints_board",
+          "nameAr": "لوحة مخططات على الجدار",
+          "descriptionAr": "تمنح الغرفة هوية هندسية واضحة."
+        },
+        {
+          "slug": "building-model",
+          "slot": "building_model",
+          "nameAr": "نموذج مبنى مصغّر",
+          "descriptionAr": "يعبّر عن المشروع الذي يعمل عليه الطفل."
+        },
+        {
+          "slug": "teaching-robot-arm",
+          "slot": "teaching_robot_arm",
+          "nameAr": "ذراع روبوتية تعليمية",
+          "descriptionAr": "أداة ختامية مبهرة ومتقدمة."
+        }
+      ]
+    },
+    "teacher": {
+      "roomNumber": 1,
+      "tools": [
+        {
+          "slug": "teacher-desk",
+          "slot": "teacher_desk",
+          "nameAr": "مكتب المعلّم",
+          "descriptionAr": "يبدأ تكوين الصف."
+        },
+        {
+          "slug": "smart-board",
+          "slot": "smart_board",
+          "nameAr": "سبورة تعليمية ذكية",
+          "descriptionAr": "تصبح العنصر المركزي في الغرفة."
+        },
+        {
+          "slug": "colorful-bookshelf",
+          "slot": "colorful_bookshelf",
+          "nameAr": "مكتبة كتب ملوّنة",
+          "descriptionAr": "تضيف ثراءً بصريًا وتعليميًا."
+        },
+        {
+          "slug": "activity-table",
+          "slot": "activity_table",
+          "nameAr": "طاولة تجارب وأنشطة",
+          "descriptionAr": "تظهر الجانب التفاعلي للتعليم."
+        },
+        {
+          "slug": "student-achievements-corner",
+          "slot": "student_achievements_corner",
+          "nameAr": "ركن إنجازات الطلاب",
+          "descriptionAr": "لوحة نجوم وشهادات وجوائز صغيرة."
+        }
+      ]
+    },
+    "chef": {
+      "roomNumber": 1,
+      "tools": [
+        {
+          "slug": "prep-table",
+          "slot": "prep_table",
+          "nameAr": "طاولة تحضير الطعام",
+          "descriptionAr": "تحدد مساحة العمل الأساسية."
+        },
+        {
+          "slug": "safe-stove-oven",
+          "slot": "safe_stove_oven",
+          "nameAr": "موقد وفرن آمنان",
+          "descriptionAr": "يمنحان المكان هوية المطبخ."
+        },
+        {
+          "slug": "colorful-fridge",
+          "slot": "colorful_fridge",
+          "nameAr": "ثلّاجة ملوّنة",
+          "descriptionAr": "عنصر كبير يملأ أحد الجدران."
+        },
+        {
+          "slug": "mixer-tools",
+          "slot": "mixer_tools",
+          "nameAr": "خلاط وأدوات تحضير",
+          "descriptionAr": "تضيف التفاصيل المهنية."
+        },
+        {
+          "slug": "plating-station",
+          "slot": "plating_station",
+          "nameAr": "محطة تقديم الأطباق",
+          "descriptionAr": "تعرض طبقًا نهائيًا بصورة احتفالية."
+        }
+      ]
+    },
+    "astronaut": {
+      "roomNumber": 1,
+      "tools": [
+        {
+          "slug": "space-pilot-seat",
+          "slot": "space_pilot_seat",
+          "nameAr": "مقعد قيادة فضائي",
+          "descriptionAr": "يبدأ بناء مركز القيادة."
+        },
+        {
+          "slug": "lit-control-panel",
+          "slot": "lit_control_panel",
+          "nameAr": "لوحة تحكم مضيئة",
+          "descriptionAr": "تضيف طابعًا تقنيًا واضحًا."
+        },
+        {
+          "slug": "space-telescope",
+          "slot": "space_telescope",
+          "nameAr": "تلسكوب فضائي",
+          "descriptionAr": "يربط المقر بالاكتشاف والمراقبة."
+        },
+        {
+          "slug": "solar-system-model",
+          "slot": "solar_system_model",
+          "nameAr": "نموذج النظام الشمسي",
+          "descriptionAr": "عنصر تعليمي وحركي مميز."
+        },
+        {
+          "slug": "panoramic-space-window",
+          "slot": "panoramic_space_window",
+          "nameAr": "نافذة فضائية بانورامية",
+          "descriptionAr": "منظر الأرض والكواكب — ترقية ختامية للمكان."
+        }
+      ]
+    },
+    "soldier": {
+      "roomNumber": 1,
+      "tools": [
+        {
+          "slug": "field-command-desk",
+          "slot": "field_command_desk",
+          "nameAr": "مكتب قيادة ميداني",
+          "descriptionAr": "يؤسس مساحة التنظيم."
+        },
+        {
+          "slug": "radio-communicator",
+          "slot": "radio_communicator",
+          "nameAr": "جهاز اتصال لاسلكي",
+          "descriptionAr": "يرمز إلى التواصل والتنسيق."
+        },
+        {
+          "slug": "interactive-mission-map",
+          "slot": "interactive_mission_map",
+          "nameAr": "خريطة مهام تفاعلية",
+          "descriptionAr": "تضيف عنصر التخطيط."
+        },
+        {
+          "slug": "first-aid-kit",
+          "slot": "first_aid_kit",
+          "nameAr": "حقيبة إسعافات أولية",
+          "descriptionAr": "تبرز الحماية ومساعدة الآخرين."
+        },
+        {
+          "slug": "flag-medals-stand",
+          "slot": "flag_medals_stand",
+          "nameAr": "منصة راية وميداليات",
+          "descriptionAr": "ختام احتفالي يرمز إلى الإنجاز والخدمة."
+        }
+      ]
+    }
+  }
+}

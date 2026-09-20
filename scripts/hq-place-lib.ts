@@ -1,34 +1,74 @@
 /**
  * Shared HQ asset placement helpers (catalog-driven naming).
  */
-import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
   HEADQUARTERS_STAGES_BY_PROFESSION,
+  PROFESSION_LABELS_AR,
+  buildStagesForProfession,
+  type HeadquartersPathData,
   type HeadquartersStageDefinition,
 } from "../src/lib/config/headquartersStages.catalog";
-import type { ProfessionCode } from "../src/lib/config/professions";
+import { PROFESSION_CODES, type ProfessionCode } from "../src/lib/config/professions";
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const PUBLIC_DIR = path.join(ROOT, "public");
+const HQ_PATHS_JSON = path.join(ROOT, "src", "lib", "config", "headquartersPaths.data.json");
+
+export { PROFESSION_LABELS_AR, PROFESSION_CODES };
+
+/** Live catalog from JSON (picks up bot edits without restart). */
+export function loadLiveStages(profession: ProfessionCode): HeadquartersStageDefinition[] {
+  try {
+    const data = JSON.parse(readFileSync(HQ_PATHS_JSON, "utf8")) as HeadquartersPathData;
+    return buildStagesForProfession(profession, data);
+  } catch {
+    return HEADQUARTERS_STAGES_BY_PROFESSION[profession] ?? [];
+  }
+}
+
+export function loadLiveLabels(): Record<ProfessionCode, string> {
+  try {
+    const data = JSON.parse(readFileSync(HQ_PATHS_JSON, "utf8")) as HeadquartersPathData;
+    const out = { ...PROFESSION_LABELS_AR };
+    for (const code of PROFESSION_CODES) {
+      if (data.labelsAr?.[code]) out[code] = data.labelsAr[code];
+    }
+    return out;
+  } catch {
+    return PROFESSION_LABELS_AR;
+  }
+}
 
 /** Display-only prices (authoritative source is StoreItem / seeder). */
-export const DOCTOR_STAGE_PRICES: Record<number, number> = {
-  1: 6,
-  2: 12,
-  3: 24,
-  4: 30,
-  5: 36,
-  6: 36,
-  7: 42,
-  8: 42,
-  9: 48,
-  10: 48,
-  11: 54,
-  12: 60,
+export const STAGE_PRICES_BY_PROFESSION: Record<ProfessionCode, Record<number, number>> = {
+  doctor: {
+    1: 6,
+    2: 12,
+    3: 24,
+    4: 30,
+    5: 36,
+    6: 36,
+    7: 42,
+    8: 42,
+    9: 48,
+    10: 48,
+    11: 54,
+    12: 60,
+  },
+  // Five-stage paths — provisional ladder for first release
+  engineer: { 1: 6, 2: 12, 3: 24, 4: 36, 5: 48 },
+  teacher: { 1: 6, 2: 12, 3: 24, 4: 36, 5: 48 },
+  chef: { 1: 6, 2: 12, 3: 24, 4: 36, 5: 48 },
+  astronaut: { 1: 6, 2: 12, 3: 24, 4: 36, 5: 48 },
+  soldier: { 1: 6, 2: 12, 3: 24, 4: 36, 5: 48 },
 };
+
+/** @deprecated use STAGE_PRICES_BY_PROFESSION.doctor */
+export const DOCTOR_STAGE_PRICES = STAGE_PRICES_BY_PROFESSION.doctor;
 
 export type PlaceKind = "item" | "stage" | "both";
 
@@ -42,17 +82,52 @@ export type PlaceResult = {
   readyAfterSync: boolean;
 };
 
-export function listPlaceableStages(
-  profession: ProfessionCode = "doctor"
-): Array<
-  HeadquartersStageDefinition & {
-    pricePoints: number | null;
-    itemOnDisk: boolean;
-    stageOnDisk: boolean;
-    ready: boolean;
-  }
-> {
-  const stages = HEADQUARTERS_STAGES_BY_PROFESSION[profession] ?? [];
+export type PlaceableStage = HeadquartersStageDefinition & {
+  pricePoints: number | null;
+  itemOnDisk: boolean;
+  stageOnDisk: boolean;
+  ready: boolean;
+};
+
+export type EmptyRoomInfo = {
+  profession: ProfessionCode;
+  stageImage: string;
+  onDisk: boolean;
+};
+
+export function getEmptyRoomInfo(profession: ProfessionCode): EmptyRoomInfo | null {
+  const def = getStage(profession, 0);
+  if (!def?.stageImage) return null;
+  return {
+    profession,
+    stageImage: def.stageImage,
+    onDisk: diskExists(def.stageImage),
+  };
+}
+
+export function listProfessions(): Array<{
+  code: ProfessionCode;
+  labelAr: string;
+  stageCount: number;
+  emptyOnDisk: boolean;
+  emptyStageImage: string | null;
+}> {
+  const labels = loadLiveLabels();
+  return PROFESSION_CODES.map((code) => {
+    const empty = getEmptyRoomInfo(code);
+    return {
+      code,
+      labelAr: labels[code],
+      stageCount: loadLiveStages(code).filter((s) => s.stage > 0).length,
+      emptyOnDisk: empty?.onDisk ?? false,
+      emptyStageImage: empty?.stageImage ?? null,
+    };
+  });
+}
+
+export function listPlaceableStages(profession: ProfessionCode = "doctor"): PlaceableStage[] {
+  const stages = loadLiveStages(profession);
+  const prices = STAGE_PRICES_BY_PROFESSION[profession] ?? {};
   return stages
     .filter((s) => s.stage > 0 && s.itemSlug && s.storeSlotKey)
     .map((s) => {
@@ -60,7 +135,7 @@ export function listPlaceableStages(
       const stageOnDisk = diskExists(s.stageImage);
       return {
         ...s,
-        pricePoints: profession === "doctor" ? (DOCTOR_STAGE_PRICES[s.stage] ?? null) : null,
+        pricePoints: prices[s.stage] ?? defaultStagePrice(s.stage),
         itemOnDisk,
         stageOnDisk,
         ready: itemOnDisk && stageOnDisk,
@@ -72,9 +147,12 @@ export function getStage(
   profession: ProfessionCode,
   stage: number
 ): HeadquartersStageDefinition | null {
-  return (
-    (HEADQUARTERS_STAGES_BY_PROFESSION[profession] ?? []).find((s) => s.stage === stage) ?? null
-  );
+  return loadLiveStages(profession).find((s) => s.stage === stage) ?? null;
+}
+
+function defaultStagePrice(stage: number): number {
+  const ladder = [6, 12, 24, 36, 48, 60, 72, 84, 96];
+  return ladder[stage - 1] ?? 60 + Math.max(0, stage - 9) * 12;
 }
 
 export function urlToDisk(urlPath: string): string {
@@ -140,17 +218,22 @@ export function placeHqAssets(input: PlaceInput): PlaceResult {
   } = input;
 
   const def = getStage(profession, stage);
-  if (!def || !def.itemSlug || !def.itemImage || !def.stageImage) {
+  if (!def?.stageImage) {
     throw new Error(`لا توجد مرحلة قابلة للوضع: ${profession} #${stage}`);
   }
 
-  const wantItem = kind === "item" || kind === "both";
-  const wantStage = kind === "stage" || kind === "both";
+  const isEmptyRoom = stage === 0;
+  if (!isEmptyRoom && (!def.itemSlug || !def.itemImage)) {
+    throw new Error(`لا توجد مرحلة قابلة للوضع: ${profession} #${stage}`);
+  }
+
+  const wantItem = !isEmptyRoom && (kind === "item" || kind === "both");
+  const wantStage = isEmptyRoom || kind === "stage" || kind === "both";
   const written: string[] = [];
   const skipped: string[] = [];
 
   if (wantItem) {
-    const dest = urlToDisk(def.itemImage);
+    const dest = urlToDisk(def.itemImage!);
     const rel = path.relative(ROOT, dest);
     let status: "written" | "skipped";
     if (itemBytes) {
@@ -177,21 +260,45 @@ export function placeHqAssets(input: PlaceInput): PlaceResult {
     (status === "written" ? written : skipped).push(rel);
   }
 
-  let readyAfterSync = diskExists(def.itemImage) && diskExists(def.stageImage);
+  let readyAfterSync = isEmptyRoom
+    ? diskExists(def.stageImage)
+    : diskExists(def.itemImage) && diskExists(def.stageImage);
   if (sync) {
     runSyncHq();
-    readyAfterSync = diskExists(def.itemImage) && diskExists(def.stageImage);
+    readyAfterSync = isEmptyRoom
+      ? diskExists(def.stageImage)
+      : diskExists(def.itemImage) && diskExists(def.stageImage);
   }
 
+  const prices = STAGE_PRICES_BY_PROFESSION[profession] ?? {};
   return {
     profession,
     stage,
-    nameAr: def.nameAr,
-    pricePoints: profession === "doctor" ? (DOCTOR_STAGE_PRICES[stage] ?? null) : null,
+    nameAr: isEmptyRoom ? "المقر الفارغ" : def.nameAr,
+    pricePoints: isEmptyRoom ? null : (prices[stage] ?? defaultStagePrice(stage)),
     written,
     skipped,
     readyAfterSync,
   };
+}
+
+/** Place only the empty HQ room (stage 0) shown before any tool purchase. */
+export function placeEmptyRoom(input: {
+  profession: ProfessionCode;
+  stageSourcePath?: string | null;
+  stageBytes?: Buffer | null;
+  overwrite?: boolean;
+  sync?: boolean;
+}): PlaceResult {
+  return placeHqAssets({
+    profession: input.profession,
+    stage: 0,
+    stageSourcePath: input.stageSourcePath,
+    stageBytes: input.stageBytes,
+    kind: "stage",
+    overwrite: input.overwrite ?? true,
+    sync: input.sync ?? true,
+  });
 }
 
 export function runSyncHq(): void {
@@ -219,8 +326,6 @@ function resolveGitExe(): string {
 }
 
 export function startFrontendDeploy(commitMessage: string): void {
-  // Non-interactive path: commit HQ assets only, push, SSH deploy.
-  // Important: shell:false so -m messages with spaces are not split on Windows.
   const relPaths = [
     "public/images/headquarters",
     "src/lib/config/generated/hqAssets.generated.ts",
