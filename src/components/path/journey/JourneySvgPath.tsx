@@ -52,7 +52,7 @@ export function JourneySvgPath({
         strokeWidth={outer}
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.7"
+        opacity="0.55"
         vectorEffect="non-scaling-stroke"
       />
       <path
@@ -71,7 +71,7 @@ export function JourneySvgPath({
         strokeWidth={edge}
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.4"
+        opacity="0.28"
         vectorEffect="non-scaling-stroke"
       />
     </svg>

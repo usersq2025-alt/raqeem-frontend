@@ -21,7 +21,7 @@ function probeImage(src: string): Promise<boolean> {
 }
 
 /**
- * Full-height soft scene. Probes long → mobile → short until one loads.
+ * Full-height soft scene. Uses probed candidates (long → mobile → short).
  * Soft gradient only as fallback — no green seam strips, no CSS hills/clouds, no tile.
  */
 export function JourneyDecorationLayer({ theme, stage, canvasHeight, isMobile }: Props) {
@@ -29,10 +29,12 @@ export function JourneyDecorationLayer({ theme, stage, canvasHeight, isMobile }:
     () => themeBackgroundCandidates(theme, { isMobile }),
     [theme, isMobile]
   );
-  const [src, setSrc] = useState<string | null>(null);
+  // Optimistic short bg while long/mobile are probed — avoids mint flash
+  const [src, setSrc] = useState<string | null>(() => theme.backgroundImage ?? candidates[0] ?? null);
 
   useEffect(() => {
     let cancelled = false;
+    setSrc(theme.backgroundImage ?? candidates[0] ?? null);
 
     (async () => {
       for (const candidate of candidates) {
@@ -43,13 +45,13 @@ export function JourneyDecorationLayer({ theme, stage, canvasHeight, isMobile }:
           return;
         }
       }
-      if (!cancelled) setSrc(null);
+      if (!cancelled) setSrc(theme.backgroundImage ?? null);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [candidates]);
+  }, [candidates, theme.backgroundImage]);
 
   return (
     <div

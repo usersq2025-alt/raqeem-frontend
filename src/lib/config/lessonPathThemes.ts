@@ -61,10 +61,11 @@ function theme(
 /** Central theme registry — swap art without touching JSX. Gate WebPs are unused on-screen. */
 export const LESSON_PATH_THEMES: Record<SubjectKey, LessonPathTheme> = {
   science: theme("science", "linear-gradient(180deg,#8ECFF2 0%,#B5DFF5 28%,#C8E8C0 62%,#B5D99A 100%)", {
-    // Temporary 576×1024 until background-long.webp ships
+    // Temporary 576×1024 asset — not for production stretch.
+    // When ready, set:
+    //   backgroundLongImage: "/images/lesson-path/science/background-long.webp" (2160×3840)
+    //   backgroundMobileImage: "/images/lesson-path/science/background-mobile.webp"
     backgroundImage: "/images/lesson-path/science/background.webp",
-    backgroundLongImage: "/images/lesson-path/science/background-long.webp",
-    backgroundMobileImage: "/images/lesson-path/science/background-mobile.webp",
     backgroundSize: { width: 576, height: 1024 },
     backgroundPosition: "center center",
   }),

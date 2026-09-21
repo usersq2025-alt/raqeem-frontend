@@ -139,6 +139,7 @@ export function LessonJourneyNode({
         status={status}
         side={labelSide}
         below={titleBelow}
+        avoidAvatar={showAvatar && !titleBelow}
       />
     </div>
   );

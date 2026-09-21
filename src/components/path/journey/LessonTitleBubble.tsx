@@ -10,9 +10,18 @@ type Props = {
   side: LabelSide;
   /** Mobile: place title under the cluster to avoid collision */
   below?: boolean;
+  /** Shift down so a current-lesson avatar above the node cannot cover the title */
+  avoidAvatar?: boolean;
 };
 
-export function LessonTitleBubble({ title, meta, status, side, below = false }: Props) {
+export function LessonTitleBubble({
+  title,
+  meta,
+  status,
+  side,
+  below = false,
+  avoidAvatar = false,
+}: Props) {
   const tone =
     status === "current"
       ? "bg-[#FFF8F1] ring-primary-orange/30"
@@ -33,9 +42,11 @@ export function LessonTitleBubble({ title, meta, status, side, below = false }: 
     );
   }
 
+  const vertical = avoidAvatar ? "top-[72%] -translate-y-1/2" : "top-1/2 -translate-y-1/2";
+
   return (
     <div
-      className={`pointer-events-none absolute top-1/2 z-[5] w-[9rem] max-w-[11rem] -translate-y-1/2 sm:w-[10.75rem] sm:max-w-[11rem] ${
+      className={`pointer-events-none absolute z-[5] w-[9rem] max-w-[11rem] sm:w-[10.75rem] sm:max-w-[11rem] ${vertical} ${
         side === "left" ? "end-[calc(100%+0.85rem)] text-end" : "start-[calc(100%+0.85rem)] text-start"
       }`}
     >
