@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -92,6 +92,7 @@ export function DoctorHeadquartersExperience({
   const [displayStage, setDisplayStage] = useState(() =>
     resolveHeadquartersStage(ownedKeysForProfession(scene.items, profession), profession).currentStage
   );
+  const [sceneSync, setSceneSync] = useState({ profession, items: scene.items });
   const [prevStageForFade, setPrevStageForFade] = useState<number | null>(null);
   const [phase, setPhase] = useState<ViewPhase>("idle");
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -100,18 +101,20 @@ export function DoctorHeadquartersExperience({
   const [imageReady, setImageReady] = useState(false);
   const [stageImageBroken, setStageImageBroken] = useState(false);
   const [itemImageBroken, setItemImageBroken] = useState(false);
+  const [trackedStageImage, setTrackedStageImage] = useState<string | null>(null);
+  const [trackedItemImage, setTrackedItemImage] = useState<string | undefined | null>(null);
   const [lastPurchasedName, setLastPurchasedName] = useState("");
   const buyButtonRef = useRef<HTMLButtonElement>(null);
   const purchaseLock = useRef(false);
 
   const [catalogRevision, setCatalogRevision] = useState(0);
 
-  useEffect(() => {
-    setOwnedKeys(ownedKeysForProfession(scene.items, profession));
-    setDisplayStage(
-      resolveHeadquartersStage(ownedKeysForProfession(scene.items, profession), profession).currentStage
-    );
-  }, [profession, scene.items]);
+  if (profession !== sceneSync.profession || scene.items !== sceneSync.items) {
+    const nextOwned = ownedKeysForProfession(scene.items, profession);
+    setSceneSync({ profession, items: scene.items });
+    setOwnedKeys(nextOwned);
+    setDisplayStage(resolveHeadquartersStage(nextOwned, profession).currentStage);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -176,14 +179,21 @@ export function DoctorHeadquartersExperience({
     setChromePoints?.(pointsBalance);
   }, [pointsBalance, setChromePoints]);
 
-  useEffect(() => {
-    setImageReady(false);
-    setStageImageBroken(false);
-  }, [activeStageDef.stageImage]);
+  if (trackedStageImage !== activeStageDef.stageImage) {
+    if (trackedStageImage !== null) {
+      setImageReady(false);
+      setStageImageBroken(false);
+    }
+    setTrackedStageImage(activeStageDef.stageImage);
+  }
 
-  useEffect(() => {
-    setItemImageBroken(false);
-  }, [nextStage?.itemImage]);
+  const nextItemImage = nextStage?.itemImage;
+  if (trackedItemImage !== nextItemImage) {
+    if (trackedItemImage !== null) {
+      setItemImageBroken(false);
+    }
+    setTrackedItemImage(nextItemImage);
+  }
 
   // Prefetch next cumulative stage image after current loads
   useEffect(() => {
@@ -789,21 +799,20 @@ function SuccessOverlay({
 }) {
   const titleId = "hq-success-title";
   const panelRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
     panelRef.current?.focus();
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previous;
     };
-  }, [mounted]);
+  }, []);
 
   if (!mounted) return null;
 

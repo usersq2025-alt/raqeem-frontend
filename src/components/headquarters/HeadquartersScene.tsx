@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useTranslations } from "next-intl";
 import type { HeadquartersItem, HeadquartersSceneData } from "@/lib/api/store";
 import { updateHeadquartersItemPosition } from "@/lib/api/store";
@@ -18,6 +18,7 @@ export function HeadquartersScene({ scene, studentId, highlightId, editable = fa
   const t = useTranslations("student.store");
   const tHq = useTranslations("student.hq");
   const [items, setItems] = useState<LocalItem[]>(scene.items);
+  const [itemsSource, setItemsSource] = useState(scene.items);
   const [savingId, setSavingId] = useState<number | null>(null);
   const [dragId, setDragId] = useState<number | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -34,9 +35,10 @@ export function HeadquartersScene({ scene, studentId, highlightId, editable = fa
     moved: boolean;
   } | null>(null);
 
-  useEffect(() => {
+  if (scene.items !== itemsSource) {
+    setItemsSource(scene.items);
     setItems(scene.items);
-  }, [scene.items]);
+  }
 
   const sorted = useMemo(
     () => [...items].sort((a, b) => a.zIndex - b.zIndex || a.id - b.id),

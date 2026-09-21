@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
 import type { SubjectProgress } from "@/lib/api/student";
 import {
   SUBJECT_ACCENTS,
@@ -11,6 +10,7 @@ import {
   withChildQuery,
 } from "@/lib/config/subjects";
 import { useMountedViewTransitionName } from "@/lib/utils/useMountedViewTransitionName";
+import { useAnimatedFill } from "@/lib/utils/useAnimatedFill";
 import { useRouter } from "@/i18n/navigation";
 import { SubjectLessonProgress } from "@/components/SubjectLessonProgress";
 
@@ -31,17 +31,7 @@ export function SubjectCard({ subject, childId, index }: Props) {
     subject.totalLessons > 0
       ? Math.min(100, Math.round((subject.completedLessons / subject.totalLessons) * 100))
       : 0;
-  const [fill, setFill] = useState(0);
-
-  useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      setFill(percentage);
-      return;
-    }
-    const frame = window.requestAnimationFrame(() => setFill(percentage));
-    return () => window.cancelAnimationFrame(frame);
-  }, [percentage]);
+  const fill = useAnimatedFill(percentage);
 
   return (
     <button

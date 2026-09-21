@@ -24,34 +24,36 @@ function probeImage(src: string): Promise<boolean> {
  * Full-height soft scene. Uses probed candidates (long → mobile → short).
  * Soft gradient only as fallback — no green seam strips, no CSS hills/clouds, no tile.
  */
-export function JourneyDecorationLayer({ theme, stage, canvasHeight, isMobile }: Props) {
-  const candidates = useMemo(
-    () => themeBackgroundCandidates(theme, { isMobile }),
-    [theme, isMobile]
-  );
-  // Optimistic short bg while long/mobile are probed — avoids mint flash
-  const [src, setSrc] = useState<string | null>(() => theme.backgroundImage ?? candidates[0] ?? null);
+function JourneyDecorationBackground({
+  theme,
+  stage,
+  canvasHeight,
+  candidates,
+}: Props & { candidates: string[] }) {
+  const optimisticSrc = theme.backgroundImage ?? candidates[0] ?? null;
+  const [probedSrc, setProbedSrc] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    setSrc(theme.backgroundImage ?? candidates[0] ?? null);
 
     (async () => {
       for (const candidate of candidates) {
         const ok = await probeImage(candidate);
         if (cancelled) return;
         if (ok) {
-          setSrc(candidate);
+          setProbedSrc(candidate);
           return;
         }
       }
-      if (!cancelled) setSrc(theme.backgroundImage ?? null);
+      if (!cancelled) setProbedSrc(null);
     })();
 
     return () => {
       cancelled = true;
     };
   }, [candidates, theme.backgroundImage]);
+
+  const src = probedSrc ?? optimisticSrc;
 
   return (
     <div
@@ -87,5 +89,24 @@ export function JourneyDecorationLayer({ theme, stage, canvasHeight, isMobile }:
         />
       ) : null}
     </div>
+  );
+}
+
+export function JourneyDecorationLayer({ theme, stage, canvasHeight, isMobile }: Props) {
+  const candidates = useMemo(
+    () => themeBackgroundCandidates(theme, { isMobile }),
+    [theme, isMobile]
+  );
+  const probeKey = `${theme.backgroundImage ?? ""}|${candidates.join(",")}`;
+
+  return (
+    <JourneyDecorationBackground
+      key={probeKey}
+      theme={theme}
+      stage={stage}
+      canvasHeight={canvasHeight}
+      isMobile={isMobile}
+      candidates={candidates}
+    />
   );
 }

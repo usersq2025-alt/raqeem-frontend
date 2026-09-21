@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import { MOCK_HEADQUARTERS } from "@/lib/api/mockStudent";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
 import { parentLaravelPatch } from "@/lib/server/parentLaravel";
+import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_AUTH !== "false";
 
 type Props = { params: Promise<{ id: string; itemId: string }> };
 
@@ -20,7 +20,7 @@ export async function PATCH(request: Request, { params }: Props) {
     return NextResponse.json({ message: "Invalid body" }, { status: 422 });
   }
 
-  if (USE_MOCK) {
+  if (isMockAuthEnabled()) {
     const items = Array.isArray(MOCK_HEADQUARTERS.items) ? MOCK_HEADQUARTERS.items : [];
     const existing = items.find((row) => Number((row as { id?: unknown }).id) === Number(itemId));
     const item = {

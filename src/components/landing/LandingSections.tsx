@@ -722,42 +722,48 @@ export function FinalCtaSection() {
   );
 }
 
+type FooterGroupId = "sections" | "account" | "legal";
+
+function FooterGroup({
+  id,
+  title,
+  children,
+  openGroup,
+  setOpenGroup,
+}: {
+  id: FooterGroupId;
+  title: string;
+  children: React.ReactNode;
+  openGroup: FooterGroupId | null;
+  setOpenGroup: (next: FooterGroupId | null) => void;
+}) {
+  const expanded = openGroup === id;
+  const panelId = `footer-${id}`;
+  return (
+    <div className="border-b border-brand-navy/10 lg:border-none">
+      <button
+        type="button"
+        className="flex min-h-11 w-full items-center justify-between py-3 text-start text-sm font-extrabold text-brand-navy-dark lg:pointer-events-none lg:cursor-default lg:py-0"
+        aria-expanded={expanded}
+        aria-controls={panelId}
+        onClick={() => setOpenGroup(expanded ? null : id)}
+      >
+        {title}
+        <span className="lg:hidden" aria-hidden="true">
+          {expanded ? "−" : "+"}
+        </span>
+      </button>
+      <div id={panelId} className={`${expanded ? "block" : "hidden"} pb-3 lg:block lg:pb-0`}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function LandingFooter() {
   const t = useTranslations("welcome");
   const year = 2026;
-  const [openGroup, setOpenGroup] = useState<"sections" | "account" | "legal" | null>(null);
-
-  function FooterGroup({
-    id,
-    title,
-    children,
-  }: {
-    id: "sections" | "account" | "legal";
-    title: string;
-    children: React.ReactNode;
-  }) {
-    const expanded = openGroup === id;
-    const panelId = `footer-${id}`;
-    return (
-      <div className="border-b border-brand-navy/10 lg:border-none">
-        <button
-          type="button"
-          className="flex min-h-11 w-full items-center justify-between py-3 text-start text-sm font-extrabold text-brand-navy-dark lg:pointer-events-none lg:cursor-default lg:py-0"
-          aria-expanded={expanded}
-          aria-controls={panelId}
-          onClick={() => setOpenGroup(expanded ? null : id)}
-        >
-          {title}
-          <span className="lg:hidden" aria-hidden="true">
-            {expanded ? "−" : "+"}
-          </span>
-        </button>
-        <div id={panelId} className={`${expanded ? "block" : "hidden"} pb-3 lg:block lg:pb-0`}>
-          {children}
-        </div>
-      </div>
-    );
-  }
+  const [openGroup, setOpenGroup] = useState<FooterGroupId | null>(null);
 
   return (
     <footer className="border-t border-brand-navy/10 bg-white/70 pb-8 pt-8">
@@ -777,7 +783,12 @@ export function LandingFooter() {
           </a>
         </div>
 
-        <FooterGroup id="sections" title={t("footer.sections")}>
+        <FooterGroup
+          id="sections"
+          title={t("footer.sections")}
+          openGroup={openGroup}
+          setOpenGroup={setOpenGroup}
+        >
           <ul className="space-y-2">
             {LANDING_NAV.map((item) =>
               item.href.startsWith("#") ? (
@@ -803,7 +814,12 @@ export function LandingFooter() {
           </ul>
         </FooterGroup>
 
-        <FooterGroup id="account" title={t("footer.account")}>
+        <FooterGroup
+          id="account"
+          title={t("footer.account")}
+          openGroup={openGroup}
+          setOpenGroup={setOpenGroup}
+        >
           <ul className="space-y-2">
             <li>
               <Link
@@ -824,7 +840,12 @@ export function LandingFooter() {
           </ul>
         </FooterGroup>
 
-        <FooterGroup id="legal" title={t("footer.legal")}>
+        <FooterGroup
+          id="legal"
+          title={t("footer.legal")}
+          openGroup={openGroup}
+          setOpenGroup={setOpenGroup}
+        >
           <ul className="space-y-2">
             <li>
               <Link

@@ -27,7 +27,6 @@ export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const firstFieldRef = useRef<HTMLInputElement>(null);
-  const [ready, setReady] = useState(false);
   const [status, setStatus] = useState<GuardianStatus | null>(null);
   const [step, setStep] = useState<Step>("auth");
   const [pin, setPin] = useState("");
@@ -37,24 +36,43 @@ export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
   const [newPinConfirm, setNewPinConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [gateSession, setGateSession] = useState(false);
 
-  useEffect(() => setReady(true), []);
-
-  useEffect(() => {
-    if (!open) return;
+  if (open && !gateSession) {
+    setGateSession(true);
     setStep("auth");
     setPin("");
     setPassword("");
     setError("");
     setBusy(false);
+  }
+  if (!open && gateSession) {
+    setGateSession(false);
+  }
+
+  useEffect(() => {
+    if (!open) return;
     let cancelled = false;
-    getGuardianStatus()
-      .then((next) => {
+    void (async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      try {
+        const next = await getGuardianStatus();
         if (!cancelled) setStatus(next);
-      })
-      .catch(() => {
-        if (!cancelled) setStatus({ pinSet: false, unlocked: false, pinLocked: false, unlockTtlMinutes: 15, pin_set: false, pin_locked: false, unlock_ttl_minutes: 15 });
-      });
+      } catch {
+        if (!cancelled) {
+          setStatus({
+            pinSet: false,
+            unlocked: false,
+            pinLocked: false,
+            unlockTtlMinutes: 15,
+            pin_set: false,
+            pin_locked: false,
+            unlock_ttl_minutes: 15,
+          });
+        }
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -65,6 +83,7 @@ export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const focusTimer = window.setTimeout(() => firstFieldRef.current?.focus(), 80);
+    const returnFocusEl = returnFocusRef?.current ?? null;
 
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape" && !busy) {
@@ -80,7 +99,7 @@ export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
       document.body.style.overflow = previous;
       window.removeEventListener("keydown", onKey);
       window.clearTimeout(focusTimer);
-      returnFocusRef?.current?.focus();
+      returnFocusEl?.focus();
     };
   }, [open, busy, onClose, returnFocusRef]);
 
@@ -153,7 +172,7 @@ export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
     }
   }
 
-  if (!ready || !open) return null;
+  if (typeof document === "undefined" || !open) return null;
 
   const usePin = Boolean(status?.pinSet);
 

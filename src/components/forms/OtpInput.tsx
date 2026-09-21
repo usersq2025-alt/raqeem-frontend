@@ -42,9 +42,6 @@ export function OtpInput({
   const digits = Array.from({ length: OTP_LENGTH }, (_, index) => value[index] ?? "");
   const activeIndex = Math.min(value.length, OTP_LENGTH - 1);
 
-  const valueRef = useRef(value);
-  valueRef.current = value;
-
   useEffect(() => {
     if (!autoFocus || disabled) return;
     inputRef.current?.focus({ preventScroll: true });
@@ -58,13 +55,11 @@ export function OtpInput({
 
   function commit(nextRaw: string) {
     const clipped = onlyDigits(nextRaw).slice(0, OTP_LENGTH);
-    const previous = valueRef.current;
-    if (clipped === previous) return;
+    if (clipped === value) return;
 
-    valueRef.current = clipped;
     onChange(clipped);
 
-    if (clipped.length > previous.length) {
+    if (clipped.length > value.length) {
       setPulseIndex(clipped.length - 1);
     }
 

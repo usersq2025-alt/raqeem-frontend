@@ -34,18 +34,17 @@ export function ChildrenHub({ parentName }: Props) {
   const [children, setChildren] = useState<ChildProfile[] | null>(null);
   const [error, setError] = useState(false);
   const [active, setActive] = useState(0);
-  const [animatePoints, setAnimatePoints] = useState(false);
-
-  useEffect(() => {
+  const [animatePoints] = useState(() => {
     try {
       if (!sessionStorage.getItem(POINTS_SEEN_KEY)) {
-        setAnimatePoints(true);
         sessionStorage.setItem(POINTS_SEEN_KEY, "1");
+        return true;
       }
+      return false;
     } catch {
-      setAnimatePoints(true);
+      return true;
     }
-  }, []);
+  });
 
   useEffect(() => {
     let cancelled = false;

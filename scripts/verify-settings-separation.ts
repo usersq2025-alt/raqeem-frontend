@@ -25,8 +25,9 @@ function assert(condition: boolean, message: string) {
 }
 
 const studentNav = read("components/StudentNav.tsx");
-assert(studentNav.includes('"preferences"'), "StudentNav uses preferences nav key");
-assert(studentNav.includes("parentGate"), "StudentNav references parent gate labels");
+assert(studentNav.includes('"settings"'), "StudentNav uses settings nav key");
+assert(!studentNav.includes("ParentGateModal"), "StudentNav no longer hosts parent return gate");
+assert(!studentNav.includes("returnToParent"), "StudentNav no longer shows return-to-parent CTA");
 assert(studentNav.includes("md:hidden"), "StudentNav keeps desktop sidebar hidden on mobile");
 assert(fs.existsSync(path.join(root, "components/family/ParentGateModal.tsx")), "ParentGateModal exists");
 
@@ -59,18 +60,21 @@ assert(!/email/i.test(experienceSource), "ExperiencePreferences has no account e
 assert(!/phone/i.test(experienceSource), "ExperiencePreferences has no phone fields");
 assert(experienceSource.includes('role="radiogroup"'), "ExperiencePreferences uses radiogroup for size/contrast");
 assert(experienceSource.includes("aria-checked"), "ExperiencePreferences exposes aria-checked");
+assert(experienceSource.includes("ParentGateModal"), "Settings page hosts parent return gate");
+assert(experienceSource.includes("parentExit"), "Settings page has parent exit section");
 
 const languageSwitcher = read("components/LanguageSwitcher.tsx");
 assert(!languageSwitcher.includes(">AR<") && !languageSwitcher.includes(">EN<"), "LanguageSwitcher does not use AR/EN abbreviations");
 assert(languageSwitcher.includes('t("langAr")') && languageSwitcher.includes('t("langEn")'), "LanguageSwitcher uses full language names");
 
 const enMessages = fs.readFileSync(path.join(process.cwd(), "messages/en.json"), "utf8");
-assert(enMessages.includes('"preferences"'), "en.json student nav preferences label");
+assert(enMessages.includes('"settings": "Settings"'), "en.json student nav settings label");
 assert(enMessages.includes('"savedChanges"'), "en.json has savedChanges copy");
 assert(enMessages.includes("Preference saved on this device"), "en.json device preference flash copy");
 assert(enMessages.includes('"familyHelp"'), "en.json has familyHelp section");
 
 const arMessages = fs.readFileSync(path.join(process.cwd(), "messages/ar.json"), "utf8");
+assert(arMessages.includes('"settings": "إعدادات"'), "ar.json student nav settings label");
 assert(arMessages.includes("تم حفظ التفضيل على هذا الجهاز"), "ar.json device preference flash copy");
 assert(arMessages.includes('"retry"'), "ar.json has retry label in family settings");
 

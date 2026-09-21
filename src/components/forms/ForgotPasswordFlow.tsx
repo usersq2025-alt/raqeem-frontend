@@ -93,12 +93,18 @@ export function ForgotPasswordFlow() {
 
   useEffect(() => {
     if (step !== 2 || !login) return;
-    const issued = readIssuedAt(login);
-    setIssuedAt(issued);
-    const tick = () => setNow(Date.now());
-    tick();
-    tickTimer.current = window.setInterval(tick, 200);
+    let cancelled = false;
+    void (async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      const issued = readIssuedAt(login);
+      setIssuedAt(issued);
+      const tick = () => setNow(Date.now());
+      tick();
+      tickTimer.current = window.setInterval(tick, 200);
+    })();
     return () => {
+      cancelled = true;
       if (tickTimer.current) window.clearInterval(tickTimer.current);
       tickTimer.current = null;
     };

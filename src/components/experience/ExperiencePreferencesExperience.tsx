@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
@@ -13,17 +13,21 @@ import {
   type ContrastPref,
 } from "@/lib/experiencePrefs";
 import { playUiTone } from "@/lib/play/uiSounds";
+import { ParentGateModal } from "@/components/family/ParentGateModal";
 
 type Props = { childId: number };
 
 export function ExperiencePreferencesExperience({ childId }: Props) {
   const t = useTranslations("experiencePrefs");
+  const tGate = useTranslations("parentGate");
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [prefs, setPrefs] = useState<ExperiencePrefs>(() => readExperiencePrefs());
   const [savedFlash, setSavedFlash] = useState(false);
+  const [gateOpen, setGateOpen] = useState(false);
+  const returnRef = useRef<HTMLButtonElement>(null);
   void childId;
 
   useEffect(() => {
@@ -164,7 +168,36 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
           </button>
         </div>
       </section>
+
+      <section className="rounded-[28px] border-2 border-primary-orange/25 bg-[#FFF8F1] p-5 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.28)]">
+        <h2 className="text-lg font-extrabold text-text-navy">{t("parentExit.title")}</h2>
+        <p className="mt-1.5 text-sm font-medium leading-relaxed text-text-gray">{t("parentExit.lead")}</p>
+        <button
+          ref={returnRef}
+          type="button"
+          className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary-orange px-4 text-base font-extrabold text-white shadow-[0_12px_24px_-14px_rgba(244,130,50,0.7)] transition-transform hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 active:scale-[0.99]"
+          onClick={() => setGateOpen(true)}
+        >
+          <ParentExitIcon />
+          {tGate("returnToParent")}
+        </button>
+        <ParentGateModal open={gateOpen} onClose={() => setGateOpen(false)} returnFocusRef={returnRef} />
+      </section>
     </div>
+  );
+}
+
+function ParentExitIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none" aria-hidden="true">
+      <path
+        d="M10 7V5.8A1.8 1.8 0 0 1 11.8 4H18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6.2A1.8 1.8 0 0 1 10 18.2V17"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path d="M13 12H4m0 0 3-3M4 12l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 

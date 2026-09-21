@@ -60,7 +60,9 @@ export function DreamPathJourney() {
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const activeRef = useRef(0);
 
-  activeRef.current = active;
+  useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
 
   /** User click/keyboard: pin that station (click same pinned station again to resume autoplay). */
   const selectStation = useCallback(

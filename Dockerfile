@@ -8,6 +8,10 @@
 #     --build-arg NEXT_PUBLIC_USE_MOCK_AUTH=false \
 #     -t raqeem-frontend:latest .
 #
+# Mock auth is fail-closed (isMockAuthEnabled === exact "true" only).
+# Omitting NEXT_PUBLIC_USE_MOCK_AUTH at build time uses the real backend.
+# Always pass =false (or omit) for production images — never leave mock on.
+#
 # NEXT_PUBLIC_API_URL must include the trailing /api — every apiClient call
 # (src/lib/api/*.ts) is written as a bare path like "/register", not
 # "/api/register". A build without it (as this comment itself wrongly showed

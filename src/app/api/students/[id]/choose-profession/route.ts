@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
+import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_AUTH !== "false";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 type Props = {
@@ -23,7 +23,7 @@ export async function POST(request: Request, { params }: Props) {
     return NextResponse.json({ message: "VALIDATION" }, { status: 422 });
   }
 
-  if (USE_MOCK) {
+  if (isMockAuthEnabled()) {
     return NextResponse.json({ id: Number(id), profession_id: professionId });
   }
 

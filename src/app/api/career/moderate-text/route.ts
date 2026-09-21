@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { parentLaravelPost } from "@/lib/server/parentLaravel";
+import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_AUTH !== "false";
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { text?: string } | null;
@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ approved: false, reason: "unapproved" }, { status: 422 });
   }
 
-  if (USE_MOCK) {
+  if (isMockAuthEnabled()) {
     const blocked = /قتل|سلاح|sex|kill|drug/i.test(text);
     return NextResponse.json(
       blocked ? { approved: false, reason: "unapproved" } : { approved: true }

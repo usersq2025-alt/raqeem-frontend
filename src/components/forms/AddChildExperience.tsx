@@ -48,7 +48,10 @@ export function AddChildExperience() {
   const resetTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    setOrdinal(readOrdinal());
+    void (async () => {
+      await Promise.resolve();
+      setOrdinal(readOrdinal());
+    })();
     return () => {
       if (resetTimer.current) window.clearTimeout(resetTimer.current);
     };

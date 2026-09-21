@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
+import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_AUTH !== "false";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 /** In-memory guardian unlock for mock auth (server process only). */
@@ -131,7 +131,7 @@ export async function parentLaravelGet(path: string, timeoutMs: number): Promise
     return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
   }
 
-  if (USE_MOCK) {
+  if (isMockAuthEnabled()) {
     return mockParentLaravel(path, undefined, session.parent);
   }
 
@@ -179,7 +179,7 @@ async function parentLaravelWrite(
     return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
   }
 
-  if (USE_MOCK) {
+  if (isMockAuthEnabled()) {
     return mockParentLaravel(path, body, session.parent);
   }
 

@@ -33,13 +33,14 @@ export function StudentShell({ children }: Props) {
     lockGuardianMode().catch(() => undefined);
   }, [validChild, childId]);
 
+  if (!validChild && (child !== null || streak !== null || points !== null)) {
+    setChild(null);
+    setStreak(null);
+    setPoints(null);
+  }
+
   useEffect(() => {
-    if (!validChild) {
-      setChild(null);
-      setStreak(null);
-      setPoints(null);
-      return;
-    }
+    if (!validChild) return;
     let cancelled = false;
     Promise.all([getChild(childId), getStreak(childId)])
       .then(([nextChild, nextStreak]) => {
@@ -84,7 +85,7 @@ export function StudentShell({ children }: Props) {
               ? "w-full max-w-full px-0 pt-0 pb-28 md:pb-10"
               : hideNav
                 ? "mx-auto w-full max-w-full px-4 pt-3 pb-6 md:max-w-3xl md:px-8"
-                : "w-full max-w-full px-4 pt-3 pb-36 md:max-w-none md:px-8 md:py-6 md:pb-8"
+                : "w-full max-w-full px-4 pt-3 pb-28 md:max-w-none md:px-8 md:py-6 md:pb-8"
           }`}
         >
           {children}

@@ -57,16 +57,19 @@ export function RegisterForm() {
   const [formError, setFormError] = useState("");
 
   useEffect(() => {
-    const draft = loadRegisterDraft();
-    if (draft) {
-      setFullName(draft.fullName);
-      setEmail(draft.email);
-      setAcceptedTerms(draft.acceptedTerms);
-      if (draft.email) setEmailTouched(true);
-      if (draft.fullName) setNameTouched(true);
-    }
-    setPassword(loadRegisterPasswordDraft());
-    setHydrated(true);
+    void (async () => {
+      await Promise.resolve();
+      const draft = loadRegisterDraft();
+      if (draft) {
+        setFullName(draft.fullName);
+        setEmail(draft.email);
+        setAcceptedTerms(draft.acceptedTerms);
+        if (draft.email) setEmailTouched(true);
+        if (draft.fullName) setNameTouched(true);
+      }
+      setPassword(loadRegisterPasswordDraft());
+      setHydrated(true);
+    })();
   }, []);
 
   useEffect(() => {

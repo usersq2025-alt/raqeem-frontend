@@ -22,23 +22,24 @@ export function FamilyEditChildModal({ open, child, onClose, onSaved, onGuardian
   const tGrades = useTranslations("child.grades");
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
   const [fullName, setFullName] = useState("");
   const [gradeId, setGradeId] = useState<number>(1);
   const [gradeOpen, setGradeOpen] = useState(false);
   const [confirmGrade, setConfirmGrade] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [seedChildId, setSeedChildId] = useState<number | null>(null);
 
-  useEffect(() => setReady(true), []);
-
-  useEffect(() => {
-    if (!open || !child) return;
+  if (open && child && child.id !== seedChildId) {
+    setSeedChildId(child.id);
     setFullName(child.fullName);
     setGradeId(child.gradeId);
     setConfirmGrade(false);
     setError("");
-  }, [open, child]);
+  }
+  if (!open && seedChildId !== null) {
+    setSeedChildId(null);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -88,7 +89,7 @@ export function FamilyEditChildModal({ open, child, onClose, onSaved, onGuardian
     }
   }
 
-  if (!ready || !open || !child) return null;
+  if (typeof document === "undefined" || !open || !child) return null;
 
   const gradeChanged = gradeId !== child.gradeId;
 

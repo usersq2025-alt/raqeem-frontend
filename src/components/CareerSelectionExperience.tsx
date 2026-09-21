@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -65,11 +65,12 @@ export function CareerSelectionExperience({ childId, gender }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [busyPreset, setBusyPreset] = useState<number | null>(null);
   const [pickedId, setPickedId] = useState<number | null>(null);
-  const [attempts, setAttempts] = useState(0);
-
-  useEffect(() => {
+  const [attempts, setAttempts] = useState(() => readAttempts(childId));
+  const [attemptsChildId, setAttemptsChildId] = useState(childId);
+  if (childId !== attemptsChildId) {
+    setAttemptsChildId(childId);
     setAttempts(readAttempts(childId));
-  }, [childId]);
+  }
 
   const remaining = Math.max(0, CUSTOM_CAREER_MAX_ATTEMPTS - attempts);
   const picked = PRESETS.find((preset) => preset.id === pickedId) ?? null;

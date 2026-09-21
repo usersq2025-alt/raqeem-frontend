@@ -37,40 +37,49 @@ export function ReportsSection({
   const t = useTranslations("familySettings");
   const tGrades = useTranslations("child.grades");
   const locale = useLocale();
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(() =>
+    childrenList.length ? childrenList[0].id : null
+  );
   const [summary, setSummary] = useState<ChildLearningSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
   const [reloadKey, setReloadKey] = useState(0);
 
-  useEffect(() => {
-    if (childrenList.length && selectedId === null) setSelectedId(childrenList[0].id);
-  }, [childrenList, selectedId]);
+  const [trackedChildIds, setTrackedChildIds] = useState(() => childrenList.map((c) => c.id).join(","));
+  const childIdsKey = childrenList.map((c) => c.id).join(",");
+  if (childIdsKey !== trackedChildIds) {
+    setTrackedChildIds(childIdsKey);
+    if (childrenList.length) {
+      const stillValid = selectedId !== null && childrenList.some((c) => c.id === selectedId);
+      if (!stillValid) setSelectedId(childrenList[0].id);
+    } else {
+      setSelectedId(null);
+    }
+  }
 
   useEffect(() => {
-    if (!selectedId) {
-      setSummary(null);
-      return;
-    }
+    if (!selectedId) return;
     let cancelled = false;
-    setLoading(true);
-    setError(false);
-    getChildLearningSummary(selectedId)
-      .then((next) => {
+    void (async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      setLoading(true);
+      setError(false);
+      try {
+        const next = await getChildLearningSummary(selectedId);
         if (cancelled) return;
         setSummary(next);
         onSummaryLoaded?.(selectedId, next);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setSummary(null);
           setError(true);
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };

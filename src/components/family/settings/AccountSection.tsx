@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -20,27 +20,23 @@ type Props = {
 export function AccountSection({ account, loading, error, onRetry, onAccount, onSaved }: Props) {
   const t = useTranslations("familySettings");
   const locale = useLocale();
-  const [name, setName] = useState("");
+  const accountFullName = account?.fullName ?? "";
+  const [name, setName] = useState(accountFullName);
+  const [trackedFullName, setTrackedFullName] = useState(accountFullName);
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState("");
 
-  const [memberSince, setMemberSince] = useState<string | null>(null);
+  if (accountFullName !== trackedFullName) {
+    setTrackedFullName(accountFullName);
+    setName(accountFullName);
+  }
 
-  useEffect(() => {
-    setName(account?.fullName ?? "");
-  }, [account?.fullName]);
-
-  useEffect(() => {
-    if (!account?.createdAt) {
-      setMemberSince(null);
-      return;
-    }
-    setMemberSince(
-      t("account.memberSince", {
-        date: formatMemberMonthYear(account.createdAt, locale),
-      })
-    );
-  }, [account?.createdAt, locale, t]);
+  const memberSince =
+    account?.createdAt != null
+      ? t("account.memberSince", {
+          date: formatMemberMonthYear(account.createdAt, locale),
+        })
+      : null;
 
   const initial = useMemo(() => {
     const n = (account?.fullName ?? "").trim();

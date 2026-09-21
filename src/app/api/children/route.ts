@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
+import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_AUTH !== "false";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 type IncomingBody = {
@@ -72,7 +72,7 @@ export async function GET() {
     return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
   }
 
-  if (USE_MOCK) {
+  if (isMockAuthEnabled()) {
     return NextResponse.json({ data: MOCK_CHILDREN });
   }
 
@@ -125,7 +125,7 @@ export async function POST(request: Request) {
     gender,
   };
 
-  if (USE_MOCK) {
+  if (isMockAuthEnabled()) {
     await new Promise((resolve) => setTimeout(resolve, 520));
     return NextResponse.json(parentSafeChild(Date.now() % 100000, fullName), { status: 201 });
   }

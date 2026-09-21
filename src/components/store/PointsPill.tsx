@@ -7,12 +7,18 @@ function prefersReducedMotion() {
 }
 
 export function useAnimatedPoints(target: number, from?: number | null) {
-  const startAt = from ?? target;
-  const [value, setValue] = useState(startAt);
+  const [value, setValue] = useState(from ?? target);
+  const [seenTarget, setSeenTarget] = useState(target);
+
+  if (target !== seenTarget) {
+    setSeenTarget(target);
+    if (from == null || from === target) {
+      setValue(target);
+    }
+  }
 
   useEffect(() => {
     if (from == null || from === target || prefersReducedMotion()) {
-      setValue(target);
       return;
     }
 

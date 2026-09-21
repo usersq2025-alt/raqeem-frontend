@@ -100,7 +100,10 @@ export function LessonPathCanvas({
       : withChildQuery("/subjects", childId);
 
   useEffect(() => {
-    setReduceMotion(effectiveReduceMotion());
+    const id = window.setTimeout(() => {
+      setReduceMotion(effectiveReduceMotion());
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   useEffect(() => {
@@ -124,7 +127,7 @@ export function LessonPathCanvas({
       const focused = stations.find((s) => s.lessonId === focusLessonId);
       if (!focused || focused.status !== "completed") return;
       sessionStorage.setItem(key, "1");
-      setToast(tJourney("openedNext"));
+      window.setTimeout(() => setToast(tJourney("openedNext")), 0);
     } catch {
       /* ignore */
     }

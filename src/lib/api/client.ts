@@ -13,14 +13,15 @@ type RequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
 };
 
+import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
-const USE_MOCK_AUTH = process.env.NEXT_PUBLIC_USE_MOCK_AUTH !== "false";
 
 async function request<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  if (USE_MOCK_AUTH) {
+  if (isMockAuthEnabled()) {
     const { mockRequest } = await import("./mock");
     return mockRequest<T>(endpoint, options);
   }

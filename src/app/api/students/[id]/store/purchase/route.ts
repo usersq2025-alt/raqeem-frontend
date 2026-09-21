@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
 import { parentLaravelPost } from "@/lib/server/parentLaravel";
+import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_AUTH !== "false";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -20,7 +20,7 @@ export async function POST(request: Request, { params }: Props) {
     return NextResponse.json({ message: "VALIDATION" }, { status: 422 });
   }
 
-  if (USE_MOCK) {
+  if (isMockAuthEnabled()) {
     // Mirror seeder prices for local prototype demos (authoritative in real API is StoreItem.price_points)
     const mockPrices: Record<number, { slot_key: string; price_paid: number }> = {
       1: { slot_key: "stethoscope", price_paid: 40 },

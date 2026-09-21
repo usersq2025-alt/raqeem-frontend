@@ -113,8 +113,10 @@ export function FamilySettingsExperience({ seed }: Props) {
   }, []);
 
   useEffect(() => {
-    void loadAccount();
-    void loadChildren();
+    void (async () => {
+      await Promise.resolve();
+      await Promise.all([loadAccount(), loadChildren()]);
+    })();
   }, [loadAccount, loadChildren]);
 
   useEffect(() => {

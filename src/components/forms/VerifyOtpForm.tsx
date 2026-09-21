@@ -65,6 +65,12 @@ export function VerifyOtpForm({ parentId, email }: Props) {
   const router = useRouter();
   const [currentEmail, setCurrentEmail] = useState(email);
   const [emailDraft, setEmailDraft] = useState(email);
+  const [trackedEmail, setTrackedEmail] = useState(email);
+  if (email !== trackedEmail) {
+    setTrackedEmail(email);
+    setCurrentEmail(email);
+    setEmailDraft(email);
+  }
   const [editingEmail, setEditingEmail] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [savingEmail, setSavingEmail] = useState(false);
@@ -82,20 +88,25 @@ export function VerifyOtpForm({ parentId, email }: Props) {
   const submitLock = useRef(false);
 
   useEffect(() => {
-    setCurrentEmail(email);
-    setEmailDraft(email);
-  }, [email]);
+    let cancelled = false;
+    let intervalId = 0;
+    void (async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      setMounted(true);
+      if (!parentId) return;
 
-  useEffect(() => {
-    setMounted(true);
-    if (!parentId) return;
-
-    const issued = readIssuedAt(parentId);
-    setIssuedAt(issued);
-    const tick = () => setNow(Date.now());
-    tick();
-    const id = window.setInterval(tick, 200);
-    return () => window.clearInterval(id);
+      const issued = readIssuedAt(parentId);
+      if (cancelled) return;
+      setIssuedAt(issued);
+      const tick = () => setNow(Date.now());
+      tick();
+      intervalId = window.setInterval(tick, 200);
+    })();
+    return () => {
+      cancelled = true;
+      if (intervalId) window.clearInterval(intervalId);
+    };
   }, [parentId]);
 
   useEffect(() => {

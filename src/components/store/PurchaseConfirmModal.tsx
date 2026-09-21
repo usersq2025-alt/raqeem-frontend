@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
@@ -19,11 +19,7 @@ export function PurchaseConfirmModal({ open, item, currentBalance, submitting, o
   const t = useTranslations("student.store");
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    setReady(true);
-  }, []);
+  const ready = typeof document !== "undefined";
 
   useEffect(() => {
     if (!open) return;

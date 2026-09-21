@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -22,18 +22,25 @@ type Props = {
   animatePoints: boolean;
 };
 
-function prefersReducedMotion() {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function usePrefersReducedMotion() {
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+      mq.addEventListener("change", onStoreChange);
+      return () => mq.removeEventListener("change", onStoreChange);
+    },
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => true
+  );
 }
 
 function useCountUp(target: number, enabled: boolean) {
-  const [value, setValue] = useState(enabled ? 0 : target);
+  const reducedMotion = usePrefersReducedMotion();
+  const animate = enabled && !reducedMotion;
+  const [value, setValue] = useState(0);
 
   useEffect(() => {
-    if (!enabled || prefersReducedMotion()) {
-      setValue(target);
-      return;
-    }
+    if (!animate) return;
     const start = performance.now();
     const duration = 720;
     let frame = 0;
@@ -45,9 +52,9 @@ function useCountUp(target: number, enabled: boolean) {
     };
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [enabled, target]);
+  }, [animate, target]);
 
-  return value;
+  return animate ? value : target;
 }
 
 export function ChildCard({ child, index, animatePoints }: Props) {

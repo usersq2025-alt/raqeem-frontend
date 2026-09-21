@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
 import type { ChildProfile } from "@/lib/api/children";
 import type { StudentStreak, SubjectProgress } from "@/lib/api/student";
 import { StreakBadge } from "@/components/StreakBadge";
@@ -11,6 +10,7 @@ import { SubjectLessonProgress } from "@/components/SubjectLessonProgress";
 import { professionAvatarSrc } from "@/lib/config/professions";
 import { SUBJECT_ACCENTS, subjectCoverSrc, streakPath, withChildQuery } from "@/lib/config/subjects";
 import { useMountedViewTransitionName } from "@/lib/utils/useMountedViewTransitionName";
+import { useAnimatedFill } from "@/lib/utils/useAnimatedFill";
 import { Link } from "@/i18n/navigation";
 
 type Props = {
@@ -18,20 +18,6 @@ type Props = {
   subjects: SubjectProgress[];
   streak: StudentStreak;
 };
-
-function useAnimatedFill(percentage: number): number {
-  const [fill, setFill] = useState(0);
-  useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      setFill(percentage);
-      return;
-    }
-    const frame = window.requestAnimationFrame(() => setFill(percentage));
-    return () => window.cancelAnimationFrame(frame);
-  }, [percentage]);
-  return fill;
-}
 
 function subjectPercentage(subject: SubjectProgress): number {
   if (subject.totalLessons <= 0) return 0;

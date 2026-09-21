@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { mapHeadquarters, mapStoreCatalog, type HeadquartersSceneData, type StoreCatalog } from "@/lib/api/store";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
 import { MOCK_HEADQUARTERS, MOCK_STORE } from "@/lib/api/mockStudent";
+import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_AUTH !== "false";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 async function laravelGet(path: string): Promise<unknown | null> {
@@ -26,13 +26,13 @@ async function laravelGet(path: string): Promise<unknown | null> {
 }
 
 export async function loadStoreCatalog(studentId: number): Promise<StoreCatalog | null> {
-  if (USE_MOCK) return mapStoreCatalog(MOCK_STORE);
+  if (isMockAuthEnabled()) return mapStoreCatalog(MOCK_STORE);
   const raw = await laravelGet(`/store/items?student_id=${studentId}`);
   return raw ? mapStoreCatalog(raw) : null;
 }
 
 export async function loadHeadquarters(studentId: number): Promise<HeadquartersSceneData | null> {
-  if (USE_MOCK) return mapHeadquarters(MOCK_HEADQUARTERS);
+  if (isMockAuthEnabled()) return mapHeadquarters(MOCK_HEADQUARTERS);
   const raw = await laravelGet(`/students/${studentId}/headquarters`);
   return raw ? mapHeadquarters(raw) : null;
 }

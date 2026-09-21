@@ -42,18 +42,16 @@ export function AddAnotherChildModal({
 }: Props) {
   const t = useTranslations("child.popup");
   const titleId = useId();
-  const [ready, setReady] = useState(false);
   const [ask, setAsk] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const timers = useRef<number[]>([]);
 
-  useEffect(() => {
-    setReady(true);
-  }, []);
+  if (!open && ask) {
+    setAsk(false);
+  }
 
   useEffect(() => {
     if (!open) {
-      setAsk(false);
       return;
     }
 
@@ -79,7 +77,7 @@ export function AddAnotherChildModal({
     };
   }, [open, onGoToPlatform]);
 
-  if (!ready || !open) return null;
+  if (typeof document === "undefined" || !open) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-[80] flex items-end justify-center p-4 sm:items-center">

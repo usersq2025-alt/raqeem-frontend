@@ -41,7 +41,9 @@ export function LearningSection({
   const t = useTranslations("familySettings");
   const tGrades = useTranslations("child.grades");
   const locale = useLocale();
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(() =>
+    childrenList.length ? childrenList[0].id : null
+  );
   const [summary, setSummary] = useState<ChildLearningSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState(false);
@@ -51,36 +53,41 @@ export function LearningSection({
 
   const [reloadKey, setReloadKey] = useState(0);
 
-  useEffect(() => {
-    if (childrenList.length && selectedId === null) {
-      setSelectedId(childrenList[0].id);
+  const [trackedChildIds, setTrackedChildIds] = useState(() => childrenList.map((c) => c.id).join(","));
+  const childIdsKey = childrenList.map((c) => c.id).join(",");
+  if (childIdsKey !== trackedChildIds) {
+    setTrackedChildIds(childIdsKey);
+    if (childrenList.length) {
+      const stillValid = selectedId !== null && childrenList.some((c) => c.id === selectedId);
+      if (!stillValid) setSelectedId(childrenList[0].id);
+    } else {
+      setSelectedId(null);
     }
-  }, [childrenList, selectedId]);
+  }
 
   useEffect(() => {
-    if (!selectedId) {
-      setSummary(null);
-      return;
-    }
+    if (!selectedId) return;
     let cancelled = false;
-    setSummaryLoading(true);
-    setSummaryError(false);
-    getChildLearningSummary(selectedId)
-      .then((next) => {
+    void (async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      setSummaryLoading(true);
+      setSummaryError(false);
+      try {
+        const next = await getChildLearningSummary(selectedId);
         if (cancelled) return;
         setSummary(next);
         setCustomGoal(String(next.weeklyGoalLessons));
         onSummaryLoaded?.(selectedId, next);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setSummary(null);
           setSummaryError(true);
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setSummaryLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };

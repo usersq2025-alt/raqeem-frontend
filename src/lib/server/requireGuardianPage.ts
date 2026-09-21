@@ -2,9 +2,9 @@ import { cookies } from "next/headers";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
 import { requireParentSession } from "@/lib/server/requireParentSession";
 import { getMockGuardianState } from "@/lib/server/parentLaravel";
+import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_AUTH !== "false";
 
 export type GuardianPageContext = {
   session: Awaited<ReturnType<typeof requireParentSession>>;
@@ -19,7 +19,7 @@ export type GuardianPageContext = {
 export async function requireGuardianPage(): Promise<GuardianPageContext> {
   const session = await requireParentSession();
 
-  if (USE_MOCK) {
+  if (isMockAuthEnabled()) {
     const state = getMockGuardianState();
     return {
       session,

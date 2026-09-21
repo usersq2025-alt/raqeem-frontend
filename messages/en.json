@@ -768,7 +768,7 @@
       "store": "Store",
       "headquarters": "HQ",
       "home": "Home",
-      "preferences": "Preferences"
+      "settings": "Settings"
     },
     "desktop": {
       "continueLearning": "Continue learning",
@@ -1218,8 +1218,12 @@
     "accountBody": "From family settings you add children, edit profiles, and open each child space."
   },
   "experiencePrefs": {
-    "title": "Experience preferences",
+    "title": "Settings",
     "subtitle": "Sound and display options for this device. They do not change parent account settings.",
+    "parentExit": {
+      "title": "Parent account",
+      "lead": "To leave this child’s profile and return to the family area, use the button below."
+    },
     "sound": {
       "title": "Sound",
       "sfx": "Button & lesson sounds",

@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import { MOCK_HEADQUARTERS } from "@/lib/api/mockStudent";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
 import { parentLaravelGet } from "@/lib/server/parentLaravel";
+import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_AUTH !== "false";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -15,7 +15,7 @@ export async function GET(_request: Request, { params }: Props) {
   }
 
   const { id } = await params;
-  if (USE_MOCK) {
+  if (isMockAuthEnabled()) {
     return NextResponse.json(MOCK_HEADQUARTERS);
   }
 

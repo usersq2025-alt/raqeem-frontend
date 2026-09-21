@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
 import type { UnitProgress } from "@/lib/api/student";
 import { UNIT_ACCENTS, lessonPlayPath, unitLessonPath, unitReviewPath } from "@/lib/config/subjects";
+import { useAnimatedFill } from "@/lib/utils/useAnimatedFill";
 import { Link } from "@/i18n/navigation";
 
 type Props = {
@@ -22,20 +22,10 @@ export function UnitCard({ unit, childId, index, selected = false, onPreview, on
   const href = unit.playLessonId
     ? lessonPlayPath(unit.playLessonId, childId)
     : unitLessonPath(unit.unitId, childId);
-  const [fill, setFill] = useState(0);
+  const fill = useAnimatedFill(unit.percentage);
   const icon = unit.iconUrl ?? unit.coverUrl;
   const needsReview = Boolean(unit.reviewSessionId) && unit.reviewStatus !== "completed";
   const hasGift = Boolean(unit.gift);
-
-  useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      setFill(unit.percentage);
-      return;
-    }
-    const frame = window.requestAnimationFrame(() => setFill(unit.percentage));
-    return () => window.cancelAnimationFrame(frame);
-  }, [unit.percentage]);
 
   return (
     <article

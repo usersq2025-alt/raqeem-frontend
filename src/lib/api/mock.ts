@@ -14,7 +14,7 @@ function isTaken(email: string) {
   return TAKEN_EMAILS.has(email.trim().toLowerCase());
 }
 
-/** In-memory stand-in for Laravel until NEXT_PUBLIC_USE_MOCK_AUTH=false. */
+/** In-memory stand-in for Laravel when NEXT_PUBLIC_USE_MOCK_AUTH=true. */
 export async function mockRequest<T>(
   endpoint: string,
   options: RequestOptions = {}

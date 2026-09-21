@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import confetti from "canvas-confetti";
 import { useTranslations } from "next-intl";
 import { LessonCompleteCelebration } from "@/components/LessonCompleteCelebration";
@@ -246,7 +246,9 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
   }
 
   const onNextRef = useRef(onNext);
-  onNextRef.current = onNext;
+  useEffect(() => {
+    onNextRef.current = onNext;
+  });
 
   useEffect(() => {
     if (phase !== "feedback" || browsingPast) return;
@@ -832,15 +834,25 @@ function MatchingBody({
     () => (Array.isArray(payload.right_items) ? (payload.right_items as Array<{ id: string; text: string }>) : []),
     [payload.right_items]
   );
+  const matchItemsKey = useMemo(
+    () =>
+      `${left.map((item) => item.id).join("\0")}\0${right.map((item) => item.id).join("\0")}`,
+    [left, right]
+  );
   const [matches, setMatches] = useState<Record<string, string>>(() => readMatches(selected));
   const [pick, setPick] = useState<{ side: "left" | "right"; id: string } | null>(null);
-  const boardRef = useRef<HTMLDivElement>(null);
-  const leftRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const rightRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [matchesKey, setMatchesKey] = useState(matchItemsKey);
+  const boardId = useId().replace(/:/g, "");
   const [lines, setLines] = useState<Array<{ leftId: string; rightId: string; x1: number; y1: number; x2: number; y2: number }>>(
     []
   );
-  const pairTimerRef = useRef<number | null>(null);
+  const [, setPairTimer] = useState<number | null>(null);
+
+  if (matchItemsKey !== matchesKey) {
+    setMatchesKey(matchItemsKey);
+    setMatches(readMatches(selected));
+    setPick(null);
+  }
 
   const locked = phase === "feedback";
   const correctMap =
@@ -849,15 +861,11 @@ function MatchingBody({
       : null;
 
   useEffect(() => {
-    setMatches(readMatches(selected));
-    setPick(null);
-    // Hydrate once per question mount / payload change (QuestionBody remounts via key).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [left, right]);
-
-  useEffect(() => {
     return () => {
-      if (pairTimerRef.current != null) window.clearTimeout(pairTimerRef.current);
+      setPairTimer((current) => {
+        if (current != null) window.clearTimeout(current);
+        return null;
+      });
     };
   }, []);
 
@@ -868,18 +876,21 @@ function MatchingBody({
   }
 
   function schedulePair(leftId: string, rightId: string) {
-    if (pairTimerRef.current != null) window.clearTimeout(pairTimerRef.current);
-    pairTimerRef.current = window.setTimeout(() => {
-      pairTimerRef.current = null;
-      pair(leftId, rightId);
-    }, 220);
+    setPairTimer((current) => {
+      if (current != null) window.clearTimeout(current);
+      return window.setTimeout(() => {
+        setPairTimer(null);
+        pair(leftId, rightId);
+      }, 220);
+    });
   }
 
   function edgeLine(leftId: string, rightId: string) {
-    const board = boardRef.current;
-    const leftEl = leftRefs.current[leftId];
-    const rightEl = rightRefs.current[rightId];
-    if (!board || !leftEl || !rightEl) return null;
+    const board = document.getElementById(boardId);
+    if (!board) return null;
+    const leftEl = board.querySelector<HTMLButtonElement>(`[data-match-left="${leftId}"]`);
+    const rightEl = board.querySelector<HTMLButtonElement>(`[data-match-right="${rightId}"]`);
+    if (!leftEl || !rightEl) return null;
     const boardBox = board.getBoundingClientRect();
     const a = leftEl.getBoundingClientRect();
     const b = rightEl.getBoundingClientRect();
@@ -903,18 +914,19 @@ function MatchingBody({
   }
 
   useEffect(() => {
-    if (Object.keys(matches).length === 0) {
-      setLines([]);
-      return;
-    }
-    const frame = window.requestAnimationFrame(() => refreshLines(matches));
+    const frame = window.requestAnimationFrame(() => {
+      if (Object.keys(matches).length === 0) {
+        setLines([]);
+        return;
+      }
+      refreshLines(matches);
+    });
     const onResize = () => refreshLines(matches);
     window.addEventListener("resize", onResize);
     return () => {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", onResize);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matches, phase, left, right]);
 
   function clearMatch(leftId: string) {
@@ -1002,7 +1014,7 @@ function MatchingBody({
   const rowCount = Math.max(left.length, right.length, 1);
 
   return (
-    <div ref={boardRef} className="relative space-y-3">
+    <div id={boardId} className="relative space-y-3">
       <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible" aria-hidden="true">
         {lines.map((line) => (
           <line
@@ -1033,9 +1045,7 @@ function MatchingBody({
                 return (
                   <button
                     type="button"
-                    ref={(node) => {
-                      leftRefs.current[leftItem.id] = node;
-                    }}
+                    data-match-left={leftItem.id}
                     disabled={locked}
                     onClick={() => onLeftClick(leftItem.id)}
                     className={`flex min-h-[4.75rem] w-full flex-col items-stretch justify-center rounded-[22px] border-[3px] px-3 py-3 text-start text-sm font-extrabold text-text-navy shadow-[0_8px_24px_-16px_rgba(26,43,71,0.35)] transition-colors sm:text-base ${cardTone(
@@ -1063,9 +1073,7 @@ function MatchingBody({
                 return (
                   <button
                     type="button"
-                    ref={(node) => {
-                      rightRefs.current[rightItem.id] = node;
-                    }}
+                    data-match-right={rightItem.id}
                     disabled={locked}
                     onClick={() => onRightClick(rightItem.id)}
                     className={`flex min-h-[4.75rem] w-full items-center rounded-[22px] border-[3px] px-3 py-3 text-start text-sm font-extrabold text-text-navy shadow-[0_8px_24px_-16px_rgba(26,43,71,0.35)] transition-colors sm:text-base ${cardTone(
