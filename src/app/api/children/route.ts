@@ -28,6 +28,9 @@ const MOCK_CHILDREN = [
     points_balance: 450,
     gender: "male",
     profession_id: 1,
+    weekly_goal_lessons: 5,
+    last_activity_date: null,
+    streak_current: 0,
     profession: { id: 1, code: "doctor", name_ar: "طبيب", name_en: "Doctor" },
   },
   {
@@ -37,6 +40,9 @@ const MOCK_CHILDREN = [
     points_balance: 280,
     gender: "female",
     profession_id: 5,
+    weekly_goal_lessons: 5,
+    last_activity_date: null,
+    streak_current: 0,
     profession: { id: 5, code: "astronaut", name_ar: "رائد فضاء", name_en: "Astronaut" },
   },
   {
@@ -46,6 +52,9 @@ const MOCK_CHILDREN = [
     points_balance: 0,
     gender: "male",
     profession_id: null,
+    weekly_goal_lessons: 3,
+    last_activity_date: null,
+    streak_current: 0,
     profession: null,
   },
 ];

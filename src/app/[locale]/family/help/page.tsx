@@ -6,6 +6,14 @@ export default async function FamilyHelpPage() {
   await requireParentSession();
   const t = await getTranslations("familyHelp");
 
+  const sections = [
+    { id: "how", title: t("howTitle"), body: t("howBody") },
+    { id: "points", title: t("pointsTitle"), body: t("pointsBody") },
+    { id: "hq", title: t("hqTitle"), body: t("hqBody") },
+    { id: "account", title: t("accountTitle"), body: t("accountBody") },
+    { id: "faq", title: t("faqTitle"), body: t("faqBody") },
+  ] as const;
+
   return (
     <AuthShell backHref="/family/settings" backLabel={t("back")}>
       <article className="space-y-8 rounded-[28px] bg-white p-5 shadow-sm sm:p-6">
@@ -14,20 +22,12 @@ export default async function FamilyHelpPage() {
           <p className="mt-2 text-sm font-medium text-text-gray">{t("lead")}</p>
         </header>
 
-        <section id="faq" className="scroll-mt-24">
-          <h2 className="text-lg font-extrabold text-text-navy">{t("faqTitle")}</h2>
-          <p className="mt-2 text-sm font-medium leading-relaxed text-text-gray">{t("faqBody")}</p>
-        </section>
-
-        <section id="points" className="scroll-mt-24">
-          <h2 className="text-lg font-extrabold text-text-navy">{t("pointsTitle")}</h2>
-          <p className="mt-2 text-sm font-medium leading-relaxed text-text-gray">{t("pointsBody")}</p>
-        </section>
-
-        <section id="hq" className="scroll-mt-24">
-          <h2 className="text-lg font-extrabold text-text-navy">{t("hqTitle")}</h2>
-          <p className="mt-2 text-sm font-medium leading-relaxed text-text-gray">{t("hqBody")}</p>
-        </section>
+        {sections.map((section) => (
+          <section key={section.id} id={section.id} className="scroll-mt-24">
+            <h2 className="text-lg font-extrabold text-text-navy">{section.title}</h2>
+            <p className="mt-2 text-sm font-medium leading-relaxed text-text-gray">{section.body}</p>
+          </section>
+        ))}
       </article>
     </AuthShell>
   );

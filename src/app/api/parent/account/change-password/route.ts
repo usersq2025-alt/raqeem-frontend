@@ -6,5 +6,5 @@ export async function POST(request: Request) {
   if (!body || typeof body !== "object") {
     return NextResponse.json({ message: "VALIDATION" }, { status: 422 });
   }
-  return parentLaravelPost("/api/parent/account/change-password", body, 8_000);
+  return parentLaravelPost("/parent/account/change-password", body, 8_000);
 }

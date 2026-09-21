@@ -9,8 +9,12 @@ export type ChildProfile = {
   pointsBalance: number;
   professionId: number | null;
   professionCode: string | null;
+  professionNameAr: string | null;
+  professionNameEn: string | null;
   gender: ChildGender;
   weeklyGoalLessons: number | null;
+  lastActivityDate: string | null;
+  streakCurrent: number;
 };
 
 export type CreateChildPayload = {
@@ -132,8 +136,23 @@ export function mapChild(raw: Record<string, unknown>): ChildProfile | null {
     pointsBalance: Number(raw.points_balance ?? raw.pointsBalance ?? 0) || 0,
     professionId: Number.isFinite(professionId) && professionId !== 0 ? professionId : null,
     professionCode: code,
+    professionNameAr:
+      (typeof profession?.name_ar === "string" && profession.name_ar) ||
+      (typeof profession?.nameAr === "string" && profession.nameAr) ||
+      null,
+    professionNameEn:
+      (typeof profession?.name_en === "string" && profession.name_en) ||
+      (typeof profession?.nameEn === "string" && profession.nameEn) ||
+      null,
     gender,
     weeklyGoalLessons: Number.isFinite(weeklyGoalLessons) ? weeklyGoalLessons : null,
+    lastActivityDate:
+      typeof raw.last_activity_date === "string"
+        ? raw.last_activity_date
+        : typeof raw.lastActivityDate === "string"
+          ? raw.lastActivityDate
+          : null,
+    streakCurrent: Number(raw.streak_current ?? raw.streakCurrent ?? 0) || 0,
   };
 }
 

@@ -39,10 +39,20 @@ assert(!studentShell.includes("max-w-lg"), "StudentShell no longer clamps mobile
 const familySettings = read("components/family/FamilySettingsExperience.tsx");
 assert(familySettings.includes("loadAccount"), "Family settings loads account independently");
 assert(familySettings.includes("loadChildren"), "Family settings loads children independently");
-assert(familySettings.includes("/family/help#faq"), "Family help uses real anchors");
 assert(!/\bPromise\.all\b/.test(familySettings), "Family settings does not fail-all via Promise.all");
 
+const helpSection = read("components/family/settings/HelpSection.tsx");
+assert(helpSection.includes("/family/help#faq"), "Family help uses real anchors");
+assert(helpSection.includes("/family/help#how"), "Family help includes how-it-works anchor");
+assert(helpSection.includes("/contact"), "Family help contact goes to contact form");
+
 assert(fs.existsSync(path.join(root, "app/[locale]/family/help/page.tsx")), "Family help page exists");
+assert(fs.existsSync(path.join(root, "components/family/settings/AccountSection.tsx")), "Account section component exists");
+assert(fs.existsSync(path.join(root, "app/api/parent/students/[id]/summary/route.ts")), "Student summary BFF exists");
+
+const accountBff = read("app/api/parent/account/route.ts");
+assert(accountBff.includes('"/parent/account"'), "Parent account BFF uses single /api prefix path");
+assert(!accountBff.includes('"/api/parent/account"'), "Parent account BFF no longer doubles /api");
 
 const experienceSource = read("components/experience/ExperiencePreferencesExperience.tsx");
 assert(!/email/i.test(experienceSource), "ExperiencePreferences has no account email fields");

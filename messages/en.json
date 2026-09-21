@@ -936,13 +936,19 @@
       "saveName": "Save name",
       "saved": "Account updated.",
       "saveError": "Could not update account.",
-      "emailGap": "Changing email or phone requires verified OTP — that flow is not available yet in the app.",
+      "emailGap": "Email changes will be available after email verification is enabled.",
       "memberSince": "Member since {date}",
       "locale": "Preferred language",
       "fullName": "Full name",
       "unnamed": "Parent",
       "noEmail": "No email on file yet",
-      "emailPhoneGap": "Changing email or phone requires verified OTP — that flow is not available yet in the app."
+      "emailPhoneGap": "Changing email or phone requires verified OTP — that flow is not available yet in the app.",
+      "panelTitle": "Parent account details",
+      "panelLead": "Update your account details and the language you prefer in Raqeem.",
+      "saveChanges": "Save changes",
+      "emailLabel": "Email",
+      "phoneSoonTitle": "Phone number",
+      "phoneSoonBody": "Phone editing will be available after verification is enabled."
     },
     "children": {
       "edit": "Edit",
@@ -961,13 +967,30 @@
       "saving": "Saving…",
       "enter": "Enter child profile",
       "manage": "Manage child profile",
-      "add": "Add a new child",
+      "add": "Add a child",
       "empty": "No children linked to this account yet.",
       "name": "Child name",
       "grade": "Grade",
       "gradeWarn": "Changing grade may change available curriculum. Achievements and purchases are kept.",
       "gradeConfirm": "I understand that changing grade affects available content.",
-      "points": "{count} points"
+      "points": "{count} points",
+      "panelTitle": "Children profiles",
+      "panelLead": "Manage your children and open each child’s journey from one place.",
+      "emptyTitle": "Let’s add your first child",
+      "emptyBody": "Create your child’s profile and choose a grade so they can start reviewing lessons and building their HQ.",
+      "addFirst": "Add my first child",
+      "openProfile": "Open child profile",
+      "editData": "Edit details",
+      "addCardTitle": "Add a new child",
+      "addCardBody": "Create another profile and start an independent journey.",
+      "completedLessons": "{count} lessons completed",
+      "activityToday": "Completed a lesson today",
+      "activityNever": "Has not started yet",
+      "activityOn": "Last activity: {date}",
+      "gradeUnknown": "Grade not set",
+      "avatarFollowsProfession": "The avatar currently follows the chosen profession.",
+      "professionLocked": "Profession cannot be changed after HQ building has started yet.",
+      "gradeConfirmed": "Grade-change impact confirmed."
     },
     "learning": {
       "pickChild": "Select a child",
@@ -987,11 +1010,24 @@
         "7": "Active: 7 lessons"
       },
       "custom": "Custom",
-      "customInvalid": "Enter a number from 1 to 21."
+      "customInvalid": "Enter a number from 1 to 15.",
+      "panelTitle": "Learning plan",
+      "panelLead": "Set a weekly goal for each child without blocking extra lessons.",
+      "needChildTitle": "Add a child first",
+      "recommended": "Suggested",
+      "currentGoal": "Current goal: {count} lessons per week",
+      "weekProgress": "This week: {done} of {goal}",
+      "weekRange": "From {start} to {end}",
+      "subjectsTitle": "Current subjects",
+      "subjectsEmpty": "No subject data for this child yet.",
+      "subjectAvailable": "Available",
+      "subjectEmpty": "No content yet",
+      "smartReviewTitle": "Smart review stations",
+      "smartReviewBody": "Raqeem will reuse past mistakes to present new questions with the same curriculum terms."
     },
     "appearance": {
       "locale": "App language",
-      "deviceNote": "Text size, contrast, and motion preferences are stored on this device only.",
+      "deviceNote": "Display settings are saved on this device only.",
       "darkUnavailable": "Dark mode is not available in the student app yet.",
       "lead": "Adjust how Raqeem looks on this device.",
       "noDark": "Dark mode is not available in the student app yet.",
@@ -999,10 +1035,18 @@
       "sizes": {
         "default": "Normal",
         "large": "Large",
-        "xlarge": "Larger"
+        "xlarge": "Extra large"
       },
       "contrast": "Increase contrast",
-      "reduceMotion": "Reduce motion"
+      "reduceMotion": "Reduce motion",
+      "panelTitle": "Appearance and accessibility",
+      "panelLead": "Adjust how Raqeem looks on this device.",
+      "applied": "Preference applied.",
+      "reduceMotionHint": "Reduces motion and visual transitions in the app.",
+      "contrastOptions": {
+        "default": "Default",
+        "high": "High contrast"
+      }
     },
     "security": {
       "changePassword": "Change password",
@@ -1025,7 +1069,16 @@
       "logout": "Log out",
       "pinTitle": "Set parent PIN",
       "pinLead": "A 4–6 digit code to open parent mode from the student space.",
-      "aiNote": "Future smart-report data will only power educational recommendations."
+      "aiNote": "Future smart-report data will only power educational recommendations.",
+      "panelTitle": "Security and access",
+      "panelLead": "Protect your account and control the return from child space to parent mode.",
+      "confirmPassword": "Confirm new password",
+      "passwordMin": "At least 8 characters.",
+      "passwordMismatch": "Passwords do not match.",
+      "pinMissing": "No PIN set yet",
+      "pinActive": "Parent PIN is active",
+      "createPin": "Create PIN",
+      "privacyHeading": "Privacy"
     },
     "help": {
       "contact": "Contact support",
@@ -1034,7 +1087,35 @@
       "points": "How points & HQ work",
       "faq": "FAQ",
       "hq": "Headquarters explained",
-      "report": "Report a problem"
+      "report": "Report a problem",
+      "panelTitle": "Help and support",
+      "panelLead": "Find a quick answer or contact us when you need help.",
+      "contactTitle": "Contact support",
+      "contactBody": "Write to us through the contact form and we will get back soon.",
+      "reportTitle": "Report a problem",
+      "reportBody": "Describe the issue without sharing passwords or sensitive data.",
+      "cards": {
+        "how": {
+          "title": "How does Raqeem work?",
+          "body": "Review, earn, and build."
+        },
+        "points": {
+          "title": "Points and store",
+          "body": "How children earn points and why HQ tools unlock in order."
+        },
+        "hq": {
+          "title": "Career headquarters",
+          "body": "How the career HQ grows with lesson progress."
+        },
+        "account": {
+          "title": "Account and children",
+          "body": "Add a child, open a profile, and edit details."
+        },
+        "faq": {
+          "title": "FAQ",
+          "body": "Short answers about everyday use of Raqeem."
+        }
+      }
     },
     "lead": "Manage your parent account, children, and learning preferences.",
     "backToFamily": "Back to children",
@@ -1051,18 +1132,47 @@
     "errors": {
       "guardianLocked": "Unlock parent mode first.",
       "saveFailed": "Could not save. Try again."
+    },
+    "reports": {
+      "panelTitle": "Progress reports",
+      "panelLead": "Follow what your child completed and what needs more review.",
+      "emptyTitle": "Your child’s report appears after the first lesson",
+      "emptyBody": "When your child starts reviewing, progress details will appear here.",
+      "weekLessons": "Lessons this week: {count}",
+      "totalAnswers": "Total answers: {count}",
+      "correctRate": "Correct answers: {percent}%",
+      "correctRateUnknown": "Correct-answer rate: not available yet",
+      "longestStreak": "Longest streak: {count} days",
+      "mostActive": "Most active subject: {name}",
+      "mostActiveUnknown": "Most active subject: not available yet",
+      "needsReview": "Needs review: {name}",
+      "needsReviewUnknown": "Needs review: not available yet",
+      "lastActivity": "Last activity: {date}",
+      "detailedCta": "View detailed report",
+      "aiTitle": "Smart analysis of your child’s performance",
+      "aiBody": "We are building a report that highlights strengths and support areas with practical parent recommendations."
+    },
+    "alerts": {
+      "panelTitle": "Alerts and follow-up",
+      "panelLead": "Choose the events you want Raqeem to notify you about.",
+      "soonTitle": "Follow-up alerts",
+      "soonBody": "We are preparing alerts that help you follow progress without noise."
     }
   },
   "familyHelp": {
     "title": "Family help",
-    "lead": "Short answers about Raqeem, points, and headquarters.",
+    "lead": "Short answers about Raqeem, points, HQ, and accounts.",
     "back": "Back to settings",
-    "faqTitle": "Frequently asked questions",
-    "faqBody": "Create one parent account, add a profile for each child, and choose a profession and grade. The child learns in student space while account settings stay under your control.",
-    "pointsTitle": "How points work",
-    "pointsBody": "Children earn points by completing lessons and challenges. Points are used in the store and headquarters to motivate progress and are not school grades.",
-    "hqTitle": "Professional headquarters",
-    "hqBody": "Headquarters is a space the child decorates around their chosen profession. Progress there reflects learning achievements in a visual, playful way."
+    "faqTitle": "FAQ",
+    "faqBody": "Create one parent account, add a profile per child, and choose profession and grade to begin.",
+    "pointsTitle": "Points and store",
+    "pointsBody": "Points come from lessons and challenges and unlock HQ tools in order.",
+    "hqTitle": "Career headquarters",
+    "hqBody": "HQ is a visual space that reflects progress in the chosen profession.",
+    "howTitle": "How does Raqeem work?",
+    "howBody": "The child reviews lessons, earns points, and builds a career HQ step by step under parent guidance.",
+    "accountTitle": "Account and children",
+    "accountBody": "From family settings you add children, edit profiles, and open each child space."
   },
   "experiencePrefs": {
     "title": "Experience preferences",

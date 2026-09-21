@@ -93,6 +93,27 @@ function mockParentLaravel(
     });
   }
 
+  if (path.includes("/parent/students/") && path.includes("/summary")) {
+    return NextResponse.json({
+      student_id: 1,
+      weekly_goal_lessons: 5,
+      completed_lessons_this_week: 0,
+      completed_lessons_total: 0,
+      total_answers: 0,
+      correct_answers: 0,
+      correct_rate_percent: null,
+      streak_current: 0,
+      streak_longest: 0,
+      last_activity_date: null,
+      week_start: new Date().toISOString().slice(0, 10),
+      week_end: new Date().toISOString().slice(0, 10),
+      most_active_subject: null,
+      needs_review_subject: null,
+      subjects: [],
+      has_hq_started: false,
+    });
+  }
+
   if (path.includes("/weekly-goal")) {
     return NextResponse.json({ id: 1, weekly_goal_lessons: 5 });
   }

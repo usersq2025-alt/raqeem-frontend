@@ -13,5 +13,5 @@ export async function PATCH(request: Request, { params }: Params) {
   if (!body || typeof body !== "object") {
     return NextResponse.json({ message: "VALIDATION" }, { status: 422 });
   }
-  return parentLaravelPatch(`/api/parent/students/${studentId}/weekly-goal`, body, 8_000);
+  return parentLaravelPatch(`/parent/students/${studentId}/weekly-goal`, body, 8_000);
 }
