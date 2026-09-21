@@ -64,7 +64,7 @@ export function FamilyGuardianUnlockPanel({ seed, pinSet, pinLocked, redirectTo 
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#F3F6FA]">
-      <BrandPageDecor density="sparse" />
+      <BrandPageDecor density="compact" />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-lg flex-col px-4 py-6 sm:px-6">
         <header className="flex items-center justify-between">
           <BrandLogo size="sm" />
