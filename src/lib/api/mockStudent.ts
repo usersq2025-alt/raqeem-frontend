@@ -206,12 +206,12 @@ export const MOCK_UNIT_PATH = {
   accent_color: "#2EC4A8",
   stations: [
     { lesson_id: 91001, title: "بنى تتحرك", sort_order: 1, status: "completed", stars: 3, is_finale: false },
-    { lesson_id: 91002, title: "عظمي تدعمني", sort_order: 2, status: "completed", stars: 2, is_finale: false },
-    { lesson_id: 91003, title: "أتحرك وألعب", sort_order: 3, status: "completed", stars: 1, is_finale: false },
-    { lesson_id: 91004, title: "جسمي السليم", sort_order: 4, status: "available", stars: null, is_finale: false },
+    { lesson_id: 91002, title: "عظمي تدعمني وتحميني", sort_order: 2, status: "completed", stars: 2, is_finale: false },
+    { lesson_id: 91003, title: "أتحرك", sort_order: 3, status: "completed", stars: 1, is_finale: false },
+    { lesson_id: 91004, title: "جسمي السليم ونشاطي اليومي", sort_order: 4, status: "available", stars: null, is_finale: false },
     { lesson_id: 91005, title: "غذائي الصحي", sort_order: 5, status: "locked", stars: null, is_finale: false },
     { lesson_id: 91006, title: "أصبحت أسرع", sort_order: 6, status: "locked", stars: null, is_finale: false },
-    { lesson_id: 91007, title: "القوة والحركة", sort_order: 7, status: "locked", stars: null, is_finale: false },
+    { lesson_id: 91007, title: "القوة والحركة في أجسامنا", sort_order: 7, status: "locked", stars: null, is_finale: false },
     { lesson_id: 91008, title: "ورشة التجربة", sort_order: 8, status: "locked", stars: null, is_finale: false },
   ],
 };

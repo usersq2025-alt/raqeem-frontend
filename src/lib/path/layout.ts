@@ -45,7 +45,7 @@ export function smoothPath(points: PathPoint[]): string {
 /** Pixel height of the path stage so nodes stay spacious while scrolling. */
 export function pathStageHeightPx(lessonCount: number): number {
   const n = Math.max(lessonCount, 1);
-  return Math.max(720, n * 148 + 220);
+  return Math.max(640, n * 124 + 168);
 }
 
 export function mixHex(hex: string, toward: string, amount: number): string {

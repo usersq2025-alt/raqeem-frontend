@@ -54,3 +54,8 @@ __pycache__/
 # leftover editor/agent scratch files
 .tmp*
 **/.tmp*
+/tmp/
+
+# source masters for knockout (ship WebP only)
+**/*.source.*
+**/*.source

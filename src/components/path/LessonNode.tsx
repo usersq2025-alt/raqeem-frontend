@@ -1,6 +1,7 @@
 "use client";
 
 import type { Ref } from "react";
+import { useTranslations } from "next-intl";
 import { LessonLabel } from "@/components/path/LessonLabel";
 import type { StationVisualState } from "@/components/path/types";
 import { toIndicDigits } from "@/lib/format/indicDigits";
@@ -29,7 +30,7 @@ export function LessonNode({
   state,
   stars,
   isFinale,
-  accentColor,
+  accentColor: _accentColor,
   x,
   y,
   appearDelayMs,
@@ -38,14 +39,18 @@ export function LessonNode({
   onSelect,
   anchorRef,
 }: Props) {
+  const tPath = useTranslations("student.path");
   const locked = state === "locked";
   const completed = state === "completed";
   const current = state === "current";
-  const starCount = completed ? Math.max(0, Math.min(3, stars ?? 0)) : 0;
   const labelSide = x >= 50 ? "start" : "end";
 
-  const size = current ? "4.85rem" : "3.65rem";
-  const fill = locked ? "#E5E8EE" : completed ? "#34C759" : accentColor || "#2EC4A8";
+  /** Only render stars when API provided a value for a completed lesson. */
+  const showStars = completed && stars != null;
+  const earned = showStars ? Math.max(0, Math.min(3, Math.round(stars))) : 0;
+
+  const size = current ? "4.7rem" : "4.2rem";
+  const fill = locked ? "#A8B8C8" : completed ? "#5FBF6A" : "#F4A03C";
 
   return (
     <div
@@ -68,30 +73,24 @@ export function LessonNode({
         </span>
       ) : null}
 
-      {starCount > 0 ? (
-        <div className="pointer-events-none absolute -top-6 left-1/2 flex -translate-x-1/2 gap-0.5" aria-hidden="true">
-          {Array.from({ length: starCount }, (_, i) => (
-            <span key={i} className="path-station-star text-sm leading-none text-amber-400">
-              ★
-            </span>
-          ))}
-        </div>
-      ) : null}
-
       <button
         type="button"
         onClick={onSelect}
         aria-label={ariaLabel}
         aria-disabled={locked}
         className={`path-station path-lesson-node relative flex items-center justify-center rounded-full text-white ${
-          current ? "path-station-current path-node-current" : completed ? "path-station-completed path-node-done" : "path-station-locked path-node-locked"
+          current
+            ? "path-station-current path-node-current"
+            : completed
+              ? "path-station-completed path-node-done"
+              : "path-station-locked path-node-locked"
         } ${selected && !locked ? "path-node-selected" : ""} ${locked ? "cursor-default" : "cursor-pointer"}`}
         style={{
           width: size,
           height: size,
           background: fill,
-          opacity: locked ? 0.78 : 1,
-          ["--path-lip" as string]: locked ? "#C5CBD3" : completed ? "#1F9A45" : "#1A9A86",
+          opacity: locked ? 0.9 : 1,
+          ["--path-lip" as string]: locked ? "#7A8FA3" : completed ? "#3D9A4A" : "#D4831F",
         }}
       >
         {current ? (
@@ -124,8 +123,37 @@ export function LessonNode({
         {!locked && isFinale ? <TrophyIcon /> : null}
       </button>
 
+      {showStars ? (
+        <div
+          className="pointer-events-none absolute start-1/2 top-[calc(100%+6px)] z-[3] flex -translate-x-1/2 items-center gap-[3px] rounded-full bg-white/60 px-2 py-0.5 backdrop-blur-[2px] md:gap-1"
+          aria-label={tPath("stars", { count: earned })}
+        >
+          {[0, 1, 2].map((i) => (
+            <StarIcon key={i} filled={i < earned} />
+          ))}
+        </div>
+      ) : null}
+
       <LessonLabel title={title} state={state} side={labelSide} />
     </div>
+  );
+}
+
+function StarIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-[15px] w-[15px] md:h-[19px] md:w-[19px]"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 2.8L14.7 9.1L21.5 9.8L16.4 14.3L17.9 21L12 17.6L6.1 21L7.6 14.3L2.5 9.8L9.3 9.1L12 2.8Z"
+        fill={filled ? "#F8C830" : "transparent"}
+        stroke={filled ? "#E0A820" : "#C5B896"}
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 

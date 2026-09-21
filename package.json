@@ -15,7 +15,7 @@
     "lint": "eslint",
     "test:hq": "npm run sync:hq && npx tsx src/lib/config/headquartersStages.verify.ts",
     "test:settings": "npx tsx scripts/verify-settings-separation.ts",
-    "test:journey": "npx tsx src/lib/path/journeyLayout.verify.ts"
+    "test:student-journey": "npx tsx scripts/verify-student-journey.ts"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",

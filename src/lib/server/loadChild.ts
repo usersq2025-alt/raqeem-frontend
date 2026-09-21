@@ -1,10 +1,28 @@
 import { cookies } from "next/headers";
 import { mapChild, type ChildProfile } from "@/lib/api/children";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
+import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 export async function loadChild(id: number): Promise<ChildProfile | null> {
+  if (isMockAuthEnabled()) {
+    return {
+      id,
+      fullName: "طفل تجريبي",
+      gradeId: 4,
+      pointsBalance: 120,
+      professionId: 1,
+      professionCode: "doctor",
+      professionNameAr: "طبيب",
+      professionNameEn: "Doctor",
+      gender: "female",
+      weeklyGoalLessons: 5,
+      lastActivityDate: null,
+      streakCurrent: 3,
+    };
+  }
+
   const session = parseSessionCookie((await cookies()).get(SESSION_COOKIE_NAME)?.value);
   if (!session) return null;
 

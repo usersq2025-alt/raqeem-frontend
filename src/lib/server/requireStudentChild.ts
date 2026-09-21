@@ -4,11 +4,12 @@ import { redirect } from "@/i18n/navigation";
 import { hasChosenProfession, type ChildProfile } from "@/lib/api/children";
 import { loadChild } from "@/lib/server/loadChild";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
+import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
 
 export async function requireStudentChild(rawChildId?: string): Promise<ChildProfile> {
   const locale = await getLocale();
   const session = parseSessionCookie((await cookies()).get(SESSION_COOKIE_NAME)?.value);
-  if (!session) {
+  if (!session && !isMockAuthEnabled()) {
     redirect({ href: "/login", locale });
   }
 

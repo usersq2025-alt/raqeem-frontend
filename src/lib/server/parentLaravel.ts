@@ -168,6 +168,14 @@ export async function parentLaravelPatch(
   return parentLaravelWrite("PATCH", path, body, timeoutMs);
 }
 
+export async function parentLaravelPut(
+  path: string,
+  body: unknown,
+  timeoutMs: number
+): Promise<NextResponse> {
+  return parentLaravelWrite("PUT", path, body, timeoutMs);
+}
+
 async function parentLaravelWrite(
   method: "POST" | "PATCH" | "PUT",
   path: string,

@@ -1,5 +1,6 @@
 import { requireStudentChild } from "@/lib/server/requireStudentChild";
-import { ComingSoonScreen } from "@/components/ComingSoonScreen";
+import { StudentJourneyDashboard } from "@/components/journey/StudentJourneyDashboard";
+import { loadJourneyDashboard } from "@/lib/server/loadJourneyDashboard";
 
 type Props = {
   searchParams: Promise<{ childId?: string }>;
@@ -7,5 +8,6 @@ type Props = {
 
 export default async function StudentHomePage({ searchParams }: Props) {
   const child = await requireStudentChild((await searchParams).childId);
-  return <ComingSoonScreen childId={child.id} />;
+  const initialData = await loadJourneyDashboard(child.id);
+  return <StudentJourneyDashboard childId={child.id} initialData={initialData} />;
 }
