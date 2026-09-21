@@ -81,7 +81,7 @@ export function StudentShell({ children }: Props) {
         <div
           className={`relative min-h-screen w-full min-w-0 max-w-full ${
             isPathScreen
-              ? "flex flex-col px-0 pt-0 pb-24 md:h-[100dvh] md:overflow-hidden md:pb-0"
+              ? "w-full max-w-full px-0 pt-0 pb-28 md:pb-10"
               : hideNav
                 ? "mx-auto w-full max-w-full px-4 pt-3 pb-6 md:max-w-3xl md:px-8"
                 : "w-full max-w-full px-4 pt-3 pb-36 md:max-w-none md:px-8 md:py-6 md:pb-8"

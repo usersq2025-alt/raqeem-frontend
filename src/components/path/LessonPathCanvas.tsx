@@ -3,321 +3,373 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { PathStation, UnitPath } from "@/lib/api/units";
+import { getStoreItems } from "@/lib/api/store";
+import { getLessonPathTheme } from "@/lib/config/lessonPathThemes";
+import { lessonPlayPath, unitReviewPath, withChildQuery } from "@/lib/config/subjects";
+import { nextRequiredStoreItem, storePathForProfession } from "@/lib/config/storeProgression";
+import { professionAvatarSrc } from "@/lib/config/professions";
+import { effectiveReduceMotion } from "@/lib/experiencePrefs";
 import {
-  curveSamples,
-  mixHex,
-  pathPointAt,
-  pathStageHeightPx,
-  smoothPath,
-  stationPoints,
-} from "@/lib/path/layout";
-import { lessonPlayPath, withChildQuery } from "@/lib/config/subjects";
+  countCompleted,
+  findFocusStationIndex,
+  resolveJourneyStatuses,
+  reviewStationStatus,
+  type JourneyNodeStatus,
+} from "@/lib/path/journeyStatus";
+import { useJourneyLayout } from "@/hooks/useJourneyLayout";
+import { useScrollToCurrentLesson } from "@/hooks/useScrollToCurrentLesson";
 import { useRouter } from "@/i18n/navigation";
-import { toIndicDigits } from "@/lib/format/indicDigits";
-import { PathBackground } from "@/components/path/PathBackground";
-import { PathHeader } from "@/components/path/PathHeader";
-import { PathTopIllustration } from "@/components/path/PathTopIllustration";
-import { LessonNode, type StationVisualState } from "@/components/path/LessonNode";
-import { LessonModal } from "@/components/path/LessonModal";
+import { UnitJourneyHeader } from "@/components/path/journey/UnitJourneyHeader";
+import { UnitJourneyMap } from "@/components/path/journey/UnitJourneyMap";
+import { LessonDetailsSheet, type LessonDetailsContent } from "@/components/path/journey/LessonDetailsSheet";
+import {
+  NextHeadquartersReward,
+  type NextRewardInfo,
+} from "@/components/path/journey/NextHeadquartersReward";
+import { JourneyEmptyState } from "@/components/path/journey/JourneyEmptyStates";
+import type { ChildGender } from "@/lib/api/children";
+import type { SubjectKey } from "@/lib/config/subjects";
+import { subjectKeyFromId } from "@/lib/config/lessonPathThemes";
 
 type Props = {
   data: UnitPath;
   childId: number;
   focusLessonId?: number | null;
+  childName?: string;
+  professionCode?: string | null;
+  gender?: ChildGender;
+  pointsBalance?: number;
 };
 
-type ModalTarget = {
-  station: PathStation;
-  state: StationVisualState;
-  number: number;
-};
+type SheetTarget =
+  | { kind: "lesson"; station: PathStation; status: JourneyNodeStatus; index: number }
+  | { kind: "review"; status: JourneyNodeStatus };
 
-type VisibleRow = {
-  station: PathStation;
-  /** 1-based lesson number in the full unit list */
-  number: number;
-};
-
-/** Vertical Duolingo-style learning path — keeps LessonPathCanvas export for the unit page. */
-export function LessonPathCanvas({ data, childId, focusLessonId = null }: Props) {
+/** Unit Learning Journey — adventure map replacing the CSS geometric path. */
+export function LessonPathCanvas({
+  data,
+  childId,
+  focusLessonId = null,
+  childName = "",
+  professionCode = null,
+  gender = "male",
+  pointsBalance = 0,
+}: Props) {
   const t = useTranslations("student");
-  const tPath = useTranslations("student.path");
+  const tJourney = useTranslations("student.unitJourney");
+  const tSubjects = useTranslations("student.subjects");
   const tDesk = useTranslations("student.desktop");
   const router = useRouter();
+
   const scrollRef = useRef<HTMLDivElement>(null);
+  const mapMeasureRef = useRef<HTMLDivElement>(null);
   const currentNodeRef = useRef<HTMLDivElement>(null);
+  const lastFocusedButton = useRef<HTMLElement | null>(null);
 
   const stations = data.stations;
-  const completedStations = useMemo(
-    () => stations.filter((station) => station.status === "completed"),
-    [stations]
+  const statuses = useMemo(() => resolveJourneyStatuses(stations), [stations]);
+  const lessonIds = useMemo(() => stations.map((s) => s.lessonId), [stations]);
+  const layout = useJourneyLayout(lessonIds, mapMeasureRef);
+  const theme = useMemo(
+    () => getLessonPathTheme(data.subjectId, data.accentColor),
+    [data.subjectId, data.accentColor]
   );
-  const canCollapseCompleted = completedStations.length >= 2;
-  const [completedOpen, setCompletedOpen] = useState(false);
 
-  const visibleRows = useMemo((): VisibleRow[] => {
-    if (!canCollapseCompleted || completedOpen) {
-      return stations.map((station, index) => ({ station, number: index + 1 }));
-    }
-    return stations
-      .map((station, index) => ({ station, number: index + 1 }))
-      .filter((row) => row.station.status !== "completed");
-  }, [stations, canCollapseCompleted, completedOpen]);
+  const completed = countCompleted(stations);
+  const total = stations.length;
+  const focusIndex = useMemo(
+    () => findFocusStationIndex(stations, statuses, focusLessonId),
+    [stations, statuses, focusLessonId]
+  );
 
-  const points = useMemo(() => stationPoints(visibleRows.length), [visibleRows.length]);
-  const fullPath = useMemo(() => smoothPath(curveSamples(64)), []);
-  const stageHeight = pathStageHeightPx(Math.max(visibleRows.length, 3));
+  const [sheet, setSheet] = useState<SheetTarget | null>(null);
+  const [selectedId, setSelectedId] = useState<number | "review" | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const [reward, setReward] = useState<NextRewardInfo | null>(null);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
-  const lastOpenVisibleIndex = visibleRows.reduce((last, row, index) => {
-    if (row.station.status === "completed" || row.station.status === "available") return index;
-    return last;
-  }, -1);
+  const avatarSrc =
+    professionAvatarSrc(professionCode, gender) ?? "/images/brand/logo.png";
 
-  const livePath = useMemo(() => {
-    if (lastOpenVisibleIndex < 0) return "";
-    const endT =
-      visibleRows.length <= 1 ? 0.08 : lastOpenVisibleIndex / Math.max(visibleRows.length - 1, 1);
-    const steps = Math.max(12, Math.round(64 * Math.max(endT, 0.08)));
-    const live = Array.from({ length: steps + 1 }, (_, i) =>
-      pathPointAt((i / steps) * Math.max(endT, 0.08))
-    );
-    return smoothPath(live);
-  }, [lastOpenVisibleIndex, visibleRows.length]);
-
-  const focusVisibleIndex = useMemo(() => {
-    const current = visibleRows.findIndex((row) => row.station.status === "available");
-    if (current >= 0) return current;
-    for (let i = visibleRows.length - 1; i >= 0; i--) {
-      if (visibleRows[i]?.station.status === "completed") return i;
-    }
-    return Math.max(0, visibleRows.length - 1);
-  }, [visibleRows]);
-
-  const liveStroke = mixHex(data.accentColor, "#FFFFFF", 0.08);
-  const currentIndex = stations.findIndex((station) => station.status === "available");
-
-  const [modal, setModal] = useState<ModalTarget | null>(null);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [lockedToast, setLockedToast] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!lockedToast) return;
-    const id = window.setTimeout(() => setLockedToast(null), 2200);
-    return () => window.clearTimeout(id);
-  }, [lockedToast]);
-
-  useEffect(() => {
-    if (!focusLessonId) return;
-    const station = stations.find((row) => row.lessonId === focusLessonId);
-    if (!station || station.status === "locked") return;
-    if (station.status === "completed") setCompletedOpen(true);
-    const index = stations.indexOf(station);
-    setModal({
-      station,
-      state: visualState(station),
-      number: index + 1,
-    });
-    setSelectedId(station.lessonId);
-  }, [focusLessonId, stations]);
-
-  useEffect(() => {
-    const scrollToCurrent = () => {
-      const node = currentNodeRef.current;
-      const scroller = scrollRef.current;
-      if (!node || !scroller) return;
-      const nodeBox = node.getBoundingClientRect();
-      const scrollerBox = scroller.getBoundingClientRect();
-      const nextTop =
-        scroller.scrollTop + (nodeBox.top - scrollerBox.top) - scrollerBox.height * 0.38;
-      scroller.scrollTo({ top: Math.max(0, nextTop), behavior: "smooth" });
-    };
-    const timer = window.setTimeout(scrollToCurrent, 180);
-    return () => window.clearTimeout(timer);
-  }, [visibleRows.length, completedOpen, currentIndex, data.unitId]);
+  const subjectKey = subjectKeyFromId(data.subjectId) as SubjectKey;
+  const subjectLabel = tSubjects(subjectKey);
 
   const backHref =
     data.subjectId > 0
       ? withChildQuery(`/subjects/${data.subjectId}/units`, childId)
       : withChildQuery("/subjects", childId);
 
-  function visualState(station: PathStation): StationVisualState {
-    if (station.status === "completed") return "completed";
-    if (station.status === "available") return "current";
-    return "locked";
+  useEffect(() => {
+    setReduceMotion(effectiveReduceMotion());
+  }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 2800);
+    return () => window.clearTimeout(id);
+  }, [toast]);
+
+  useScrollToCurrentLesson(scrollRef, currentNodeRef, [
+    layout.canvasHeight,
+    focusIndex,
+    data.unitId,
+  ]);
+
+  // One-shot encouragement when returning via focusLesson after progress
+  useEffect(() => {
+    if (!focusLessonId) return;
+    const key = `raqeem:journey-celebrate:${data.unitId}:${focusLessonId}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      const focused = stations.find((s) => s.lessonId === focusLessonId);
+      if (!focused || focused.status !== "completed") return;
+      sessionStorage.setItem(key, "1");
+      setToast(tJourney("openedNext"));
+    } catch {
+      /* ignore */
+    }
+  }, [focusLessonId, data.unitId, stations, tJourney]);
+
+  // Optional store progression — hide quietly on failure
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const catalog = await getStoreItems(childId);
+        if (cancelled) return;
+        const path = storePathForProfession(professionCode);
+        const owned = catalog.items.filter((i) => i.isOwned).map((i) => i.slotKey).filter(Boolean) as string[];
+        const nextKey = nextRequiredStoreItem(owned, path);
+        if (!nextKey) {
+          setReward({
+            name: "",
+            imageUrl: null,
+            pricePoints: 0,
+            pointsBalance: catalog.pointsBalance,
+            allComplete: true,
+          });
+          return;
+        }
+        const item = catalog.items.find((i) => i.slotKey === nextKey);
+        if (!item || item.pricePoints == null) {
+          setReward(null);
+          return;
+        }
+        setReward({
+          name: item.name ?? nextKey,
+          imageUrl: item.imageUrl,
+          pricePoints: item.pricePoints,
+          pointsBalance: catalog.pointsBalance || pointsBalance,
+        });
+      } catch {
+        if (!cancelled) setReward(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [childId, professionCode, pointsBalance]);
+
+  function openSheet(target: SheetTarget) {
+    lastFocusedButton.current = document.activeElement as HTMLElement | null;
+    setSheet(target);
+    if (target.kind === "lesson") setSelectedId(target.station.lessonId);
+    else setSelectedId("review");
   }
 
-  function onSelect(station: PathStation, number: number) {
-    const state = visualState(station);
-    if (state === "locked") {
-      setLockedToast(tPath("lockedHint"));
-      setSelectedId(null);
-      setModal(null);
+  function closeSheet() {
+    setSheet(null);
+    setSelectedId(null);
+    window.setTimeout(() => lastFocusedButton.current?.focus?.(), 0);
+  }
+
+  function onSelectLesson(station: PathStation, index: number) {
+    const status = statuses[index] ?? "locked";
+    openSheet({ kind: "lesson", station, status, index });
+  }
+
+  function onSelectReview() {
+    const raw = reviewStationStatus(stations);
+    const status: JourneyNodeStatus =
+      raw === "locked" ? "locked" : raw === "completed" ? "completed" : "available";
+    openSheet({ kind: "review", status });
+  }
+
+  function onActivateStart() {
+    const currentIdx = statuses.findIndex((s) => s === "current" || s === "available");
+    if (currentIdx < 0) return;
+    const station = stations[currentIdx];
+    if (!station) return;
+    onSelectLesson(station, currentIdx);
+  }
+
+  function onPrimary() {
+    if (!sheet) return;
+    if (sheet.kind === "review") {
+      if (sheet.status === "locked") return;
+      router.push(unitReviewPath(data.unitId, childId));
       return;
     }
-    setSelectedId(station.lessonId);
-    setModal({ station, state, number });
+    if (sheet.status === "locked") return;
+    router.push(lessonPlayPath(sheet.station.lessonId, childId));
   }
 
-  function openLesson(station: PathStation) {
-    router.push(lessonPlayPath(station.lessonId, childId));
+  function scrollToCurrent() {
+    const target = currentNodeRef.current;
+    if (!target) return;
+    target.scrollIntoView({
+      block: "center",
+      inline: "nearest",
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
   }
 
-  const iconUrl = data.unitIconUrl
-    ? `${data.unitIconUrl}${data.unitIconUrl.includes("?") ? "&" : "?"}v=child1`
-    : null;
+  const sheetContent = useMemo((): LessonDetailsContent | null => {
+    if (!sheet) return null;
+    if (sheet.kind === "review") {
+      const locked = sheet.status === "locked";
+      return {
+        title: tJourney("reviewStation"),
+        status: sheet.status,
+        statusLabel: locked
+          ? tJourney("locked")
+          : sheet.status === "completed"
+            ? tJourney("completed")
+            : tJourney("available"),
+        description: locked
+          ? tJourney("reviewLockedMessage")
+          : sheet.status === "completed"
+            ? tJourney("reviewCompletedMessage")
+            : tJourney("reviewAvailableMessage"),
+        primaryLabel: locked ? tJourney("completePrevious") : tJourney("openReview"),
+        primaryDisabled: locked,
+        closeLabel: t("back"),
+      };
+    }
+    const { station, status } = sheet;
+    const locked = status === "locked";
+    const completed = status === "completed";
+    return {
+      title: station.title,
+      status,
+      statusLabel: completed
+        ? tJourney("completed")
+        : locked
+          ? tJourney("locked")
+          : status === "current"
+            ? tJourney("current")
+            : tJourney("available"),
+      description: locked
+        ? tJourney("lockedLessonMessage")
+        : completed
+          ? tJourney("replayHint")
+          : tJourney("startHint", { title: station.title }),
+      stars: station.stars,
+      pointsHint: completed ? tJourney("replayNoNewPoints") : null,
+      primaryLabel: locked
+        ? tJourney("completePrevious")
+        : completed
+          ? tDesk("replayLesson")
+          : tJourney("startLesson"),
+      primaryDisabled: locked,
+      closeLabel: t("back"),
+    };
+  }, [sheet, t, tJourney, tDesk]);
+
+  if (stations.length === 0) {
+    return (
+      <div className="path-screen relative mx-auto w-full max-w-3xl">
+        <JourneyEmptyState
+          title={tJourney("emptyUnit")}
+          backLabel={tJourney("backToUnits")}
+          backHref={backHref}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
-      className="path-screen relative mx-auto flex min-h-0 w-full max-w-[100vw] flex-1 flex-col overflow-hidden md:h-full md:max-w-3xl"
-      style={{ ["--path-accent" as string]: data.accentColor }}
+      className="path-screen relative mx-auto w-full max-w-[100vw] md:max-w-3xl"
+      style={{ ["--path-accent" as string]: theme.accentColor }}
     >
-      <PathBackground />
+      <UnitJourneyHeader
+        title={data.title}
+        subjectLabel={subjectLabel}
+        backHref={backHref}
+        backLabel={t("back")}
+        progressLabel={tJourney("progress", { completed, total })}
+        completed={completed}
+        total={total}
+        returnLabel={tJourney("returnToCurrent")}
+        onReturnToCurrent={scrollToCurrent}
+        accentColor={theme.accentColor}
+      />
 
-      <PathHeader title={data.title} backHref={backHref} backLabel={t("back")} />
+      <div ref={scrollRef} className="relative z-10 w-full pb-6 pt-2">
+        <NextHeadquartersReward
+          reward={reward}
+          labels={{
+            title: tJourney("nextHeadquartersReward"),
+            remaining: tJourney("pointsRemaining"),
+            progress: tJourney("rewardProgress"),
+            allComplete: tJourney("allToolsComplete"),
+            points: tJourney("priceAndBalance"),
+          }}
+        />
 
-      <div
-        ref={scrollRef}
-        className="relative z-10 min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
-      >
-        {canCollapseCompleted ? (
-          <div className="sticky top-0 z-20 mx-auto flex w-[92%] max-w-md justify-center px-1 pb-2 pt-2 md:w-[78%]">
-            <button
-              type="button"
-              onClick={() => setCompletedOpen((open) => !open)}
-              className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white/90 px-3 py-1.5 text-xs font-extrabold text-emerald-700 shadow-sm backdrop-blur-md"
-            >
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">
-                ✓
-              </span>
-              {tPath("completedSummary", { count: toIndicDigits(completedStations.length) })}
-              <span aria-hidden="true">{completedOpen ? "▴" : "▾"}</span>
-            </button>
-          </div>
-        ) : null}
-
-        <div
-          className="path-canvas-stage relative mx-auto w-[92%] max-w-md md:w-[78%]"
-          style={{ height: stageHeight }}
-        >
-          <PathTopIllustration
-            iconUrl={iconUrl}
-            accentColor={data.accentColor}
-            label={data.title}
+        <div ref={mapMeasureRef} className="relative w-full px-2 sm:px-4">
+          <UnitJourneyMap
+            stations={stations}
+            statuses={statuses}
+            layout={layout}
+            theme={theme}
+            selectedId={selectedId}
+            focusIndex={focusIndex}
+            childAvatarSrc={avatarSrc}
+            childName={childName || tJourney("companion")}
+            reduceMotion={reduceMotion}
+            labels={{
+              aria: tJourney("aria"),
+              startTitle: tJourney("startOfJourney"),
+              reviewTitle: tJourney("reviewShort"),
+              reviewEndBadge: tJourney("reviewEndBadge"),
+              currentBadge: tJourney("currentStation"),
+              completed: tJourney("completed"),
+              locked: tJourney("locked"),
+              current: tJourney("current"),
+              available: tJourney("available"),
+              metaCompleted: tJourney("metaCompleted"),
+              metaLocked: tJourney("metaLocked"),
+              metaAvailable: tJourney("metaAvailable"),
+            }}
+            onSelectLesson={onSelectLesson}
+            onSelectReview={onSelectReview}
+            onActivateStart={onActivateStart}
+            startActivateLabel={tJourney("startOfJourney")}
+            currentNodeRef={currentNodeRef}
           />
-
-          <svg
-            className="pointer-events-none absolute inset-0 h-full w-full"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <path
-              d={fullPath}
-              fill="none"
-              stroke="#FFFFFF"
-              strokeWidth="5.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity="0.55"
-            />
-            <path
-              d={fullPath}
-              fill="none"
-              stroke="#D5DCE6"
-              strokeWidth="3.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="path-stroke-base"
-            />
-            {lastOpenVisibleIndex >= 0 ? (
-              <path
-                d={livePath}
-                fill="none"
-                stroke={liveStroke}
-                strokeWidth="3.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                pathLength={1}
-                className="path-stroke-draw"
-              />
-            ) : null}
-          </svg>
-
-          <div className="absolute inset-0" role="list" aria-label={tPath("aria")}>
-            {visibleRows.length === 0 ? (
-              <p className="absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-[22px] bg-white/90 p-4 text-center font-semibold text-text-gray">
-                {t("emptyLessons")}
-              </p>
-            ) : (
-              visibleRows.map((row, index) => {
-                const point = points[index];
-                if (!point) return null;
-                const state = visualState(row.station);
-                return (
-                  <LessonNode
-                    key={row.station.lessonId}
-                    title={row.station.title}
-                    number={row.number}
-                    state={state}
-                    stars={row.station.stars}
-                    isFinale={row.station.isFinale}
-                    accentColor={data.accentColor}
-                    x={point.x}
-                    y={point.y}
-                    appearDelayMs={160 + index * 90}
-                    selected={selectedId === row.station.lessonId}
-                    anchorRef={index === focusVisibleIndex ? currentNodeRef : undefined}
-                    ariaLabel={
-                      row.station.isFinale
-                        ? `${tPath("finale")}: ${row.station.title}`
-                        : `${row.station.title}. ${
-                            state === "locked"
-                              ? tPath("locked")
-                              : state === "current"
-                                ? tPath("current")
-                                : tPath("completed")
-                          }`
-                    }
-                    onSelect={() => onSelect(row.station, row.number)}
-                  />
-                );
-              })
-            )}
-          </div>
         </div>
       </div>
 
-      {lockedToast ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-28 z-50 flex justify-center px-4 md:bottom-8">
+      {toast ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-28 z-50 flex justify-center px-4 md:bottom-8">
           <p className="rounded-2xl bg-[#1A2B47]/90 px-4 py-2.5 text-center text-sm font-extrabold text-white shadow-lg">
-            {lockedToast}
+            {toast}
           </p>
         </div>
       ) : null}
 
-      <LessonModal
-        open={modal != null}
-        title={modal?.station.title ?? ""}
-        state={modal?.state ?? "current"}
-        description={
-          modal?.state === "completed"
-            ? tPath("replayHint")
-            : tPath("startHint", { title: modal?.station.title ?? "" })
-        }
-        primaryLabel={modal?.state === "completed" ? tDesk("replayLesson") : tPath("playNow")}
-        closeLabel={t("back")}
-        onClose={() => {
-          setModal(null);
-          setSelectedId(null);
-        }}
-        onPrimary={() => {
-          if (!modal) return;
-          openLesson(modal.station);
-        }}
+      <LessonDetailsSheet
+        open={sheet != null}
+        content={sheetContent}
+        onClose={closeSheet}
+        onPrimary={onPrimary}
       />
     </div>
   );
 }
 
-/** Alias matching the requested LearningPath name. */
+/** Alias matching the requested LearningPath / UnitJourneyPage name. */
 export const LearningPath = LessonPathCanvas;
+export const UnitJourneyPage = LessonPathCanvas;

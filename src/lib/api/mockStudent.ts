@@ -198,22 +198,21 @@ export function mockStreak(studentId: number) {
 }
 
 export const MOCK_UNIT_PATH = {
-  unit_id: 109,
+  unit_id: 9101,
   subject_id: 7,
-  title: "الوحدة الأولى",
+  title: "الوحدة الأولى: جسدي يتحرك",
   path_background_url: null,
   unit_icon_url: "/images/units/icons/science-g4-u1.png",
   accent_color: "#2EC4A8",
   stations: [
-    { lesson_id: 919, title: "بنى تتحرك", sort_order: 1, status: "completed", stars: 3, is_finale: false },
-    { lesson_id: 920, title: "عظمي تدعمني", sort_order: 2, status: "completed", stars: 2, is_finale: false },
-    { lesson_id: 921, title: "بني تحرك", sort_order: 3, status: "completed", stars: 3, is_finale: false },
-    { lesson_id: 922, title: "أصبحت أكبر", sort_order: 4, status: "completed", stars: 2, is_finale: false },
-    { lesson_id: 923, title: "جسمي السليم", sort_order: 5, status: "available", stars: null, is_finale: false },
-    { lesson_id: 924, title: "أصبحت أسرع", sort_order: 6, status: "locked", stars: null, is_finale: false },
-    { lesson_id: 925, title: "القوة والحركة", sort_order: 7, status: "locked", stars: null, is_finale: false },
-    { lesson_id: 926, title: "ورشة العمل والتجربة", sort_order: 8, status: "locked", stars: null, is_finale: false },
-    { lesson_id: 927, title: "التحدي النهائي", sort_order: 9, status: "locked", stars: null, is_finale: true },
+    { lesson_id: 91001, title: "بنى تتحرك", sort_order: 1, status: "completed", stars: 3, is_finale: false },
+    { lesson_id: 91002, title: "عظمي تدعمني", sort_order: 2, status: "completed", stars: 2, is_finale: false },
+    { lesson_id: 91003, title: "أتحرك وألعب", sort_order: 3, status: "completed", stars: 1, is_finale: false },
+    { lesson_id: 91004, title: "جسمي السليم", sort_order: 4, status: "available", stars: null, is_finale: false },
+    { lesson_id: 91005, title: "غذائي الصحي", sort_order: 5, status: "locked", stars: null, is_finale: false },
+    { lesson_id: 91006, title: "أصبحت أسرع", sort_order: 6, status: "locked", stars: null, is_finale: false },
+    { lesson_id: 91007, title: "القوة والحركة", sort_order: 7, status: "locked", stars: null, is_finale: false },
+    { lesson_id: 91008, title: "ورشة التجربة", sort_order: 8, status: "locked", stars: null, is_finale: false },
   ],
 };
 

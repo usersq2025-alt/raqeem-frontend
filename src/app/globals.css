@@ -142,6 +142,8 @@
     .path-station-bounce,
     .path-pulse-ring,
     .path-node-sparkles,
+    .journey-pulse,
+    .journey-breathe,
     .play-choice-selected,
     .play-choice-right,
     .play-feedback-correct {
@@ -1183,6 +1185,72 @@
     opacity: 1;
     transform: translate(-50%, -118%);
   }
+}
+
+/* Unit Learning Journey map motion */
+.journey-pulse {
+  animation: journey-pulse 2.4s ease-out infinite;
+}
+
+.journey-breathe {
+  animation: journey-breathe 3.2s ease-in-out infinite;
+}
+
+@keyframes journey-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 130, 50, 0.45);
+    opacity: 0.9;
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(244, 130, 50, 0);
+    opacity: 0;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 130, 50, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes journey-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey-pulse,
+  .journey-breathe {
+    animation: none !important;
+  }
+
+  .journey-gate-in {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.journey-gate-in {
+  animation: journey-gate-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes journey-gate-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.journey-gate-glow {
+  filter: drop-shadow(0 0 12px rgba(248, 200, 48, 0.35));
 }
 
 .hero-blob {
