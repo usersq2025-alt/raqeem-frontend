@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -17,6 +17,13 @@ const GOAL_OPTIONS: Array<{ value: DailyGoalTarget; key: "balanced" | "active" |
   { value: 5, key: "active", icon: "⚡" },
   { value: 7, key: "champion", icon: "🏆" },
 ];
+
+const subscribeToPreviewQuery = () => () => undefined;
+const readPreviewCount = (): number | null => {
+  if (process.env.NODE_ENV === "production" || typeof window === "undefined") return null;
+  const requested = Number(new URLSearchParams(window.location.search).get("streakPreview"));
+  return Number.isFinite(requested) && requested > 0 ? Math.min(365, Math.floor(requested)) : null;
+};
 
 export function StudentJourneyDashboard({ childId, initialData = null }: Props) {
   const t = useTranslations("student.journeyDashboard");
@@ -77,15 +84,29 @@ function JourneyGreeting({ data }: { data: JourneyDashboard }) {
 function StreakHero({ data }: { data: JourneyDashboard }) {
   const t = useTranslations("student.journeyDashboard");
   const locale = useLocale();
-  const streak = data.streak ?? { current: 0, longest: 0, completedToday: false, recentDays: [] };
-  const nextMilestone = [3, 7, 14, 30].find((value) => value > streak.current) ?? 50;
+  const realStreak = data.streak ?? { current: 0, longest: 0, completedToday: false, recentDays: [] };
+  const previewCount = useSyncExternalStore(subscribeToPreviewQuery, readPreviewCount, () => null);
+
+  const previewDays = previewCount
+    ? Array.from({ length: 7 }, (_, index) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - index));
+        return { date: date.toISOString().slice(0, 10), active: true, isToday: index === 6 };
+      })
+    : null;
+  const streak = previewCount
+    ? { current: previewCount, longest: Math.max(realStreak.longest, previewCount), completedToday: true, recentDays: previewDays ?? [] }
+    : realStreak;
+  const orderedDays = locale === "ar" ? [...streak.recentDays].reverse() : streak.recentDays;
+  const nextMilestone = [3, 7, 14, 30, 60, 100, 365].find((value) => value > streak.current) ?? 500;
+  const remainingToMilestone = Math.max(1, nextMilestone - streak.current);
   const milestoneProgress = Math.min(100, (streak.current / nextMilestone) * 100);
 
   return (
     <section className="journey-streak-card relative min-h-[390px] overflow-hidden rounded-[34px] border border-[#FFD58A]/70 bg-[linear-gradient(145deg,#FFF9E9_0%,#FFF1CC_50%,#FFE4A3_100%)] p-5 shadow-[0_22px_55px_-30px_rgba(211,121,20,.55)] md:p-7" aria-labelledby="streak-title">
       <div className="journey-spark-field pointer-events-none absolute inset-0" aria-hidden />
       <div className="relative flex items-start justify-between gap-3">
-        <div><p className="text-xs font-black text-[#C76816]">{t("streakEyebrow")}</p><h2 id="streak-title" className="mt-1 text-2xl font-black text-[#1F3A5F] md:text-3xl">{t("streakTitle")}</h2><p className="mt-1 text-sm font-bold text-[#765936]">{streak.completedToday ? t("streakActive") : t("streakKeep")}</p></div>
+        <div><p className="text-xs font-black text-[#C76816]">{t("streakEyebrow")}</p><h2 id="streak-title" className="mt-1 text-2xl font-black text-[#1F3A5F] md:text-3xl">{t("streakTitle")}</h2><p className="mt-1 text-sm font-bold text-[#765936]">{streak.completedToday ? t("streakActive") : t("streakKeep")}</p>{previewCount ? <span className="mt-2 inline-flex rounded-full bg-[#1F3A5F] px-2.5 py-1 text-[10px] font-black text-white">{t("previewData")}</span> : null}</div>
         <div className="journey-flame-wrap relative flex h-32 w-28 shrink-0 items-center justify-center" aria-label={t("streakCount", { count: toIndicDigits(streak.current) })}>
           <span className="journey-flame-glow absolute h-20 w-20 rounded-full bg-[#FF9D22]/45 blur-xl" aria-hidden />
           <span className="journey-flame text-7xl drop-shadow-[0_8px_10px_rgba(220,96,10,.28)]" aria-hidden>🔥</span>
@@ -93,14 +114,15 @@ function StreakHero({ data }: { data: JourneyDashboard }) {
         </div>
       </div>
       <div className="relative mt-6 rounded-[26px] bg-white/75 p-4 shadow-inner backdrop-blur-sm">
-        <div className="grid grid-cols-7 gap-1.5" role="list" aria-label={t("weekAria")}>
-          {streak.recentDays.map((day) => {
-            const dayName = new Intl.DateTimeFormat(locale, { weekday: "narrow" }).format(new Date(`${day.date}T12:00:00`));
-            return <div key={day.date} role="listitem" className="flex min-w-0 flex-col items-center gap-2"><span className={`text-[10px] font-black md:text-xs ${day.isToday ? "text-[#E66C16]" : "text-[#78879A]"}`}>{day.isToday ? t("todayDay") : dayName}</span><span className={["relative flex aspect-square w-full max-w-12 items-center justify-center rounded-2xl border-2 text-lg font-black transition", day.active ? "journey-day-active border-[#FFB43D] bg-gradient-to-b from-[#FFCC62] to-[#FF9A2F] text-white shadow-[0_5px_0_#D97713]" : day.isToday ? "border-dashed border-[#F4A03C] bg-white text-[#F4A03C]" : "border-white bg-[#EDF2F6] text-[#A9B4C1]"].join(" ")}>{day.active ? "✓" : day.isToday ? "●" : "·"}</span></div>;
+        <div className="grid grid-cols-4 gap-x-2 gap-y-4 md:grid-cols-7" role="list" aria-label={t("weekAria")}>
+          {orderedDays.map((day) => {
+            const dayName = new Intl.DateTimeFormat(locale, { weekday: "long" }).format(new Date(`${day.date}T12:00:00`));
+            return <div key={day.date} role="listitem" className="flex min-w-0 flex-col items-center gap-2"><span className={`whitespace-nowrap text-[11px] font-black md:text-xs ${day.isToday ? "text-[#E66C16]" : "text-[#78879A]"}`}>{day.isToday ? t("todayDay") : dayName}</span><span className={["relative flex h-11 w-11 items-center justify-center rounded-2xl border-2 text-xl font-black transition", day.active ? "journey-day-active border-[#FFB43D] bg-gradient-to-b from-[#FFCC62] to-[#FF9A2F] text-white shadow-[0_5px_0_#D97713]" : day.isToday ? "border-dashed border-[#F4A03C] bg-white text-[#F4A03C]" : "border-white bg-[#EDF2F6] text-[#A9B4C1]"].join(" ")}>{day.active ? "🔥" : day.isToday ? "●" : "·"}</span></div>;
           })}
         </div>
+        <p className="mt-4 text-center text-[11px] font-bold text-[#7A684D]">{t("streakWindowHint")}</p>
       </div>
-      <div className="relative mt-5"><div className="flex items-center justify-between gap-3 text-xs font-black text-[#765936]"><span>{t("nextMilestone", { count: toIndicDigits(nextMilestone) })}</span><span>{t("streakLongest", { count: toIndicDigits(streak.longest) })}</span></div><div className="mt-2 h-3 overflow-hidden rounded-full bg-white/80"><div className="h-full rounded-full bg-gradient-to-r from-[#FF8A25] via-[#FFC241] to-[#FFE073] transition-[width] duration-700" style={{ width: `${milestoneProgress}%` }} /></div></div>
+      <div className="relative mt-5"><div className="flex items-center justify-between gap-3 text-xs font-black text-[#765936]"><span>{t("remainingToBadge", { remaining: remainingToMilestone, badge: nextMilestone })}</span><span>{t("streakLongest", { count: toIndicDigits(streak.longest) })}</span></div><div className="mt-2 h-3 overflow-hidden rounded-full bg-white/80"><div className="h-full rounded-full bg-gradient-to-r from-[#FF8A25] via-[#FFC241] to-[#FFE073] transition-[width] duration-700" style={{ width: `${milestoneProgress}%` }} /></div></div>
     </section>
   );
 }
