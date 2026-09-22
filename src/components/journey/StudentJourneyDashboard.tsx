@@ -88,19 +88,25 @@ function StreakHero({ data }: { data: JourneyDashboard }) {
   const previewCount = useSyncExternalStore(subscribeToPreviewQuery, readPreviewCount, () => null);
 
   const previewDays = previewCount
-    ? Array.from({ length: 7 }, (_, index) => {
-        const date = new Date();
-        date.setDate(date.getDate() - (6 - index));
-        return { date: date.toISOString().slice(0, 10), active: true, isToday: index === 6 };
-      })
+    ? (() => {
+        const today = new Date();
+        today.setHours(12, 0, 0, 0);
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - ((today.getDay() - 5 + 7) % 7));
+        const elapsedDays = ((today.getDay() - 5 + 7) % 7) + 1;
+        const activeStartIndex = Math.max(0, elapsedDays - previewCount);
+        return Array.from({ length: 7 }, (_, index) => {
+          const date = new Date(weekStart);
+          date.setDate(weekStart.getDate() + index);
+          const isToday = date.toDateString() === today.toDateString();
+          const isFuture = date > today;
+          return { date: date.toISOString().slice(0, 10), active: !isFuture && index >= activeStartIndex, isToday, isFuture };
+        });
+      })()
     : null;
   const streak = previewCount
     ? { current: previewCount, longest: Math.max(realStreak.longest, previewCount), completedToday: true, recentDays: previewDays ?? [] }
     : realStreak;
-  const orderedDays = locale === "ar" ? [...streak.recentDays].reverse() : streak.recentDays;
-  const nextMilestone = [3, 7, 14, 30, 60, 100, 365].find((value) => value > streak.current) ?? 500;
-  const remainingToMilestone = Math.max(1, nextMilestone - streak.current);
-  const milestoneProgress = Math.min(100, (streak.current / nextMilestone) * 100);
 
   return (
     <section className="journey-streak-card relative min-h-[390px] overflow-hidden rounded-[34px] border border-[#FFD58A]/70 bg-[linear-gradient(145deg,#FFF9E9_0%,#FFF1CC_50%,#FFE4A3_100%)] p-5 shadow-[0_22px_55px_-30px_rgba(211,121,20,.55)] md:p-7" aria-labelledby="streak-title">
@@ -115,14 +121,14 @@ function StreakHero({ data }: { data: JourneyDashboard }) {
       </div>
       <div className="relative mt-6 rounded-[26px] bg-white/75 p-4 shadow-inner backdrop-blur-sm">
         <div className="grid grid-cols-4 gap-x-2 gap-y-4 md:grid-cols-7" role="list" aria-label={t("weekAria")}>
-          {orderedDays.map((day) => {
+          {streak.recentDays.map((day) => {
             const dayName = new Intl.DateTimeFormat(locale, { weekday: "long" }).format(new Date(`${day.date}T12:00:00`));
-            return <div key={day.date} role="listitem" className="flex min-w-0 flex-col items-center gap-2"><span className={`whitespace-nowrap text-[11px] font-black md:text-xs ${day.isToday ? "text-[#E66C16]" : "text-[#78879A]"}`}>{day.isToday ? t("todayDay") : dayName}</span><span className={["relative flex h-11 w-11 items-center justify-center rounded-2xl border-2 text-xl font-black transition", day.active ? "journey-day-active border-[#FFB43D] bg-gradient-to-b from-[#FFCC62] to-[#FF9A2F] text-white shadow-[0_5px_0_#D97713]" : day.isToday ? "border-dashed border-[#F4A03C] bg-white text-[#F4A03C]" : "border-white bg-[#EDF2F6] text-[#A9B4C1]"].join(" ")}>{day.active ? "🔥" : day.isToday ? "●" : "·"}</span></div>;
+            const missed = !day.active && !day.isToday && !day.isFuture;
+            return <div key={day.date} role="listitem" className={`flex min-w-0 flex-col items-center gap-2 rounded-2xl px-1 py-2 ${day.isToday ? "journey-day-today bg-white/90" : ""}`}><span className={`whitespace-nowrap text-[11px] font-black md:text-xs ${day.isToday ? "text-[#E66C16]" : "text-[#78879A]"}`}>{day.isToday ? t("todayDay") : dayName}</span><span className={["relative flex h-11 w-11 items-center justify-center rounded-2xl border-2 text-xl font-black transition", day.active ? "journey-day-active border-[#FFB43D] bg-gradient-to-b from-[#FFCC62] to-[#FF9A2F] text-white shadow-[0_5px_0_#D97713]" : missed ? "border-[#B8DDF4] bg-gradient-to-b from-[#EAF8FF] to-[#CDEBFA] shadow-[0_4px_0_#9CCBE5]" : day.isToday ? "border-dashed border-[#F4A03C] bg-white text-[#F4A03C]" : "border-white bg-[#EDF2F6] text-[#A9B4C1]"].join(" ")}>{day.active ? "🔥" : missed ? "🧊" : day.isToday ? "●" : "·"}</span></div>;
           })}
         </div>
-        <p className="mt-4 text-center text-[11px] font-bold text-[#7A684D]">{t("streakWindowHint")}</p>
+        <p className="mt-4 text-center text-[11px] font-bold text-[#7A684D]">{t("streakWeekHint")}</p>
       </div>
-      <div className="relative mt-5"><div className="flex items-center justify-between gap-3 text-xs font-black text-[#765936]"><span>{t("remainingToBadge", { remaining: remainingToMilestone, badge: nextMilestone })}</span><span>{t("streakLongest", { count: toIndicDigits(streak.longest) })}</span></div><div className="mt-2 h-3 overflow-hidden rounded-full bg-white/80"><div className="h-full rounded-full bg-gradient-to-r from-[#FF8A25] via-[#FFC241] to-[#FFE073] transition-[width] duration-700" style={{ width: `${milestoneProgress}%` }} /></div></div>
     </section>
   );
 }

@@ -56,7 +56,7 @@ export type JourneyDashboard = {
     current: number;
     longest: number;
     completedToday: boolean;
-    recentDays: Array<{ date: string; active: boolean; isToday: boolean }>;
+    recentDays: Array<{ date: string; active: boolean; isToday: boolean; isFuture: boolean }>;
   };
   latestAchievement?: {
     type: "lesson" | "purchase" | "unit";
@@ -209,6 +209,7 @@ export function mapJourneyDashboard(raw: unknown): JourneyDashboard | null {
                 date: String(value.date ?? ""),
                 active: Boolean(value.active),
                 isToday: Boolean(value.is_today ?? value.isToday),
+                isFuture: Boolean(value.is_future ?? value.isFuture),
               };
             }),
           },
@@ -307,13 +308,13 @@ export function mockJourneyDashboard(studentId = 9001): JourneyDashboard {
       longest: 5,
       completedToday: true,
       recentDays: [
-        { date: "2026-09-15", active: false, isToday: false },
-        { date: "2026-09-16", active: false, isToday: false },
-        { date: "2026-09-17", active: false, isToday: false },
-        { date: "2026-09-18", active: false, isToday: false },
-        { date: "2026-09-19", active: true, isToday: false },
-        { date: "2026-09-20", active: true, isToday: false },
-        { date: "2026-09-21", active: true, isToday: true },
+        { date: "2026-09-18", active: false, isToday: false, isFuture: false },
+        { date: "2026-09-19", active: true, isToday: false, isFuture: false },
+        { date: "2026-09-20", active: true, isToday: false, isFuture: false },
+        { date: "2026-09-21", active: true, isToday: true, isFuture: false },
+        { date: "2026-09-22", active: false, isToday: false, isFuture: true },
+        { date: "2026-09-23", active: false, isToday: false, isFuture: true },
+        { date: "2026-09-24", active: false, isToday: false, isFuture: true },
       ],
     },
     latestAchievement: {

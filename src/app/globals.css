@@ -2749,6 +2749,11 @@
   border: 2px solid rgba(255, 184, 61, .32);
   border-radius: 18px;
 }
+.journey-day-today {
+  border: 2px solid rgba(244, 130, 50, .78);
+  box-shadow: 0 0 0 4px rgba(244, 160, 60, .14), 0 8px 18px -12px rgba(207, 96, 19, .8);
+  animation: journey-current-step 2s ease-out infinite;
+}
 .journey-spark-field {
   background-image:
     radial-gradient(circle at 10% 20%, rgba(255,255,255,.95) 0 2px, transparent 3px),
@@ -2762,5 +2767,6 @@
   .journey-float-delayed,
   .journey-flame,
   .journey-flame-glow,
-  .journey-current-step { animation: none !important; }
+  .journey-current-step,
+  .journey-day-today { animation: none !important; }
 }
