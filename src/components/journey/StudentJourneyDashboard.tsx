@@ -39,7 +39,7 @@ export function StudentJourneyDashboard({ childId, initialData = null }: Props) 
   const goalTone = goalMessageKey(data);
 
   return (
-    <div className="journey-dash relative mx-auto w-full max-w-5xl px-4 pb-28 pt-4 md:px-6 md:pb-10 md:pt-6">
+    <div className="student-journey-dashboard relative mx-auto w-full max-w-5xl px-4 pb-28 pt-4 md:px-6 md:pb-10 md:pt-6">
       <div
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_rgba(200,233,255,0.55),_transparent_55%),linear-gradient(180deg,#F7FBFF_0%,#F3FFF6_100%)]"
         aria-hidden

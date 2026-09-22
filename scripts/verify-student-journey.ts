@@ -80,6 +80,10 @@ const component = fs.readFileSync(
   "utf8"
 );
 assert(component.includes("DailyGoalPicker"), "goal picker present");
+assert(
+  !component.includes('className="journey-dash '),
+  "dashboard root does not reuse the non-interactive decorative journey-dash class"
+);
 assert(component.includes("smartReviewAvailable") === false || !component.includes("AI حلل"), "no fake AI copy");
 assert(component.includes("goStore"), "store CTA present");
 assert(!component.includes("purchase("), "no purchase action in journey screen");
