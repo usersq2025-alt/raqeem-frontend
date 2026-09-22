@@ -1,4 +1,4 @@
-export type DailyGoalTarget = 1 | 3 | 5 | 7;
+export type DailyGoalTarget = 3 | 5 | 7;
 
 export type JourneyDashboard = {
   child: {
@@ -6,6 +6,9 @@ export type JourneyDashboard = {
     name: string;
     avatarUrl?: string;
     professionCode?: string;
+    professionNameAr?: string;
+    professionNameEn?: string;
+    gender?: "male" | "female";
     gradeName?: string;
     pointsBalance: number;
   };
@@ -53,6 +56,7 @@ export type JourneyDashboard = {
     current: number;
     longest: number;
     completedToday: boolean;
+    recentDays: Array<{ date: string; active: boolean; isToday: boolean }>;
   };
   latestAchievement?: {
     type: "lesson" | "purchase" | "unit";
@@ -64,7 +68,7 @@ export type JourneyDashboard = {
 };
 
 function asTarget(n: number): DailyGoalTarget {
-  if (n === 1 || n === 3 || n === 5 || n === 7) return n;
+  if (n === 3 || n === 5 || n === 7) return n;
   return 3;
 }
 
@@ -149,6 +153,15 @@ export function mapJourneyDashboard(raw: unknown): JourneyDashboard | null {
       ...(typeof (childRaw.profession_code ?? childRaw.professionCode) === "string"
         ? { professionCode: String(childRaw.profession_code ?? childRaw.professionCode) }
         : {}),
+      ...(typeof (childRaw.profession_name_ar ?? childRaw.professionNameAr) === "string"
+        ? { professionNameAr: String(childRaw.profession_name_ar ?? childRaw.professionNameAr) }
+        : {}),
+      ...(typeof (childRaw.profession_name_en ?? childRaw.professionNameEn) === "string"
+        ? { professionNameEn: String(childRaw.profession_name_en ?? childRaw.professionNameEn) }
+        : {}),
+      ...(["male", "female"].includes(String(childRaw.gender))
+        ? { gender: String(childRaw.gender) as "male" | "female" }
+        : {}),
       ...(typeof (childRaw.grade_name ?? childRaw.gradeName) === "string"
         ? { gradeName: String(childRaw.grade_name ?? childRaw.gradeName) }
         : {}),
@@ -185,6 +198,19 @@ export function mapJourneyDashboard(raw: unknown): JourneyDashboard | null {
             current: Number(streakRaw.current ?? 0),
             longest: Number(streakRaw.longest ?? 0),
             completedToday: Boolean(streakRaw.completed_today ?? streakRaw.completedToday),
+            recentDays: (Array.isArray(streakRaw.recent_days)
+              ? streakRaw.recent_days
+              : Array.isArray(streakRaw.recentDays)
+                ? streakRaw.recentDays
+                : []
+            ).map((day) => {
+              const value = day as Record<string, unknown>;
+              return {
+                date: String(value.date ?? ""),
+                active: Boolean(value.active),
+                isToday: Boolean(value.is_today ?? value.isToday),
+              };
+            }),
           },
         }
       : {}),
@@ -210,9 +236,11 @@ export function mockJourneyDashboard(studentId = 9001): JourneyDashboard {
       id: studentId,
       name: "سارة",
       professionCode: "doctor",
+      professionNameAr: "طبيبة",
+      professionNameEn: "Doctor",
+      gender: "female",
       gradeName: "الرابع",
       pointsBalance: 4,
-      avatarUrl: "/images/professions/doctor-girl.png",
     },
     today: {
       date: "2026-09-21",
@@ -274,7 +302,20 @@ export function mockJourneyDashboard(studentId = 9001): JourneyDashboard {
       canPurchase: false,
     },
     headquartersCompleted: false,
-    streak: { current: 3, longest: 5, completedToday: true },
+    streak: {
+      current: 3,
+      longest: 5,
+      completedToday: true,
+      recentDays: [
+        { date: "2026-09-15", active: false, isToday: false },
+        { date: "2026-09-16", active: false, isToday: false },
+        { date: "2026-09-17", active: false, isToday: false },
+        { date: "2026-09-18", active: false, isToday: false },
+        { date: "2026-09-19", active: true, isToday: false },
+        { date: "2026-09-20", active: true, isToday: false },
+        { date: "2026-09-21", active: true, isToday: true },
+      ],
+    },
     latestAchievement: {
       type: "lesson",
       title: "أتحرك",

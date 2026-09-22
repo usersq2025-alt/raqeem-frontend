@@ -2715,3 +2715,52 @@
 }
 
 
+/* Student adventure: joyful motion with a calm, accessible fallback. */
+@keyframes journey-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -8px, 0); }
+}
+
+@keyframes journey-flame {
+  0%, 100% { transform: translateY(0) rotate(-2deg) scale(1); }
+  45% { transform: translateY(-4px) rotate(2deg) scale(1.06); }
+}
+
+@keyframes journey-glow {
+  0%, 100% { opacity: .45; transform: scale(.9); }
+  50% { opacity: .85; transform: scale(1.12); }
+}
+
+@keyframes journey-current-step {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(244, 160, 60, .35); }
+  50% { box-shadow: 0 0 0 7px rgba(244, 160, 60, 0); }
+}
+
+.journey-float { animation: journey-float 4.8s ease-in-out infinite; }
+.journey-float-delayed { animation: journey-float 5.6s ease-in-out 1s infinite; }
+.journey-flame { animation: journey-flame 2.2s ease-in-out infinite; transform-origin: 50% 85%; }
+.journey-flame-glow { animation: journey-glow 2.2s ease-in-out infinite; }
+.journey-current-step { animation: journey-current-step 1.8s ease-out infinite; }
+.journey-day-active { position: relative; }
+.journey-day-active::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border: 2px solid rgba(255, 184, 61, .32);
+  border-radius: 18px;
+}
+.journey-spark-field {
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(255,255,255,.95) 0 2px, transparent 3px),
+    radial-gradient(circle at 72% 14%, rgba(255,174,41,.65) 0 2px, transparent 3px),
+    radial-gradient(circle at 88% 68%, rgba(255,255,255,.85) 0 3px, transparent 4px),
+    radial-gradient(circle at 22% 82%, rgba(255,174,41,.45) 0 2px, transparent 3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey-float,
+  .journey-float-delayed,
+  .journey-flame,
+  .journey-flame-glow,
+  .journey-current-step { animation: none !important; }
+}

@@ -18,7 +18,7 @@ export async function PUT(request: Request, { params }: Props) {
   const target = Number(body?.target_lessons);
 
   if (isMockAuthEnabled()) {
-    if (![1, 3, 5, 7].includes(target)) {
+    if (![3, 5, 7].includes(target)) {
       return NextResponse.json({ message: "Invalid target" }, { status: 422 });
     }
     const mock = mockJourneyDashboard(Number(id) || 9001);

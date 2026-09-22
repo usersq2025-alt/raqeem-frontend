@@ -39,7 +39,7 @@ const noStore = mapJourneyDashboard({
 });
 assert(noStore != null && noStore.nextHeadquartersItem === undefined, "partial store failure maps to missing HQ item");
 
-for (const target of [1, 3, 5, 7] as DailyGoalTarget[]) {
+for (const target of [3, 5, 7] as DailyGoalTarget[]) {
   const mapped = mapJourneyDashboard({
     child: { id: 2, name: "B", points_balance: 1 },
     today: {
@@ -64,9 +64,9 @@ assert(page.includes("StudentJourneyDashboard"), "home page renders StudentJourn
 assert(!page.includes("ComingSoonScreen"), "home page no longer uses ComingSoon");
 
 const nav = fs.readFileSync(path.join(root, "messages/ar.json"), "utf8");
-assert(nav.includes('"home": "رحلتي"'), "Arabic nav label is رحلتي");
+assert(nav.includes('"home": "مغامرتي"'), "Arabic nav label is مغامرتي");
 const en = fs.readFileSync(path.join(root, "messages/en.json"), "utf8");
-assert(en.includes('"home": "My Journey"'), "English nav label is My Journey");
+assert(en.includes('"home": "My Adventure"'), "English nav label is My Adventure");
 assert(en.includes('"journeyDashboard"'), "en messages include journeyDashboard");
 assert(nav.includes('"journeyDashboard"'), "ar messages include journeyDashboard");
 
@@ -85,7 +85,8 @@ assert(
   "dashboard root does not reuse the non-interactive decorative journey-dash class"
 );
 assert(component.includes("smartReviewAvailable") === false || !component.includes("AI حلل"), "no fake AI copy");
-assert(component.includes("goStore"), "store CTA present");
+assert(component.includes("StreakHero"), "streak is the dashboard centerpiece");
+assert(!component.includes("NextHeadquartersItem"), "HQ promotion is removed from the dashboard");
 assert(!component.includes("purchase("), "no purchase action in journey screen");
 
 if (failed > 0) {
