@@ -7,6 +7,7 @@ import type { UnitProgress } from "@/lib/api/student";
 import type { SubjectKey } from "@/lib/config/subjects";
 import { lessonPlayPath, subjectCoverSrc, UNIT_ACCENTS, unitLessonPath, unitReviewPath, withChildQuery } from "@/lib/config/subjects";
 import { UnitCard } from "@/components/UnitCard";
+import { UnitTopicIcon } from "@/components/UnitTopicIcon";
 import { Button } from "@/components/ui/Button";
 import { useMountedViewTransitionName } from "@/lib/utils/useMountedViewTransitionName";
 import { Link } from "@/i18n/navigation";
@@ -40,7 +41,6 @@ export function UnitsScreen({ childId, subjectId, subjectKey, subjectName, iconU
       ? lessonPlayPath(preview.playLessonId, childId)
       : unitLessonPath(preview.unitId, childId)
     : withChildQuery("/subjects", childId);
-  const previewIcon = preview?.iconUrl ?? preview?.coverUrl ?? cover;
 
   return (
     <div className="md:grid md:grid-cols-[minmax(0,1fr)_20rem] md:items-start md:gap-7">
@@ -74,6 +74,7 @@ export function UnitsScreen({ childId, subjectId, subjectKey, subjectName, iconU
               <UnitCard
                 key={unit.unitId}
                 unit={unit}
+                subjectKey={subjectKey}
                 childId={childId}
                 index={index}
                 selected={preview?.unitId === unit.unitId}
@@ -90,10 +91,9 @@ export function UnitsScreen({ childId, subjectId, subjectKey, subjectName, iconU
         {preview ? (
           <>
             <div
-              className="mt-4 flex h-28 items-center justify-center rounded-[22px]"
-              style={{ background: `${accent}22` }}
+              className="mt-4 flex h-24 items-center justify-center rounded-[22px] border border-[#E5EDF3] bg-[#F3F7FA] text-[#5C7791]"
             >
-              <Image src={previewIcon} alt="" width={140} height={140} unoptimized className="h-24 w-24 object-contain" />
+              <UnitTopicIcon subject={subjectKey} unit={preview} className="h-12 w-12" />
             </div>
             <p className="mt-4 text-lg font-extrabold text-text-navy">{preview.title}</p>
             <p className="mt-1 text-sm font-semibold text-text-gray">

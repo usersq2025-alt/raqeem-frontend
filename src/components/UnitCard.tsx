@@ -3,12 +3,15 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { UnitLessonSummary, UnitProgress } from "@/lib/api/student";
+import type { SubjectKey } from "@/lib/config/subjects";
 import { UNIT_ACCENTS, lessonPlayPath, unitLessonPath, unitReviewPath } from "@/lib/config/subjects";
+import { UnitTopicIcon } from "@/components/UnitTopicIcon";
 import { useAnimatedFill } from "@/lib/utils/useAnimatedFill";
 import { Link } from "@/i18n/navigation";
 
 type Props = {
   unit: UnitProgress;
+  subjectKey: SubjectKey;
   childId: number;
   index: number;
   selected?: boolean;
@@ -16,28 +19,22 @@ type Props = {
   onOpenGift?: () => void;
 };
 
-export function UnitCard({ unit, childId, index, selected = false, onPreview, onOpenGift }: Props) {
+export function UnitCard({ unit, subjectKey, childId, index, selected = false, onPreview, onOpenGift }: Props) {
   const t = useTranslations("student");
   const accent = UNIT_ACCENTS[index % UNIT_ACCENTS.length];
   const href = unit.playLessonId
     ? lessonPlayPath(unit.playLessonId, childId)
     : unitLessonPath(unit.unitId, childId);
   const fill = useAnimatedFill(unit.percentage);
-  const icon = unit.iconUrl ?? unit.coverUrl;
   const needsReview = Boolean(unit.reviewSessionId) && unit.reviewStatus !== "completed";
   const hasGift = Boolean(unit.gift);
   const lessons = unit.lessons;
   const header = (
     <>
       <span
-        className="relative flex h-[4.6rem] w-[4.6rem] shrink-0 items-center justify-center overflow-hidden rounded-[20px]"
-        style={{ background: `${accent}22` }}
+        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] border border-[#E5EDF3] bg-[#F3F7FA] text-[#5C7791]"
       >
-        {icon ? (
-          <Image src={icon} alt="" width={160} height={160} unoptimized className="h-[4.15rem] w-[4.15rem] object-contain" />
-        ) : (
-          <UnitGlyph index={index} color={accent} />
-        )}
+        <UnitTopicIcon subject={subjectKey} unit={unit} />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-base font-extrabold text-text-navy">{unit.title}</span>
@@ -104,7 +101,6 @@ export function UnitCard({ unit, childId, index, selected = false, onPreview, on
     </article>
   );
 }
-
 function LessonRow({
   lesson,
   childId,
@@ -164,33 +160,5 @@ function LessonRow({
         {content}
       </Link>
     </li>
-  );
-}
-
-function UnitGlyph({ index, color }: { index: number; color: string }) {
-  if (index % 3 === 0) {
-    return (
-      <svg viewBox="0 0 64 64" className="h-12 w-12" aria-hidden="true">
-        <circle cx="18" cy="40" r="8" fill={color} />
-        <circle cx="32" cy="22" r="7" fill={color} opacity="0.8" />
-        <circle cx="46" cy="38" r="9" fill={color} opacity="0.65" />
-      </svg>
-    );
-  }
-  if (index % 3 === 1) {
-    return (
-      <svg viewBox="0 0 64 64" className="h-11 w-11" aria-hidden="true">
-        <rect x="10" y="28" width="18" height="18" rx="3" fill={color} />
-        <circle cx="44" cy="24" r="10" fill={color} opacity="0.85" />
-        <polygon points="32,48 48,48 40,34" fill={color} opacity="0.7" />
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 64 64" className="h-11 w-11" aria-hidden="true">
-      <rect x="16" y="12" width="32" height="40" rx="6" fill={color} />
-      <rect x="22" y="20" width="20" height="4" rx="2" fill="white" />
-      <rect x="22" y="28" width="14" height="4" rx="2" fill="white" opacity="0.8" />
-    </svg>
   );
 }
