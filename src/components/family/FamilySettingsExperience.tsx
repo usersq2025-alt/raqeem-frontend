@@ -16,6 +16,7 @@ import {
   getChildLearningSummary,
   type ChildLearningSummary,
 } from "@/lib/api/parentSummary";
+import { getParentAlerts } from "@/lib/api/parentAlerts";
 import { AccountSection } from "./settings/AccountSection";
 import { ChildrenSection } from "./settings/ChildrenSection";
 import { LearningSection } from "./settings/LearningSection";
@@ -48,13 +49,13 @@ const SECTIONS: SectionId[] = [
 
 type Seed = { id: number; fullName: string; email: string | null };
 
-type Props = { seed: Seed };
+type Props = { seed: Seed; initialSection?: SectionId };
 
-export function FamilySettingsExperience({ seed }: Props) {
+export function FamilySettingsExperience({ seed, initialSection }: Props) {
   const t = useTranslations("familySettings");
   const router = useRouter();
-  const [section, setSection] = useState<SectionId | null>(null);
-  const [mobileDetail, setMobileDetail] = useState(false);
+  const [section, setSection] = useState<SectionId | null>(initialSection ?? null);
+  const [mobileDetail, setMobileDetail] = useState(Boolean(initialSection));
   const [account, setAccount] = useState<ParentAccount | null>(null);
   const [accountLoading, setAccountLoading] = useState(true);
   const [accountError, setAccountError] = useState(false);
@@ -62,6 +63,7 @@ export function FamilySettingsExperience({ seed }: Props) {
   const [childrenLoading, setChildrenLoading] = useState(true);
   const [childrenError, setChildrenError] = useState(false);
   const [flash, setFlash] = useState("");
+  const [unreadAlerts, setUnreadAlerts] = useState(0);
   const [prefs, setPrefs] = useState<ExperiencePrefs>(() => readExperiencePrefs());
   const [childSummaries, setChildSummaries] = useState<
     Record<number, { completedTotal: number; lastActivity: string | null }>
@@ -115,14 +117,20 @@ export function FamilySettingsExperience({ seed }: Props) {
   useEffect(() => {
     void (async () => {
       await Promise.resolve();
-      await Promise.all([loadAccount(), loadChildren()]);
+      await Promise.allSettled([loadAccount(), loadChildren()]);
+      try {
+        const alerts = await getParentAlerts();
+        setUnreadAlerts(alerts.unread_count);
+      } catch {
+        /* Keep settings usable if the badge cannot load. */
+      }
     })();
   }, [loadAccount, loadChildren]);
 
   useEffect(() => {
     if (!children.length) return;
     let cancelled = false;
-    void Promise.all(
+    void Promise.allSettled(
       children.map(async (child) => {
         try {
           const summary = await getChildLearningSummary(child.id);
@@ -215,6 +223,7 @@ export function FamilySettingsExperience({ seed }: Props) {
                       >
                         <SectionIcon id={id} active={selected} />
                         <span className="text-sm font-extrabold">{t(`sections.${id}`)}</span>
+                        {id === "alerts" && unreadAlerts > 0 ? <span className="ms-auto rounded-full bg-primary-orange px-2 py-0.5 text-xs font-extrabold text-white" aria-label={t("alerts.unread", { count: unreadAlerts })}>{unreadAlerts}</span> : null}
                       </button>
                     </li>
                   );
@@ -271,7 +280,7 @@ export function FamilySettingsExperience({ seed }: Props) {
                   onSummaryLoaded={onSummaryLoaded}
                 />
               ) : null}
-              {active === "alerts" ? <AlertsSection /> : null}
+              {active === "alerts" ? <AlertsSection emailReady={Boolean(account?.email && account.emailVerifiedAt)} accountLoaded={!accountLoading} onUnreadChange={setUnreadAlerts} /> : null}
               {active === "appearance" ? (
                 <AppearanceSection prefs={prefs} onPrefs={setPrefs} onSaved={showSaved} />
               ) : null}

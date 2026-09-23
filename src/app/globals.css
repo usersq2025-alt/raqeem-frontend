@@ -93,15 +93,6 @@
     outline-offset: 2px !important;
   }
 
-  html[data-raqeem-reduce-motion="true"] *,
-  html[data-raqeem-reduce-motion="true"] *::before,
-  html[data-raqeem-reduce-motion="true"] *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .animate-float-slow,
     .animate-float-delayed,
@@ -1505,7 +1496,8 @@
   background: transparent;
   border: 0;
   box-shadow: none;
-  padding: 0.15rem 0.2rem;
+  min-height: 2.75rem;
+  padding: 0.45rem 0.75rem;
 }
 
 .play-chrome-nav:not(:disabled):active {
@@ -1666,6 +1658,93 @@
 
 .play-drag-ghost {
   animation: play-pop 0.18s ease-out both;
+}
+
+/* Correct-answer glow: a short pulse ring, calmer once it settles. */
+.play-glow-ring {
+  animation: play-glow-ring 0.7s ease-out both;
+}
+
+@keyframes play-glow-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgb(52 211 153 / 0.55);
+  }
+  60% {
+    box-shadow: 0 0 0 10px rgb(52 211 153 / 0.12);
+  }
+  100% {
+    box-shadow: 0 0 0 4px rgb(52 211 153 / 0.22);
+  }
+}
+
+/* Small badge (✓ / ✗) popping onto a tile once the answer is revealed. */
+.play-badge-pop {
+  animation: play-badge-pop 0.32s cubic-bezier(0.34, 1.5, 0.64, 1) both;
+}
+
+@keyframes play-badge-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Tiny sparkle burst around a correct tile — brief, never blocks the next question. */
+.play-sparkle {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  font-size: 0.9rem;
+  line-height: 1;
+  animation: play-sparkle-pop 0.62s ease-out both;
+}
+
+@keyframes play-sparkle-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-10deg);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.2) rotate(6deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) translateY(-10px) rotate(10deg);
+  }
+}
+
+/* Sequence-ordering: cards popping back into the bank together. */
+.play-return-pop {
+  animation: play-return-pop 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+@keyframes play-return-pop {
+  0% {
+    opacity: 0.35;
+    transform: translateY(-8px) scale(0.9);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(1px) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-glow-ring,
+  .play-badge-pop,
+  .play-sparkle,
+  .play-return-pop {
+    animation: none !important;
+  }
 }
 
 .path-canvas-stage {

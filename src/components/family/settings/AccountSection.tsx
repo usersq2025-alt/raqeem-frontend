@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import type { ParentAccount } from "@/lib/api/parentAccount";
 import { ParentAccountApiError, updateParentAccount } from "@/lib/api/parentAccount";
+import { formatLocaleDate } from "@/lib/i18n/latinNumerals";
 import { CardShell, ComingSoonCard, EmptyBlock, ErrorBlock, SectionIntro, SkeletonBlock } from "./SettingsUi";
 
 type Props = {
@@ -146,8 +147,5 @@ export function AccountSection({ account, loading, error, onRetry, onAccount, on
 function formatMemberMonthYear(iso: string, locale: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat(locale.startsWith("ar") ? "ar" : "en", {
-    month: "long",
-    year: "numeric",
-  }).format(date);
+  return formatLocaleDate(date, locale, { month: "long", year: "numeric" });
 }

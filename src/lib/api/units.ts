@@ -1,3 +1,4 @@
+import { readDisplayJson } from "@/lib/format/displayNumerals";
 export type PathStationStatus = "completed" | "available" | "locked";
 
 export type PathStation = {
@@ -90,7 +91,7 @@ export async function getUnitPath(unitId: number, studentId: number): Promise<Un
   } catch {
     throw new UnitPathApiError("NETWORK", "NETWORK", 503);
   }
-  const raw = await response.json().catch(() => null);
+  const raw = await readDisplayJson(response);
   if (response.status === 401) throw new UnitPathApiError("UNAUTHENTICATED", "UNAUTHENTICATED", 401);
   if (response.status === 404) throw new UnitPathApiError("NOT_FOUND", "NOT_FOUND", 404);
   if (!response.ok) throw new UnitPathApiError("NETWORK", "NETWORK", response.status);

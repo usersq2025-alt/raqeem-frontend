@@ -45,7 +45,6 @@ export function SubjectsHome({ child, subjects, streak }: Props) {
   const totalsFill = useAnimatedFill(totalsPct);
   const nextSubject =
     subjects.find((subject) => subject.completedLessons < subject.totalLessons && subject.totalLessons > 0) ??
-    subjects.find((subject) => subject.totalLessons > 0) ??
     null;
   const nextPct = nextSubject ? subjectPercentage(nextSubject) : 0;
   const nextFill = useAnimatedFill(nextPct);
@@ -53,6 +52,9 @@ export function SubjectsHome({ child, subjects, streak }: Props) {
     .filter((subject) => subject.completedLessons > 0)
     .sort((a, b) => b.completedLessons / Math.max(b.totalLessons, 1) - a.completedLessons / Math.max(a.totalLessons, 1))
     .slice(0, 3);
+  const visibleSubjects = [...subjects].sort(
+    (a, b) => Number(b.totalLessons > 0) - Number(a.totalLessons > 0)
+  );
 
   return (
     <div className="md:grid md:grid-cols-[minmax(0,1fr)_19.5rem] md:items-start md:gap-7">
@@ -97,7 +99,7 @@ export function SubjectsHome({ child, subjects, streak }: Props) {
         </div>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
-          {subjects.map((subject, index) => (
+          {visibleSubjects.map((subject, index) => (
             <SubjectCard key={subject.subjectId} subject={subject} childId={child.id} index={index} />
           ))}
         </div>
@@ -140,7 +142,9 @@ export function SubjectsHome({ child, subjects, streak }: Props) {
               </span>
             </Link>
           ) : (
-            <p className="mt-3 text-sm font-semibold text-text-gray">{tDesk("allCaughtUp")}</p>
+            <p className="mt-3 text-sm font-semibold text-text-gray">
+              {totals.total > 0 ? tDesk("allCaughtUp") : tDesk("lessonsComingSoon")}
+            </p>
           )}
         </section>
 

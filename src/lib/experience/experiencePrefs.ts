@@ -9,7 +9,6 @@ export type ExperiencePrefs = {
   celebration: boolean;
   textSize: TextSizePref;
   contrast: ContrastPref;
-  reduceMotion: boolean;
 };
 
 export const DEFAULT_EXPERIENCE_PREFS: ExperiencePrefs = {
@@ -18,7 +17,6 @@ export const DEFAULT_EXPERIENCE_PREFS: ExperiencePrefs = {
   celebration: true,
   textSize: "default",
   contrast: "default",
-  reduceMotion: false,
 };
 
 function normalize(raw: unknown): ExperiencePrefs {
@@ -32,7 +30,6 @@ function normalize(raw: unknown): ExperiencePrefs {
     base.textSize = o.textSize;
   }
   if (o.contrast === "default" || o.contrast === "high") base.contrast = o.contrast;
-  if (typeof o.reduceMotion === "boolean") base.reduceMotion = o.reduceMotion;
   return base;
 }
 
@@ -70,7 +67,12 @@ export function applyExperiencePrefsToDocument(prefs: ExperiencePrefs): void {
   const root = document.documentElement;
   root.dataset.raqeemTextSize = prefs.textSize;
   root.dataset.raqeemContrast = prefs.contrast;
-  root.dataset.raqeemReduceMotion = prefs.reduceMotion ? "true" : "false";
+}
+
+/** Respect only the OS-level "prefers-reduced-motion" setting; there is no in-app override. */
+export function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 export function isExperienceSfxEnabled(): boolean {

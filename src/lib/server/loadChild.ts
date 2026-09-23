@@ -1,3 +1,4 @@
+import { readDisplayJson } from "@/lib/format/displayNumerals";
 import { cookies } from "next/headers";
 import { mapChild, type ChildProfile } from "@/lib/api/children";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
@@ -35,7 +36,7 @@ export async function loadChild(id: number): Promise<ChildProfile | null> {
       cache: "no-store",
       signal: AbortSignal.timeout(10_000),
     });
-    const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+    const payload = (await readDisplayJson(response)) as Record<string, unknown> | null;
     if (!response.ok || !payload) return null;
     return mapChild(payload);
   } catch {

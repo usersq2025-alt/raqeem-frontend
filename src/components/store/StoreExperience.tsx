@@ -156,9 +156,8 @@ export function StoreExperience({ childId, catalog, professionCode = null }: Pro
   }
 
   return (
-    <div className="md:grid md:grid-cols-[15.5rem_minmax(0,1fr)] md:items-start md:gap-7">
-      <h1 className="sr-only md:hidden">{t("title")}</h1>
-      <header className="mb-4 flex items-center justify-between gap-3 md:col-span-2 md:hidden" dir="ltr">
+    <div className="mx-auto w-full max-w-7xl xl:grid xl:grid-cols-[minmax(0,1fr)_16rem] xl:items-start xl:gap-7">
+      <header className="mb-4 flex items-center justify-between gap-3 md:hidden" dir="ltr">
         <Image
           src="/images/brand/logo.png"
           alt=""
@@ -170,15 +169,16 @@ export function StoreExperience({ childId, catalog, professionCode = null }: Pro
         <PointsPill count={balance} label={t("pointsUnit")} />
       </header>
 
-      <aside className="hidden md:block">
-        <h1 className="text-2xl font-extrabold text-text-navy">{t("title")}</h1>
-        <div className="mt-4">
-          <PointsPill count={balance} label={t("pointsUnit")} />
-        </div>
-        <p className="mt-5 text-sm font-bold leading-relaxed text-text-gray">{t("pathHint")}</p>
-      </aside>
-
       <div>
+        <div className="mb-5 md:flex md:items-center md:justify-between md:gap-4 xl:block">
+          <div>
+            <h1 className="sr-only text-2xl font-extrabold text-text-navy md:not-sr-only">{t("title")}</h1>
+            <p className="mt-1.5 hidden text-sm font-bold leading-relaxed text-text-gray md:block">{t("pathHint")}</p>
+          </div>
+          <div className="hidden shrink-0 md:block xl:hidden">
+            <PointsPill count={balance} label={t("pointsUnit")} />
+          </div>
+        </div>
         <p className="mb-4 text-sm font-bold text-text-gray md:hidden">{t("pathHint")}</p>
 
         {error ? (
@@ -193,13 +193,23 @@ export function StoreExperience({ childId, catalog, professionCode = null }: Pro
         {visible.length === 0 ? (
           <p className="py-16 text-center text-base font-bold text-text-gray">{t("emptyTab")}</p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 md:gap-4 2xl:grid-cols-4">
             {visible.map((item, index) => (
               <ProductCard key={item.id} item={item} index={index} onBuy={openBuy} />
             ))}
           </div>
         )}
       </div>
+
+      <aside className="hidden flex-col gap-4 xl:flex">
+        <section className="rounded-[24px] bg-white p-4 shadow-[0_14px_32px_-22px_rgba(26,43,71,0.4)]">
+          <h2 className="text-sm font-extrabold text-text-navy">{t("title")}</h2>
+          <div className="mt-3">
+            <PointsPill count={balance} label={t("pointsUnit")} />
+          </div>
+          <p className="mt-3 text-xs font-bold leading-relaxed text-text-gray">{t("pathHint")}</p>
+        </section>
+      </aside>
 
       <PurchaseConfirmModal
         open={Boolean(selected)}

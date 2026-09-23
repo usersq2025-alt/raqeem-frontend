@@ -1,3 +1,4 @@
+import { readDisplayJson } from "@/lib/format/displayNumerals";
 import { cookies } from "next/headers";
 import {
   mapJourneyDashboard,
@@ -27,7 +28,7 @@ export async function loadJourneyDashboard(studentId: number): Promise<JourneyDa
       signal: AbortSignal.timeout(12_000),
     });
     if (!response.ok) return null;
-    const raw = await response.json().catch(() => null);
+    const raw = await readDisplayJson(response);
     return mapJourneyDashboard(raw);
   } catch {
     return null;

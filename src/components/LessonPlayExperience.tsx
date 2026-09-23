@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import confetti from "canvas-confetti";
 import { useTranslations } from "next-intl";
 import { LessonCompleteCelebration } from "@/components/LessonCompleteCelebration";
@@ -18,6 +26,7 @@ import {
   type PlayQuestion,
 } from "@/lib/api/lessonPlay";
 import { playUiTone } from "@/lib/play/uiSounds";
+import { isExperienceCelebrationEnabled } from "@/lib/experience/experiencePrefs";
 
 type Props = {
   lessonId: number;
@@ -52,6 +61,7 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
   const [canSubmit, setCanSubmit] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [feedback, setFeedback] = useState<Record<string, unknown>>({});
+  const [rechargeEndsAt, setRechargeEndsAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [history, setHistory] = useState<AnsweredReview[]>([]);
@@ -61,6 +71,7 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
   const advancingRef = useRef(false);
   const liveDraftRef = useRef<LiveDraft | null>(null);
   const browsingPast = browseIndex != null;
+  const rewardedQuestions = useRef(new Set<number>());
 
   useEffect(() => {
     let cancelled = false;
@@ -70,6 +81,7 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
         if (cancelled) return;
         setAttempt(started);
         if (started.status === "battery_depleted") {
+          setRechargeEndsAt(started.rechargeEndsAt);
           setPhase("recharge");
           return;
         }
@@ -93,6 +105,10 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
         if (cancelled) return;
         const status = (err as { status?: number }).status;
         if (status === 423) {
+          const retrySeconds = Number((err as { payload?: Record<string, unknown> }).payload?.retry_after_seconds);
+          if (Number.isFinite(retrySeconds)) {
+            setRechargeEndsAt(new Date(Date.now() + Math.max(0, retrySeconds) * 1000).toISOString());
+          }
           setPhase("recharge");
           return;
         }
@@ -106,9 +122,16 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
   }, [lessonId, childId, t]);
 
   useEffect(() => {
-    if (phase !== "feedback" || isCorrect !== true) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (phase !== "feedback" || isCorrect == null || browsingPast || !question || rewardedQuestions.current.has(question.id)) return;
+    rewardedQuestions.current.add(question.id);
+    if (isCorrect === false) {
+      // A wrong answer is feedback, not a punishment: a soft, short, non-alarming tone only.
+      playUiTone("wrong");
+      return;
+    }
     playUiTone("success");
+    if (!isExperienceCelebrationEnabled()) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const pointsEl = document.querySelector<HTMLElement>("[data-play-points]");
     const rect = pointsEl?.getBoundingClientRect();
     const x = rect ? (rect.left + rect.width / 2) / window.innerWidth : 0.85;
@@ -121,7 +144,7 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
       colors: ["#F48232", "#FDE68A", "#86EFAC", "#7DD3FC"],
       disableForReducedMotion: true,
     });
-    window.setTimeout(() => {
+    const later = window.setTimeout(() => {
       void confetti({
         particleCount: 18,
         spread: 28,
@@ -131,7 +154,8 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
         disableForReducedMotion: true,
       });
     }, 180);
-  }, [phase, isCorrect, question?.id]);
+    return () => window.clearTimeout(later);
+  }, [phase, isCorrect, question, browsingPast]);
 
   async function onSubmit() {
     if (!attempt || !question || selected == null || busy || browsingPast) return;
@@ -141,6 +165,9 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
       setAttempt(result.attempt);
       setIsCorrect(result.isCorrect);
       setFeedback(result.feedback);
+      if (result.attempt.status === "battery_depleted") {
+        setRechargeEndsAt(result.attempt.rechargeEndsAt);
+      }
       setHistory((prev) => [
         ...prev,
         {
@@ -150,14 +177,14 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
           isCorrect: result.isCorrect,
         },
       ]);
-      if (result.attempt.status === "battery_depleted") {
-        setPhase("recharge");
-        return;
-      }
       setPhase("feedback");
     } catch (err) {
       const status = (err as { status?: number }).status;
       if (status === 423) {
+        const retrySeconds = Number((err as { payload?: Record<string, unknown> }).payload?.retry_after_seconds);
+        if (Number.isFinite(retrySeconds)) {
+          setRechargeEndsAt(new Date(Date.now() + Math.max(0, retrySeconds) * 1000).toISOString());
+        }
         setPhase("recharge");
         return;
       }
@@ -222,6 +249,10 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
     advancingRef.current = true;
     setBusy(true);
     try {
+      if (attempt.status === "battery_depleted") {
+        setPhase("recharge");
+        return;
+      }
       if (attempt.answeredCount >= attempt.totalQuestions) {
         const done = await completeAttempt(attempt.id);
         setAttempt(done);
@@ -251,8 +282,8 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
   });
 
   useEffect(() => {
-    if (phase !== "feedback" || browsingPast) return;
-    const feedbackHold = isCorrect === true ? 1400 : 2400;
+    if (phase !== "feedback" || browsingPast || isCorrect !== true || feedback.explanation) return;
+    const feedbackHold = 1400;
     const travelMs = 1600;
     let cancelled = false;
     const showTravel = window.setTimeout(() => {
@@ -271,18 +302,18 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
       window.clearTimeout(showTravel);
       window.clearTimeout(goNext);
     };
-  }, [phase, question?.id, browsingPast, isCorrect]);
+  }, [phase, question?.id, browsingPast, isCorrect, feedback.explanation]);
 
   if (phase === "error") {
     return <p className="py-16 text-center font-bold text-text-gray">{error}</p>;
   }
 
-  if (!attempt) {
-    return <LessonPlayLoading />;
+  if (phase === "recharge") {
+    return <RechargeView endsAt={rechargeEndsAt} childId={childId} />;
   }
 
-  if (phase === "recharge") {
-    return <RechargeView endsAt={attempt.rechargeEndsAt} childId={childId} />;
+  if (!attempt) {
+    return <LessonPlayLoading />;
   }
 
   if (phase === "done") {
@@ -360,6 +391,7 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
           correctLabel={t("correct")}
           incorrectLabel={t("incorrect")}
           niceTryLabel={t("niceTry")}
+          explanation={typeof feedback.explanation === "string" ? feedback.explanation : null}
         />
       ) : null}
 
@@ -373,6 +405,14 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
         ) : phase === "playing" ? (
           <Button onClick={onSubmit} disabled={!canSubmit || busy} fullWidth>
             {t("check")}
+          </Button>
+        ) : phase === "feedback" ? (
+          <Button onClick={() => void onNext()} disabled={busy || transitioning} fullWidth>
+            {attempt.status === "battery_depleted"
+              ? t("goToBreak")
+              : attempt.answeredCount >= attempt.totalQuestions
+                ? t("finishLesson")
+                : t("nextQuestion")}
           </Button>
         ) : (
           <div className="h-12" aria-hidden="true" />
@@ -444,64 +484,109 @@ export function PlayChrome({
   nextDisabled?: boolean;
   viewingPastLabel?: string | null;
 }) {
+  const t = useTranslations("lesson");
   const showBattery = (batteryTotal ?? 0) > 0;
   const showNav = Boolean(previousLabel || nextLabel);
+  const remaining =
+    totalQuestions != null && answeredCount != null ? Math.max(0, totalQuestions - answeredCount) : null;
 
   return (
     <div className="play-chrome space-y-2.5 rounded-[22px] bg-[#F7FBFF] px-3 py-3">
-      <div className="play-trail relative h-2.5 overflow-hidden rounded-full bg-white">
+      <div role="progressbar" aria-label={questionLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.max(0, Math.min(100, progressPct)))} className="play-trail relative h-3.5 overflow-hidden rounded-full bg-white shadow-inner">
         <div
-          className="absolute inset-y-0 start-0 rounded-full bg-primary-orange transition-[width] duration-500"
+          className="absolute inset-y-0 start-0 rounded-full bg-gradient-to-l from-primary-orange to-[#FFAA55] transition-[width] duration-500"
           style={{ width: `${Math.max(0, Math.min(100, progressPct))}%` }}
         />
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <span className="min-w-0 truncate text-xs font-extrabold text-text-navy">{questionLabel}</span>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span
+          data-play-question-pill
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-black text-text-navy shadow-[0_6px_16px_-10px_rgba(26,43,71,0.5)]"
+        >
+          <FlagIcon />
+          {questionLabel}
+        </span>
         <div className="flex shrink-0 items-center gap-1.5">
           {pointsLabel ? (
             <span
               data-play-points
-              className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-extrabold text-amber-700"
+              className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1.5 text-sm font-extrabold text-amber-700"
             >
               <span aria-hidden="true">★</span>
               {pointsLabel}
             </span>
           ) : null}
-          {showBattery ? (
-            <Battery remaining={batteryRemaining ?? 0} total={batteryTotal ?? 0} />
-          ) : null}
+          {showBattery ? <Battery remaining={batteryRemaining ?? 0} total={batteryTotal ?? 0} /> : null}
         </div>
       </div>
 
       {gameLabel ? <p className="truncate text-[11px] font-bold text-text-gray">{gameLabel}</p> : null}
 
+      {remaining != null && remaining > 0 ? (
+        <p className="text-center text-[11px] font-bold text-text-gray">{t("questionsRemaining", { count: toIndicDigits(remaining) })}</p>
+      ) : null}
+
       {showNav ? (
         <div className="flex items-center justify-between gap-2 pt-0.5">
-          <button
-            type="button"
-            disabled={previousDisabled}
-            onClick={onPrevious}
-            className="play-chrome-nav text-xs font-extrabold text-sky-700 disabled:opacity-30"
-          >
-            {previousLabel}
-          </button>
+          <ChromeNavButton direction="previous" disabled={previousDisabled} onClick={onPrevious} label={previousLabel} />
           {viewingPastLabel ? (
-            <span className="text-[11px] font-extrabold text-amber-600">{viewingPastLabel}</span>
+            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-extrabold text-amber-600">
+              {viewingPastLabel}
+            </span>
           ) : (
-            <span className="text-[11px] font-bold text-transparent">·</span>
+            <span aria-hidden="true" />
           )}
-          <button
-            type="button"
-            disabled={nextDisabled}
-            onClick={onNext}
-            className="play-chrome-nav text-xs font-extrabold text-sky-700 disabled:opacity-30"
-          >
-            {nextLabel}
-          </button>
+          <ChromeNavButton direction="next" disabled={nextDisabled} onClick={onNext} label={nextLabel} />
         </div>
       ) : null}
     </div>
+  );
+}
+
+function ChromeNavButton({
+  direction,
+  disabled,
+  onClick,
+  label,
+}: {
+  direction: "previous" | "next";
+  disabled?: boolean;
+  onClick?: () => void;
+  label?: string;
+}) {
+  if (!label) return <span aria-hidden="true" />;
+  const isPrevious = direction === "previous";
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="play-chrome-nav flex min-h-[2.5rem] items-center gap-1.5 rounded-full px-3 text-sm font-extrabold text-sky-700 disabled:opacity-30"
+    >
+      {isPrevious ? <ChevronIcon dir="previous" /> : null}
+      <span className="truncate">{label}</span>
+      {!isPrevious ? <ChevronIcon dir="next" /> : null}
+    </button>
+  );
+}
+
+function ChevronIcon({ dir }: { dir: "previous" | "next" }) {
+  // Logical start/end chevrons: rotated with CSS so they always point the right way in RTL and LTR.
+  const rotate = dir === "previous" ? "rotate-0 rtl:rotate-180" : "rotate-180 rtl:rotate-0";
+  return (
+    <svg viewBox="0 0 24 24" className={`h-4 w-4 shrink-0 ${rotate}`} fill="none" aria-hidden="true">
+      <path d="M15 6 9 12l6 6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function FlagIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-primary-orange" fill="none" aria-hidden="true">
+      <path d="M6 3.5v17" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M6 4.5c2-1.2 4-1.2 6 0s4 1.2 6 0v8c-2 1.2-4 1.2-6 0s-4-1.2-6 0v-8Z" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" />
+    </svg>
   );
 }
 
@@ -510,12 +595,15 @@ export function PlayFeedbackBanner({
   correctLabel,
   incorrectLabel,
   niceTryLabel,
+  explanation,
 }: {
   isCorrect: boolean;
   correctLabel: string;
   incorrectLabel: string;
   niceTryLabel: string;
+  explanation?: string | null;
 }) {
+  const t = useTranslations("lesson");
   return (
     <div
       className={`play-feedback-banner mt-4 flex items-center gap-3 rounded-[22px] border-4 px-4 py-3 ${
@@ -536,29 +624,39 @@ export function PlayFeedbackBanner({
       <div className="min-w-0">
         <p className="text-base font-extrabold">{isCorrect ? correctLabel : incorrectLabel}</p>
         {!isCorrect ? <p className="text-sm font-bold opacity-80">{niceTryLabel}</p> : null}
+        {explanation ? (
+          <p className="mt-2 text-sm font-bold leading-relaxed text-text-navy">
+            <span className="text-primary-orange">{t("explanation")}: </span>{explanation}
+          </p>
+        ) : null}
       </div>
     </div>
   );
 }
 
 function Battery({ remaining, total }: { remaining: number; total: number }) {
+  const t = useTranslations("lesson");
   const safeTotal = Math.max(total, 1);
   const ratio = Math.max(0, Math.min(1, remaining / safeTotal));
   const fill =
     ratio > 0.55 ? "#22C55E" : ratio > 0.25 ? "#F59E0B" : ratio > 0 ? "#EF4444" : "#D1D5DB";
-  const width = Math.max(ratio > 0 ? 3 : 0, Math.round(ratio * 14));
+  const width = Math.max(ratio > 0 ? 3.5 : 0, ratio * 21.2);
+  const label = t("batteryLabel", { remaining: toIndicDigits(remaining), total: toIndicDigits(total) });
 
   return (
     <span
-      className="inline-flex items-center"
-      title={`${remaining}/${total}`}
-      aria-label={`battery ${remaining} of ${total}`}
+      className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1.5 shadow-[0_6px_16px_-10px_rgba(26,43,71,0.5)]"
+      title={label}
+      aria-label={label}
     >
-      <svg viewBox="0 0 28 16" className="h-4 w-7" aria-hidden="true">
-        <rect x="1" y="2.5" width="22" height="11" rx="2.5" fill="none" stroke="#64748B" strokeWidth="1.8" />
-        <rect x="23.5" y="5.5" width="3" height="5" rx="1" fill="#64748B" />
-        <rect x="3.2" y="4.6" width={width} height="6.8" rx="1.2" fill={fill} />
+      <svg viewBox="0 0 32 18" className="h-[1.1rem] w-9" aria-hidden="true">
+        <rect x="1" y="2" width="26" height="14" rx="3" fill="none" stroke="#64748B" strokeWidth="2" />
+        <rect x="28" y="6" width="3.5" height="6" rx="1.2" fill="#64748B" />
+        <rect x="3.4" y="4.4" width={width} height="9.2" rx="1.6" fill={fill} />
       </svg>
+      <span className="text-xs font-black tabular-nums" style={{ color: fill }} aria-hidden="true">
+        {toIndicDigits(remaining)}
+      </span>
     </span>
   );
 }
@@ -632,7 +730,7 @@ export function QuestionBody({
   }
   if (question.gameType === "crossword") {
     return (
-      <CrosswordBody payload={question.payload} phase={phase} selected={selected} onChange={onChange} />
+      <CrosswordBody payload={question.payload} phase={phase} selected={selected} feedback={feedback} onChange={onChange} />
     );
   }
   return <p className="text-center font-bold text-text-gray">{question.gameType}</p>;
@@ -642,10 +740,10 @@ function optionList(payload: Record<string, unknown>): Array<{ id: string; text:
   const options = Array.isArray(payload.options) ? payload.options : [];
   return options
     .map((row, index) => {
-      if (typeof row === "string") return { id: String(index), text: row };
+      if (typeof row === "string") return { id: String(index), text: toIndicDigits(row) };
       if (row && typeof row === "object") {
         const item = row as { id?: unknown; text?: unknown };
-        return { id: String(item.id ?? index), text: String(item.text ?? "") };
+        return { id: String(item.id ?? index), text: toIndicDigits(String(item.text ?? "")) };
       }
       return { id: String(index), text: "" };
     })
@@ -663,21 +761,74 @@ function shuffleOptions<T>(items: T[]): T[] {
   return next;
 }
 
-const MCQ_TINTS = [
-  { bg: "bg-sky-100", border: "border-sky-200", badge: "bg-sky-200 text-sky-800" },
-  { bg: "bg-amber-100", border: "border-amber-200", badge: "bg-amber-200 text-amber-800" },
-  { bg: "bg-emerald-100", border: "border-emerald-200", badge: "bg-emerald-200 text-emerald-800" },
-  { bg: "bg-violet-100", border: "border-violet-200", badge: "bg-violet-200 text-violet-800" },
+// Color only marks the option's LETTER badge before an answer is submitted —
+// never the whole tile. That keeps the pre-answer state calm and low-saturation
+// so the green "correct" reveal afterwards is the thing that actually stands out.
+const MCQ_BADGE_TINTS = ["bg-sky-100 text-sky-700", "bg-amber-100 text-amber-700", "bg-violet-100 text-violet-700", "bg-rose-100 text-rose-700"];
+
+/**
+ * Small ✓ / ✗ badge that pops onto a tile once an answer is revealed.
+ * Shared across every game type so "you're right" / "that's not it" always
+ * looks and reads the same way, wherever it appears.
+ */
+function AnswerBadge({ correct }: { correct: boolean }) {
+  return (
+    <span
+      className={`play-badge-pop absolute -top-2 -end-2 z-20 flex h-6 w-6 items-center justify-center rounded-full text-xs font-black text-white shadow-md ${
+        correct ? "bg-emerald-500" : "bg-rose-400"
+      }`}
+      aria-hidden="true"
+    >
+      {correct ? "✓" : "✗"}
+    </span>
+  );
+}
+
+/**
+ * Brief, non-blocking sparkle burst around a just-revealed correct tile.
+ * Purely CSS-driven (see `.play-sparkle` in globals.css), so it automatically
+ * disappears under prefers-reduced-motion without any JS branching here.
+ */
+function SparkleBurst() {
+  if (!isExperienceCelebrationEnabled()) return null;
+  const sparkles: Array<{ style: CSSProperties; color: string; delay: string }> = [
+    { style: { top: "-10%", insetInlineStart: "8%" }, color: "#F6C15B", delay: "0ms" },
+    { style: { top: "6%", insetInlineEnd: "-8%" }, color: "#7DD3FC", delay: "70ms" },
+    { style: { bottom: "-10%", insetInlineStart: "24%" }, color: "#86EFAC", delay: "130ms" },
+    { style: { top: "26%", insetInlineStart: "-10%" }, color: "#F48232", delay: "190ms" },
+  ];
+  return (
+    <span className="pointer-events-none absolute inset-0 z-10 overflow-visible" aria-hidden="true">
+      {sparkles.map((s, i) => (
+        <span key={i} className="play-sparkle" style={{ ...s.style, color: s.color, animationDelay: s.delay }}>
+          ✦
+        </span>
+      ))}
+    </span>
+  );
+}
+
+// Shared "this pair belongs together" identity: a color AND a glyph, so the
+// relationship never rides on color alone (colorblind- / accessibility-safe).
+const PAIR_ACCENTS = [
+  { text: "text-sky-700", ring: "ring-sky-300", bg: "bg-sky-50", glyph: "●" },
+  { text: "text-violet-700", ring: "ring-violet-300", bg: "bg-violet-50", glyph: "■" },
+  { text: "text-amber-700", ring: "ring-amber-300", bg: "bg-amber-50", glyph: "▲" },
+  { text: "text-rose-700", ring: "ring-rose-300", bg: "bg-rose-50", glyph: "◆" },
+  { text: "text-teal-700", ring: "ring-teal-300", bg: "bg-teal-50", glyph: "★" },
+  { text: "text-orange-700", ring: "ring-orange-300", bg: "bg-orange-50", glyph: "♥" },
 ];
 
-const CHIP_TINTS = [
-  "bg-sky-100 border-sky-200 text-sky-900",
-  "bg-amber-100 border-amber-200 text-amber-900",
-  "bg-rose-100 border-rose-200 text-rose-900",
-  "bg-emerald-100 border-emerald-200 text-emerald-900",
-  "bg-violet-100 border-violet-200 text-violet-900",
-  "bg-orange-100 border-orange-200 text-orange-900",
-];
+function PairBadge({ accent }: { accent: (typeof PAIR_ACCENTS)[number] }) {
+  return (
+    <span
+      className={`play-badge-pop absolute -top-2 -start-2 z-20 flex h-6 w-6 items-center justify-center rounded-full text-xs font-black shadow-sm ring-2 ${accent.bg} ${accent.text} ${accent.ring}`}
+      aria-hidden="true"
+    >
+      {accent.glyph}
+    </span>
+  );
+}
 
 function McqBody({
   payload,
@@ -698,16 +849,17 @@ function McqBody({
       ? String((selected as { selected_option_id: string }).selected_option_id)
       : null;
   const correctId = feedback.correct_option_id != null ? String(feedback.correct_option_id) : null;
+  const locked = phase === "feedback";
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {options.map((option, index) => {
-        const locked = phase === "feedback";
         const isPick = selectedId === option.id;
         const isRight = locked && correctId === option.id;
         const isWrong = locked && isPick && correctId !== option.id;
+        const isFadedOut = locked && !isRight && !isWrong;
         const letter = String.fromCharCode(65 + index);
-        const tint = MCQ_TINTS[index % MCQ_TINTS.length]!;
+        const badgeTint = MCQ_BADGE_TINTS[index % MCQ_BADGE_TINTS.length]!;
         return (
           <button
             key={option.id}
@@ -717,23 +869,23 @@ function McqBody({
               playUiTone("click");
               onChange({ selected_option_id: option.id }, true);
             }}
-            className={`play-choice-tile play-mcq-card flex min-h-[5.75rem] items-center gap-3 rounded-[26px] border-[3px] px-4 py-4 text-start text-lg font-extrabold text-text-navy sm:min-h-[7rem] sm:text-xl ${tint.bg} ${
+            className={`play-choice-tile play-mcq-card relative flex min-h-[5.75rem] items-center gap-3 rounded-[26px] border-[3px] px-4 py-4 text-start text-lg font-extrabold text-text-navy transition-opacity sm:min-h-[7rem] sm:text-xl ${
               isRight
-                ? "play-choice-right border-emerald-400"
+                ? "play-choice-right play-glow-ring border-emerald-400 bg-emerald-50"
                 : isWrong
-                  ? "play-choice-wrong border-red-300"
+                  ? "play-choice-wrong border-rose-300 bg-rose-50"
                   : isPick
-                    ? "play-choice-selected border-primary-orange"
-                    : `${tint.border} shadow-[0_10px_28px_-16px_rgba(26,43,71,0.45)]`
+                    ? "play-choice-selected border-primary-orange bg-white"
+                    : `border-neutral-100 bg-white shadow-[0_10px_28px_-16px_rgba(26,43,71,0.3)] ${
+                        isFadedOut ? "opacity-55" : ""
+                      }`
             }`}
           >
+            {isRight ? <SparkleBurst /> : null}
+            {isRight || isWrong ? <AnswerBadge correct={isRight} /> : null}
             <span
               className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-base font-black ${
-                isRight
-                  ? "bg-emerald-100 text-emerald-700"
-                  : isPick
-                    ? "bg-orange-100 text-primary-orange"
-                    : tint.badge
+                isRight ? "bg-emerald-100 text-emerald-700" : isWrong ? "bg-rose-100 text-rose-600" : isPick ? "bg-orange-100 text-primary-orange" : badgeTint
               }`}
             >
               {letter}
@@ -763,14 +915,15 @@ function TrueFalseBody({
       ? Boolean((selected as { answer: boolean }).answer)
       : null;
   const correct = typeof feedback.correct_answer === "boolean" ? feedback.correct_answer : null;
+  const locked = phase === "feedback";
 
   return (
     <div className="mx-auto grid max-w-md grid-cols-2 gap-3">
       {[true, false].map((answer) => {
-        const locked = phase === "feedback";
         const isPick = value === answer;
         const isRight = locked && correct === answer;
         const isWrong = locked && isPick && correct !== answer;
+        const isFadedOut = locked && !isRight && !isWrong;
         const positive = answer === true;
         return (
           <button
@@ -781,23 +934,27 @@ function TrueFalseBody({
               playUiTone("click");
               onChange({ answer }, true);
             }}
-            className={`play-tf-flat flex min-h-[7.5rem] flex-col items-center justify-center gap-2 rounded-[24px] border-[3px] text-xl font-black transition-colors sm:min-h-[8.25rem] ${
+            className={`play-tf-flat relative flex min-h-[7.5rem] flex-col items-center justify-center gap-2 rounded-[24px] border-[3px] text-xl font-black transition-colors sm:min-h-[8.25rem] ${
               isRight
-                ? "border-emerald-400 bg-emerald-50 text-emerald-700"
+                ? "play-glow-ring border-emerald-400 bg-emerald-50 text-emerald-700"
                 : isWrong
-                  ? "border-amber-300 bg-amber-50 text-amber-800"
+                  ? "border-rose-300 bg-rose-50 text-rose-700"
                   : isPick
-                    ? positive
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-800"
-                      : "border-rose-400 bg-rose-50 text-rose-700"
-                    : positive
-                      ? "border-emerald-200 bg-emerald-50/80 text-emerald-800"
-                      : "border-rose-200 bg-rose-50/80 text-rose-700"
+                    ? "border-primary-orange bg-white text-text-navy"
+                    : `border-neutral-100 bg-white text-text-navy ${isFadedOut ? "opacity-55" : ""}`
             }`}
           >
+            {isRight ? <SparkleBurst /> : null}
+            {isRight || isWrong ? <AnswerBadge correct={isRight} /> : null}
             <span
-              className={`flex h-14 w-14 items-center justify-center rounded-full text-3xl font-black text-white ${
-                positive ? "bg-emerald-500" : "bg-rose-400"
+              className={`flex h-14 w-14 items-center justify-center rounded-full text-3xl font-black ${
+                isRight
+                  ? "bg-emerald-500 text-white"
+                  : isWrong
+                    ? "bg-rose-400 text-white"
+                    : isPick
+                      ? "bg-primary-orange text-white"
+                      : "bg-neutral-100 text-text-gray"
               }`}
               aria-hidden="true"
             >
@@ -859,6 +1016,17 @@ function MatchingBody({
     feedback.correct_matches && typeof feedback.correct_matches === "object"
       ? (feedback.correct_matches as Record<string, string>)
       : null;
+  // Stable per-question color+glyph identity for each correct pair, revealed
+  // only once locked — never before, so the answer can't be read off early.
+  const pairAccentByLeftId = useMemo(() => {
+    if (!correctMap) return {} as Record<string, number>;
+    const map: Record<string, number> = {};
+    Object.keys(correctMap).forEach((leftId, index) => {
+      map[leftId] = index % PAIR_ACCENTS.length;
+    });
+    return map;
+  }, [correctMap]);
+  const visibleMatches = locked && correctMap ? correctMap : matches;
 
   useEffect(() => {
     return () => {
@@ -915,19 +1083,19 @@ function MatchingBody({
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      if (Object.keys(matches).length === 0) {
+      if (Object.keys(visibleMatches).length === 0) {
         setLines([]);
         return;
       }
-      refreshLines(matches);
+      refreshLines(visibleMatches);
     });
-    const onResize = () => refreshLines(matches);
+    const onResize = () => refreshLines(visibleMatches);
     window.addEventListener("resize", onResize);
     return () => {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", onResize);
     };
-  }, [matches, phase, left, right]);
+  }, [visibleMatches, phase, left, right]);
 
   function clearMatch(leftId: string) {
     if (locked) return;
@@ -984,7 +1152,7 @@ function MatchingBody({
 
   function lineColor(leftId: string, rightId: string) {
     if (!locked || !correctMap) return "#94A3B8";
-    return correctMap[leftId] === rightId ? "#22C55E" : "#EF4444";
+    return correctMap[leftId] === rightId ? ["#0369a1", "#6d28d9", "#b45309", "#be123c", "#0f766e", "#c2410c"][pairAccentByLeftId[leftId] ?? 0] : "#FB7185";
   }
 
   function cardTone(opts: {
@@ -995,8 +1163,16 @@ function MatchingBody({
   }) {
     const selected = pick?.side === opts.side && pick.id === opts.id;
     const awaiting = Boolean(pick && pick.side !== opts.side && !opts.paired && !locked);
-    if (opts.ok === false) return "border-red-300 bg-red-50/40";
-    if (opts.ok === true) return "border-emerald-300 bg-emerald-50/40";
+    if (locked && correctMap) {
+      const leftId = opts.side === "left" ? opts.id : Object.keys(correctMap).find((id) => correctMap[id] === opts.id);
+      const index = leftId == null ? undefined : pairAccentByLeftId[leftId];
+      if (index != null) {
+        const accent = PAIR_ACCENTS[index]!;
+        return `border-transparent ring-2 ${accent.ring} ${accent.bg} ${accent.text}`;
+      }
+    }
+    if (opts.ok === false) return "border-rose-300 bg-rose-50/50";
+    if (opts.ok === true) return "play-glow-ring border-emerald-300 bg-emerald-50/50";
     if (selected) {
       return opts.side === "left"
         ? "play-choice-selected border-sky-500 bg-sky-100"
@@ -1042,19 +1218,21 @@ function MatchingBody({
                 const ok = locked && correctMap ? correctMap[leftItem.id] === pairedRight : null;
                 const expectedId = correctMap?.[leftItem.id];
                 const expected = expectedId ? right.find((rowItem) => rowItem.id === expectedId)?.text : null;
+                const pairIndex = locked && correctMap ? pairAccentByLeftId[leftItem.id] : undefined;
                 return (
                   <button
                     type="button"
                     data-match-left={leftItem.id}
                     disabled={locked}
                     onClick={() => onLeftClick(leftItem.id)}
-                    className={`flex min-h-[4.75rem] w-full flex-col items-stretch justify-center rounded-[22px] border-[3px] px-3 py-3 text-start text-sm font-extrabold text-text-navy shadow-[0_8px_24px_-16px_rgba(26,43,71,0.35)] transition-colors sm:text-base ${cardTone(
+                    className={`relative flex min-h-[4.75rem] w-full flex-col items-stretch justify-center rounded-[22px] border-[3px] px-3 py-3 text-start text-sm font-extrabold text-text-navy shadow-[0_8px_24px_-16px_rgba(26,43,71,0.35)] transition-colors sm:text-base ${cardTone(
                       { side: "left", id: leftItem.id, paired: Boolean(pairedRight), ok }
                     )}`}
                   >
+                    {pairIndex != null ? <PairBadge accent={PAIR_ACCENTS[pairIndex]!} /> : null}
                     <span>{leftItem.text}</span>
                     {ok === false && expected ? (
-                      <span className="mt-1 text-xs font-bold text-red-500">
+                      <span className="mt-1 text-xs font-bold text-rose-500">
                         {t("matchShouldBe", { text: expected })}
                       </span>
                     ) : null}
@@ -1070,16 +1248,22 @@ function MatchingBody({
                 const paired = Object.values(matches).includes(rightItem.id);
                 const owner = Object.entries(matches).find(([, rid]) => rid === rightItem.id)?.[0];
                 const ok = locked && correctMap && owner ? correctMap[owner] === rightItem.id : null;
+                const correctOwnerLeftId = correctMap
+                  ? Object.entries(correctMap).find(([, rid]) => rid === rightItem.id)?.[0]
+                  : undefined;
+                const pairIndex =
+                  locked && correctOwnerLeftId != null ? pairAccentByLeftId[correctOwnerLeftId] : undefined;
                 return (
                   <button
                     type="button"
                     data-match-right={rightItem.id}
                     disabled={locked}
                     onClick={() => onRightClick(rightItem.id)}
-                    className={`flex min-h-[4.75rem] w-full items-center rounded-[22px] border-[3px] px-3 py-3 text-start text-sm font-extrabold text-text-navy shadow-[0_8px_24px_-16px_rgba(26,43,71,0.35)] transition-colors sm:text-base ${cardTone(
+                    className={`relative flex min-h-[4.75rem] w-full items-center rounded-[22px] border-[3px] px-3 py-3 text-start text-sm font-extrabold text-text-navy shadow-[0_8px_24px_-16px_rgba(26,43,71,0.35)] transition-colors sm:text-base ${cardTone(
                       { side: "right", id: rightItem.id, paired, ok }
                     )}`}
                   >
+                    {pairIndex != null ? <PairBadge accent={PAIR_ACCENTS[pairIndex]!} /> : null}
                     {rightItem.text}
                   </button>
                 );
@@ -1225,7 +1409,7 @@ function DragBody({
       clearItem(itemId);
       return;
     }
-    setPick((prev) => (prev === itemId ? null : itemId));
+    setPick(itemId);
   }
 
   const correctMap =
@@ -1236,45 +1420,89 @@ function DragBody({
   const unassigned = items.filter((item) => !assignments[item.id]);
   const draggingItem = drag ? items.find((item) => item.id === drag.itemId) : null;
 
-  function cardClass(itemId: string, inBucket: boolean, tintIndex: number) {
-    const assigned = assignments[itemId];
-    const ok = correctMap ? correctMap[itemId] === assigned : isCorrect;
-    const tint = CHIP_TINTS[tintIndex % CHIP_TINTS.length]!;
-    if (locked && ok === false) return "border-amber-200 bg-amber-50 text-amber-800";
-    if (locked && ok === true) return "border-emerald-300 bg-emerald-50 text-emerald-800";
-    if (pick === itemId || drag?.itemId === itemId) return "play-choice-selected border-primary-orange bg-white text-text-navy";
-    if (inBucket) return `${tint} shadow-sm`;
-    return `${tint} shadow-[0_10px_24px_-14px_rgba(26,43,71,0.45)]`;
+  const binThemes = [
+    { shell: "from-sky-100 to-sky-200 border-sky-300", marker: "●", glow: "border-sky-400 bg-sky-50 scale-[1.03]", accent: "border-sky-400 bg-sky-50 text-sky-800" },
+    { shell: "from-violet-100 to-violet-200 border-violet-300", marker: "◆", glow: "border-violet-400 bg-violet-50 scale-[1.03]", accent: "border-violet-400 bg-violet-50 text-violet-800" },
+    { shell: "from-amber-100 to-amber-200 border-amber-300", marker: "▲", glow: "border-amber-400 bg-amber-50 scale-[1.03]", accent: "border-amber-400 bg-amber-50 text-amber-800" },
+    { shell: "from-slate-100 to-slate-200 border-slate-300", marker: "■", glow: "border-slate-400 bg-slate-50 scale-[1.03]", accent: "border-slate-400 bg-slate-50 text-slate-800" },
+  ];
+  const categoryIndexById = useMemo(() => {
+    const map: Record<string, number> = {};
+    categories.forEach((cat, index) => {
+      map[cat.id] = index % binThemes.length;
+    });
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories]);
+
+  function correctThemeFor(itemId: string) {
+    const expectedCategoryId = correctMap?.[itemId];
+    if (expectedCategoryId == null) return null;
+    const index = categoryIndexById[expectedCategoryId];
+    return index != null ? binThemes[index] ?? null : null;
   }
 
-  function renderCard(item: { id: string; text: string }, inBucket: boolean, tintIndex: number) {
+  function cardClass(itemId: string, inBucket: boolean) {
+    const assigned = assignments[itemId];
+    const ok = correctMap ? correctMap[itemId] === assigned : isCorrect;
+    if (locked && ok === false) {
+      const theme = correctThemeFor(itemId);
+      return theme ? `play-badge-pop ${theme.accent}` : "border-neutral-200 bg-neutral-50 text-text-gray";
+    }
+    if (locked && ok === true) return "play-glow-ring border-emerald-300 bg-emerald-50 text-emerald-800";
+    if (pick === itemId || drag?.itemId === itemId) return "play-choice-selected border-primary-orange bg-white text-text-navy";
+    if (inBucket) return "border-neutral-100 bg-white shadow-sm";
+    return "border-neutral-100 bg-white shadow-[0_10px_24px_-14px_rgba(26,43,71,0.3)]";
+  }
+
+  function renderCard(item: { id: string; text: string }, inBucket: boolean) {
     const isGhost = drag?.itemId === item.id;
+    const assigned = assignments[item.id];
+    const ok = locked && correctMap ? correctMap[item.id] === assigned : null;
+    const wrongTheme = locked && ok === false ? correctThemeFor(item.id) : null;
+    const expectedCategoryName =
+      wrongTheme && correctMap ? categories.find((cat) => cat.id === correctMap[item.id])?.name : null;
     return (
       <button
         key={item.id}
         type="button"
         disabled={locked}
         onPointerDown={(event) => onCardPointerDown(event, item.id)}
+        onClick={(event) => {
+          event.stopPropagation();
+          if (locked || event.detail !== 0) return;
+          if (assignments[item.id]) clearItem(item.id);
+          else setPick(item.id);
+        }}
         onPointerMove={onCardPointerMove}
         onPointerUp={finishPointer}
-        onPointerCancel={finishPointer}
-        className={`play-drag-card touch-none select-none min-h-[3.35rem] rounded-[22px] border-[3px] px-4 py-2.5 text-sm font-extrabold sm:text-base ${cardClass(
+        onPointerCancel={() => {
+          dragRef.current = null;
+          setDrag(null);
+          setHoverZone(null);
+          setPick(null);
+        }}
+        className={`play-drag-card relative touch-none select-none min-h-[3.35rem] rounded-[22px] border-[3px] px-4 py-2.5 text-sm font-extrabold sm:text-base ${cardClass(
           item.id,
-          inBucket,
-          tintIndex
+          inBucket
         )} ${isGhost ? "opacity-30" : ""}`}
       >
+        {ok === true ? <AnswerBadge correct /> : null}
+        {wrongTheme ? (
+          <span
+            className="play-badge-pop absolute -top-2 -end-2 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs shadow-sm ring-2 ring-white"
+            role="img"
+            aria-label={expectedCategoryName ? t("belongsIn", { category: expectedCategoryName }) : undefined}
+            title={expectedCategoryName ?? undefined}
+          >
+            {wrongTheme.marker}
+          </span>
+        ) : null}
         {item.text}
+        {expectedCategoryName ? <span className="mt-1 block text-xs font-bold">{t("belongsIn", { category: expectedCategoryName })}</span> : null}
       </button>
     );
   }
-
-  const binThemes = [
-    { shell: "from-sky-100 to-sky-200 border-sky-300", emoji: "💪", glow: "border-emerald-400 bg-sky-50 scale-[1.03]" },
-    { shell: "from-violet-100 to-violet-200 border-violet-300", emoji: "💗", glow: "border-emerald-400 bg-violet-50 scale-[1.03]" },
-    { shell: "from-amber-100 to-amber-200 border-amber-300", emoji: "⚡", glow: "border-emerald-400 bg-amber-50 scale-[1.03]" },
-    { shell: "from-emerald-100 to-emerald-200 border-emerald-300", emoji: "🌿", glow: "border-emerald-400 bg-emerald-50 scale-[1.03]" },
-  ];
 
   return (
     <div className="space-y-4">
@@ -1289,7 +1517,7 @@ function DragBody({
           {unassigned.length === 0 ? (
             <p className="py-2 text-sm font-bold text-text-gray">{t("classifyTrayEmpty")}</p>
           ) : (
-            unassigned.map((item, index) => renderCard(item, false, index))
+            unassigned.map((item) => renderCard(item, false))
           )}
         </div>
       </div>
@@ -1311,15 +1539,18 @@ function DragBody({
                 hot ? theme.glow : ""
               }`}
             >
-              <div className="flex items-center gap-2">
+              <button type="button" disabled={locked || !pick} onClick={(event) => {
+                event.stopPropagation();
+                if (pick && !locked) assign(pick, cat.id);
+              }} className="flex min-h-11 w-full items-center gap-2 text-start disabled:cursor-default">
                 <span className="text-2xl" aria-hidden="true">
-                  {theme.emoji}
+                  {theme.marker}
                 </span>
                 <p className="text-base font-black text-text-navy">{cat.name}</p>
-              </div>
+              </button>
               <p className="mt-1 text-xs font-bold text-text-gray">{t("dropHere")}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {inBucket.map((item, index) => renderCard(item, true, index + catIndex))}
+                {inBucket.map((item) => renderCard(item, true))}
               </div>
             </div>
           );
@@ -1362,8 +1593,16 @@ function OrderingBody({
   const t = useTranslations("lesson");
   const tokens = Array.isArray(payload.tokens) ? (payload.tokens as Array<{ id: string; text: string }>) : [];
   const [order, setOrder] = useState<string[]>(() => readOrder(selected));
+  const [justReturnedIds, setJustReturnedIds] = useState<string[]>([]);
+  const returnTimerRef = useRef<number | null>(null);
   const slotCount = Math.max(tokens.length, 1);
   const locked = phase === "feedback";
+
+  useEffect(() => {
+    return () => {
+      if (returnTimerRef.current) window.clearTimeout(returnTimerRef.current);
+    };
+  }, []);
 
   function publish(next: string[]) {
     setOrder(next);
@@ -1378,12 +1617,20 @@ function OrderingBody({
     publish([...order, id]);
   }
 
+  // Tapping a placed card unlinks the chain starting at that point: the tapped
+  // card AND every card after it return together to the bank, leaving only the
+  // correct earlier portion in place. This avoids forcing a manual one-by-one
+  // removal from the end when a student wants to rebuild from an earlier slot.
   function clearSlot(index: number) {
     if (locked) return;
     if (!order[index]) return;
     playUiTone("click");
-    const next = order.filter((_, i) => i !== index);
+    const removed = order.slice(index);
+    const next = order.slice(0, index);
     publish(next);
+    setJustReturnedIds(removed);
+    if (returnTimerRef.current) window.clearTimeout(returnTimerRef.current);
+    returnTimerRef.current = window.setTimeout(() => setJustReturnedIds([]), 450);
   }
 
   const correctOrder = Array.isArray(feedback.correct_order) ? (feedback.correct_order as string[]) : null;
@@ -1399,12 +1646,17 @@ function OrderingBody({
               type="button"
               disabled={locked}
               onClick={() => placeToken(token.id)}
-              className="min-h-[3.25rem] rounded-[20px] border-[3px] border-white bg-sky-100 px-4 py-2.5 text-sm font-extrabold text-text-navy shadow-sm sm:text-base"
+              className={`min-h-[3.25rem] rounded-[20px] border-[3px] border-white bg-sky-100 px-4 py-2.5 text-sm font-extrabold text-text-navy shadow-sm sm:text-base ${
+                justReturnedIds.includes(token.id) ? "play-return-pop" : ""
+              }`}
             >
               {token.text}
             </button>
           ))}
       </div>
+      {!locked && order.length > 0 ? (
+        <p className="text-center text-xs font-bold text-text-gray">{t("hintOrderClear")}</p>
+      ) : null}
 
       <div className="relative mx-auto w-full max-w-sm">
         <svg className="pointer-events-none absolute start-7 top-4 bottom-4 w-0" aria-hidden="true">
@@ -1431,10 +1683,10 @@ function OrderingBody({
                   className={`relative z-[1] flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-4 border-white text-lg font-black shadow-md ${
                     token
                       ? ok === false
-                        ? "bg-red-400 text-white"
+                        ? "bg-rose-400 text-white"
                         : ok === true
                           ? "bg-emerald-500 text-white"
-                          : "bg-[#2EC4A8] text-white"
+                          : "bg-sky-600 text-white"
                       : "bg-[#E8EAEE] text-[#9AA3AF]"
                   }`}
                 >
@@ -1448,9 +1700,9 @@ function OrderingBody({
                   className={`flex min-h-[3.5rem] flex-1 items-center rounded-[22px] border-[3px] px-4 py-2 text-start text-sm font-extrabold sm:text-base ${
                     token
                       ? ok === false
-                        ? "border-red-300 bg-red-50 text-red-800"
+                        ? "border-rose-300 bg-rose-50 text-rose-800"
                         : ok === true
-                          ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                          ? "play-glow-ring border-emerald-300 bg-emerald-50 text-emerald-800"
                           : "border-white bg-white text-text-navy shadow-[0_8px_24px_-16px_rgba(26,43,71,0.4)]"
                       : "border-dashed border-slate-200 bg-white/70 text-text-gray"
                   }`}
@@ -1477,17 +1729,23 @@ function CrosswordBody({
   payload,
   phase,
   selected,
+  feedback,
   onChange,
 }: {
   payload: Record<string, unknown>;
   phase: QuestionPlayPhase;
   selected: unknown;
+  feedback: Record<string, unknown>;
   onChange: (value: unknown, ready: boolean) => void;
 }) {
+  const t = useTranslations("lesson");
   const words = Array.isArray(payload.words)
     ? (payload.words as Array<{ id: string; clue: string; length?: number }>)
     : [];
   const [answers, setAnswers] = useState<Record<string, string>>(() => readCrosswordAnswers(selected));
+  const correctAnswers = feedback.correct_answers && typeof feedback.correct_answers === "object"
+    ? feedback.correct_answers as Record<string, string>
+    : null;
 
   function setWord(id: string, value: string) {
     const next = { ...answers, [id]: value };
@@ -1497,10 +1755,12 @@ function CrosswordBody({
 
   return (
     <div className="space-y-3">
-      {words.map((word, index) => (
-        <label
+      {words.map((word, index) => {
+        const expected = phase === "feedback" ? correctAnswers?.[word.id] : null;
+        const correct = expected != null ? answers[word.id]?.trim() === expected.trim() : null;
+        return <label
           key={word.id}
-          className="block rounded-[24px] border-[3px] border-white bg-white p-4 shadow-[0_8px_24px_-16px_rgba(26,43,71,0.4)]"
+          className={`block rounded-[24px] border-[3px] bg-white p-4 shadow-[0_8px_24px_-16px_rgba(26,43,71,0.4)] ${correct === true ? "border-emerald-300 bg-emerald-50" : correct === false ? "border-rose-200 bg-rose-50/40" : "border-white"}`}
         >
           <span className="flex items-start gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-sm font-black text-amber-700">
@@ -1515,8 +1775,10 @@ function CrosswordBody({
             value={answers[word.id] ?? ""}
             onChange={(event) => setWord(word.id, event.target.value)}
           />
+          {correct === true ? <span className="mt-2 block text-sm font-extrabold text-emerald-700">✓ {t("correct")}</span> : null}
+          {correct === false ? <span className="mt-2 block text-sm font-extrabold text-text-navy">{t("expected")}: {toIndicDigits(expected ?? "")}</span> : null}
         </label>
-      ))}
+      })}
     </div>
   );
 }
@@ -1551,6 +1813,7 @@ function readCrosswordAnswers(selected: unknown): Record<string, string> {
 function RechargeView({ endsAt, childId }: { endsAt: string | null; childId: number }) {
   const t = useTranslations("lesson");
   const [label, setLabel] = useState("--:--");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!endsAt) return;
@@ -1558,10 +1821,12 @@ function RechargeView({ endsAt, childId }: { endsAt: string | null; childId: num
       const ms = new Date(endsAt).getTime() - Date.now();
       if (ms <= 0) {
         setLabel("00:00");
+        setReady(true);
         return;
       }
       const m = Math.floor(ms / 60000);
       const s = Math.floor((ms % 60000) / 1000);
+      setReady(false);
       setLabel(`${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
     };
     tick();
@@ -1578,6 +1843,7 @@ function RechargeView({ endsAt, childId }: { endsAt: string | null; childId: num
       <p className="mt-3 max-w-sm text-sm font-semibold leading-relaxed text-text-gray">{t("rechargeBody")}</p>
       <p className="mt-4 text-lg font-extrabold text-violet-600">{t("rechargeTimer", { time: label })}</p>
       <div className="mt-8 grid w-full max-w-sm grid-cols-1 gap-2.5">
+        {ready ? <Button onClick={() => window.location.reload()}>{t("resumeAfterBreak")}</Button> : null}
         <Button href={withChildQuery("/headquarters", childId)}>{t("rechargeHq")}</Button>
         <Button href={withChildQuery("/store", childId)} variant="secondary">
           {t("rechargeStore")}

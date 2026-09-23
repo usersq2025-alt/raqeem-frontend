@@ -3,16 +3,16 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { type ChildProfile } from "@/lib/api/children";
 import {
   getChildLearningSummary,
   type ChildLearningSummary,
 } from "@/lib/api/parentSummary";
 import { professionAvatarSrc } from "@/lib/config/professions";
+import { formatLocaleDate, withLatinNumerals } from "@/lib/i18n/latinNumerals";
 import {
   CardShell,
-  ComingSoonCard,
   EmptyBlock,
   ErrorBlock,
   SectionIntro,
@@ -37,8 +37,9 @@ export function ReportsSection({
   const t = useTranslations("familySettings");
   const tGrades = useTranslations("child.grades");
   const locale = useLocale();
+  const requestedId = Number(useSearchParams().get("childId"));
   const [selectedId, setSelectedId] = useState<number | null>(() =>
-    childrenList.length ? childrenList[0].id : null
+    childrenList.find((child) => child.id === requestedId)?.id ?? childrenList[0]?.id ?? null
   );
   const [summary, setSummary] = useState<ChildLearningSummary | null>(null);
   const [loading, setLoading] = useState(false);
@@ -98,7 +99,8 @@ export function ReportsSection({
     );
   }
 
-  const noLessons = summary && summary.completedLessonsTotal === 0;
+  const number = (value: number) => new Intl.NumberFormat(withLatinNumerals(locale)).format(value);
+  const date = (value: string) => formatLocaleDate(new Date(`${value}T12:00:00`), locale, { dateStyle: "medium" });
 
   return (
     <div className="space-y-4">
@@ -144,60 +146,56 @@ export function ReportsSection({
         />
       ) : null}
 
-      {!loading && !error && summary && noLessons ? (
-        <EmptyBlock title={t("reports.emptyTitle")} body={t("reports.emptyBody")} />
-      ) : null}
-
-      {!loading && !error && summary && !noLessons ? (
-        <CardShell>
-          <ul className="space-y-2 text-sm font-semibold text-text-navy">
-            <li>{t("reports.weekLessons", { count: summary.completedLessonsThisWeek })}</li>
-            <li>{t("reports.totalAnswers", { count: summary.totalAnswers })}</li>
-            <li>
-              {summary.correctRatePercent == null
-                ? t("reports.correctRateUnknown")
-                : t("reports.correctRate", { percent: summary.correctRatePercent })}
-            </li>
-            <li>{t("reports.longestStreak", { count: summary.streakLongest })}</li>
-            <li>
-              {summary.mostActiveSubject
-                ? t("reports.mostActive", {
-                    name: locale.startsWith("ar")
-                      ? summary.mostActiveSubject.nameAr
-                      : summary.mostActiveSubject.nameEn || summary.mostActiveSubject.nameAr,
-                  })
-                : t("reports.mostActiveUnknown")}
-            </li>
-            <li>
-              {summary.needsReviewSubject
-                ? t("reports.needsReview", {
-                    name: locale.startsWith("ar")
-                      ? summary.needsReviewSubject.nameAr
-                      : summary.needsReviewSubject.nameEn || summary.needsReviewSubject.nameAr,
-                  })
-                : t("reports.needsReviewUnknown")}
-            </li>
-            <li>
-              {summary.lastActivityDate
-                ? t("reports.lastActivity", { date: summary.lastActivityDate })
-                : t("children.activityNever")}
-            </li>
-          </ul>
-          <Link
-            href={`/family/reports?childId=${summary.studentId}`}
-            className="mt-4 inline-flex min-h-11 items-center rounded-2xl bg-primary-orange px-4 text-sm font-extrabold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
-          >
-            {t("reports.detailedCta")}
-          </Link>
+      {!loading && !error && summary ? <>
+        <CardShell className="bg-[#FFF7EC] ring-1 ring-[#F9DCB7]">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h3 className="text-base font-extrabold text-text-navy">{t("reports.weeklyGoal")}</h3>
+              <p className="mt-1 text-xs font-semibold text-text-gray">{t("reports.weekRange", { start: date(summary.weekStart), end: date(summary.weekEnd) })}</p>
+            </div>
+            <p className="text-2xl font-extrabold text-primary-orange" dir="ltr">{number(summary.completedLessonsThisWeek)} / {number(summary.weeklyGoalLessons)}</p>
+          </div>
+          <div className="mt-4 h-3 overflow-hidden rounded-full bg-white" role="progressbar" aria-label={t("reports.weeklyGoal")} aria-valuemin={0} aria-valuemax={summary.weeklyGoalLessons} aria-valuenow={Math.min(summary.completedLessonsThisWeek, summary.weeklyGoalLessons)}>
+            <div className="h-full rounded-full bg-primary-orange transition-all" style={{ width: `${Math.min(100, (summary.completedLessonsThisWeek / summary.weeklyGoalLessons) * 100)}%` }} />
+          </div>
+          <p className="mt-3 text-sm font-bold text-text-navy">{summary.completedLessonsThisWeek >= summary.weeklyGoalLessons ? t("reports.goalReached") : t("reports.goalRemaining", { count: number(Math.max(0, summary.weeklyGoalLessons - summary.completedLessonsThisWeek)) })}</p>
         </CardShell>
-      ) : null}
 
-      <ComingSoonCard
-        badge={t("comingSoonBadge")}
-        title={t("reports.aiTitle")}
-        body={t("reports.aiBody")}
-        note={t("reportsDisclaimer")}
-      />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Metric label={t("reports.completedLabel")} value={number(summary.completedLessonsTotal)} hint={t("reports.completedHint")} />
+          <Metric label={t("reports.accuracyLabel")} value={summary.correctRatePercent === null ? "—" : `${number(summary.correctRatePercent)}%`} hint={summary.correctRatePercent === null ? t("reports.noAnswers") : t("reports.answersCount", { count: number(summary.totalAnswers) })} />
+          <Metric label={t("reports.streakLabel")} value={number(summary.streakCurrent)} hint={t("reports.streakHint")} />
+        </div>
+
+        <CardShell className="bg-white ring-1 ring-brand-navy/10">
+          <h3 className="text-base font-extrabold text-text-navy">{t("reports.subjectsTitle")}</h3>
+          <p className="mt-1 text-sm text-text-gray">{t("reports.subjectsHint")}</p>
+          {summary.subjects.length ? <ul className="mt-4 space-y-4">{summary.subjects.map((subject) => {
+            const name = locale.startsWith("ar") ? subject.nameAr : subject.nameEn || subject.nameAr;
+            const percent = subject.totalLessons ? Math.round(subject.completedLessons / subject.totalLessons * 100) : 0;
+            return <li key={subject.subjectId}>
+              <div className="mb-1.5 flex items-center justify-between gap-3 text-sm font-bold text-text-navy"><span>{name}</span><span dir="ltr">{number(subject.completedLessons)} / {number(subject.totalLessons)}</span></div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-[#E8EEF4]" role="progressbar" aria-label={name} aria-valuemin={0} aria-valuemax={subject.totalLessons || 1} aria-valuenow={subject.completedLessons}>
+                <div className="h-full rounded-full bg-[#40A48D]" style={{ width: `${percent}%` }} />
+              </div>
+            </li>;
+          })}</ul> : <p className="mt-4 text-sm font-semibold text-text-gray">{t("reports.noSubjects")}</p>}
+        </CardShell>
+
+        <CardShell>
+          <h3 className="text-base font-extrabold text-text-navy">{t("reports.nextStepTitle")}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-text-gray">{summary.completedLessonsTotal === 0
+            ? t("reports.startGuidance")
+            : summary.needsReviewSubject
+              ? t("reports.nextSubject", { name: locale.startsWith("ar") ? summary.needsReviewSubject.nameAr : summary.needsReviewSubject.nameEn || summary.needsReviewSubject.nameAr })
+              : t("reports.keepGoing")}</p>
+          <p className="mt-3 text-xs font-semibold text-text-gray">{summary.lastActivityDate ? t("reports.lastActivity", { date: date(summary.lastActivityDate) }) : t("children.activityNever")}</p>
+        </CardShell>
+      </> : null}
     </div>
   );
+}
+
+function Metric({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return <div className="rounded-[22px] bg-white p-4 ring-1 ring-brand-navy/10"><p className="text-xs font-bold text-text-gray">{label}</p><p className="mt-2 text-3xl font-extrabold text-text-navy" dir="auto">{value}</p><p className="mt-1 text-xs font-medium text-text-gray">{hint}</p></div>;
 }

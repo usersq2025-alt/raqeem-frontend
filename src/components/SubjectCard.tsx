@@ -32,15 +32,17 @@ export function SubjectCard({ subject, childId, index }: Props) {
       ? Math.min(100, Math.round((subject.completedLessons / subject.totalLessons) * 100))
       : 0;
   const fill = useAnimatedFill(percentage);
+  const available = subject.totalLessons > 0;
 
   return (
     <button
       type="button"
-      onClick={() => router.push(href)}
+      onClick={() => available && router.push(href)}
+      disabled={!available}
       style={{ animationDelay: `${index * 70}ms` }}
       className={`subject-card group flex flex-col items-center rounded-[26px] px-3 pb-3.5 pt-4 text-center ${SUBJECT_TINTS[subject.key]} ${
         index === 6 ? "col-span-2 mx-auto w-[calc(50%-0.4rem)] md:col-span-1 md:mx-0 md:w-auto" : ""
-      }`}
+      } ${available ? "cursor-pointer" : "cursor-not-allowed opacity-75"}`}
     >
       <span
         className="relative mb-2 flex h-[4.6rem] w-[4.6rem] items-center justify-center sm:h-24 sm:w-24"
@@ -67,18 +69,24 @@ export function SubjectCard({ subject, childId, index }: Props) {
       <span className="text-[0.95rem] font-extrabold leading-tight text-text-navy sm:text-lg">
         {t(`subjects.${subject.key}`)}
       </span>
-      <SubjectLessonProgress
-        completed={subject.completedLessons}
-        total={subject.totalLessons}
-        percentage={percentage}
-        fill={fill}
-        accent={accent}
-        label={t("lessonsCount", {
-          completed: subject.completedLessons,
-          total: subject.totalLessons,
-        })}
-        className="mt-2.5 w-full"
-      />
+      {available ? (
+        <SubjectLessonProgress
+          completed={subject.completedLessons}
+          total={subject.totalLessons}
+          percentage={percentage}
+          fill={fill}
+          accent={accent}
+          label={t("lessonsCount", {
+            completed: subject.completedLessons,
+            total: subject.totalLessons,
+          })}
+          className="mt-2.5 w-full"
+        />
+      ) : (
+        <span className="mt-2.5 rounded-full bg-white/80 px-3 py-1 text-xs font-extrabold text-text-gray">
+          {t("comingSoon")}
+        </span>
+      )}
     </button>
   );
 }

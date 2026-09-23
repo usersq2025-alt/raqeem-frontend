@@ -1,3 +1,4 @@
+import { readDisplayJson } from "@/lib/format/displayNumerals";
 export type LessonGift = {
   id: number;
   rewardType: string;
@@ -100,7 +101,7 @@ function mapAttempt(raw: Record<string, unknown>): LessonAttempt {
 }
 
 async function parse(res: Response): Promise<Record<string, unknown>> {
-  const raw = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+  const raw = (await readDisplayJson(res)) as Record<string, unknown> | null;
   if (!res.ok) {
     const err = new Error(typeof raw?.message === "string" ? raw.message : "NETWORK") as Error & {
       status: number;

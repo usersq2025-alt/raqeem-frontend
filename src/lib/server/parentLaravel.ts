@@ -8,6 +8,13 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 /** In-memory guardian unlock for mock auth (server process only). */
 let mockGuardianUnlocked = true;
 let mockPinSet = false;
+let mockAlertPreferences = {
+  in_app_enabled: true,
+  email_enabled: true,
+  lesson_completed: true,
+  weekly_goal_reached: true,
+  purchase_made: true,
+};
 
 export function getMockGuardianState() {
   return {
@@ -23,6 +30,18 @@ function mockParentLaravel(
   body?: unknown,
   sessionParent?: { id: number; full_name?: string | null; email?: string | null }
 ): NextResponse {
+  if (path === "/parent/alerts/preferences") {
+    if (body && typeof body === "object") {
+      mockAlertPreferences = { ...mockAlertPreferences, ...body };
+    }
+    return NextResponse.json({ preferences: mockAlertPreferences });
+  }
+  if (path === "/parent/alerts") {
+    return NextResponse.json({ preferences: mockAlertPreferences, unread_count: 0, alerts: [] });
+  }
+  if (path.startsWith("/parent/alerts/") && path.endsWith("/read") || path === "/parent/alerts/read-all") {
+    return NextResponse.json({ unread_count: 0 });
+  }
   if (path.includes("/parent/guardian-mode/verify-password")) {
     const password =
       body && typeof body === "object" && "password" in body

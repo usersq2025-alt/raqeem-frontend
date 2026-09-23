@@ -15,7 +15,9 @@
     "lint": "eslint",
     "test:hq": "npm run sync:hq && npx tsx src/lib/config/headquartersStages.verify.ts",
     "test:settings": "npx tsx scripts/verify-settings-separation.ts",
-    "test:student-journey": "npx tsx scripts/verify-student-journey.ts"
+    "test:student-journey": "npx tsx scripts/verify-student-journey.ts",
+    "test:numerals": "npx tsx scripts/verify-display-numerals.ts",
+    "test:ux": "node scripts/verify-ux.mjs"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
@@ -33,6 +35,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
+    "puppeteer-core": "^24.43.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

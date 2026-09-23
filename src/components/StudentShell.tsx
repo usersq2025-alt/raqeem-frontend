@@ -76,11 +76,13 @@ export function StudentShell({ children }: Props) {
       <div
         className={`relative min-h-screen overflow-x-hidden ${
           hideNav ? "bg-[#F7FBFF]" : isPathScreen ? "bg-[#F4F7FB]" : "student-sky bg-[#F7FBFF]"
-        } ${hideNav ? "" : "md:flex"}`}
+        }`}
       >
         {!hideNav && validChild ? <StudentNav childId={childId} /> : null}
         <div
           className={`relative min-h-screen w-full min-w-0 max-w-full ${
+            !hideNav && validChild ? "md:ms-[16.75rem] md:w-[calc(100%-16.75rem)]" : ""
+          } ${
             isPathScreen
               ? "flex flex-col px-0 pt-0 pb-24 md:h-[100dvh] md:overflow-hidden md:pb-0"
               : hideNav

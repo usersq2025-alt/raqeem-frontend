@@ -72,15 +72,6 @@ export function ExperienceDisplayPrefsFields({ prefs, onChange }: Props) {
           ))}
         </div>
       </div>
-      <label className="flex items-center justify-between rounded-2xl bg-neutral-50 px-3 py-3 text-sm font-semibold text-text-navy">
-        <span>{t("reduceMotion")}</span>
-        <input
-          type="checkbox"
-          checked={prefs.reduceMotion}
-          onChange={(event) => patch({ reduceMotion: event.target.checked })}
-          className="h-5 w-5 accent-primary-orange"
-        />
-      </label>
     </div>
   );
 }

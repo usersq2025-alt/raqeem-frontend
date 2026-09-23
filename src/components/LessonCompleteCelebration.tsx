@@ -6,8 +6,9 @@ import confetti from "canvas-confetti";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import type { LessonAttempt } from "@/lib/api/lessonPlay";
-import { isExperienceCelebrationEnabled, readExperiencePrefs } from "@/lib/experience/experiencePrefs";
+import { isExperienceCelebrationEnabled, prefersReducedMotion } from "@/lib/experience/experiencePrefs";
 import { lessonPlayPath, unitLessonPath, unitPathFocus, withChildQuery } from "@/lib/config/subjects";
+import { playUiTone } from "@/lib/play/uiSounds";
 
 const CONFETTI_COLORS = ["#F48232", "#F9A8D4", "#7DD3FC", "#FDE68A", "#C4B5FD", "#6EE7B7"];
 
@@ -40,9 +41,9 @@ export function LessonCompleteCelebration({ attempt, childId }: Props) {
   );
 
   useEffect(() => {
-    const prefs = readExperiencePrefs();
     if (!isExperienceCelebrationEnabled()) return;
-    if (prefs.reduceMotion || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    playUiTone("bigSuccess");
+    if (prefersReducedMotion()) return;
     void confetti({
       particleCount: 90,
       spread: 76,

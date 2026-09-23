@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { professionAvatarSrc } from "@/lib/config/professions";
 import { lessonPlayPath, withChildQuery } from "@/lib/config/subjects";
 import { toIndicDigits } from "@/lib/format/indicDigits";
+import { formatLocaleDate } from "@/lib/i18n/latinNumerals";
 import type { DailyGoalTarget, JourneyDashboard } from "@/lib/api/journeyDashboard";
 import { useStudentJourneyDashboard } from "@/hooks/useStudentJourneyDashboard";
 
@@ -122,7 +123,7 @@ function StreakHero({ data }: { data: JourneyDashboard }) {
       <div className="relative mt-6 rounded-[26px] bg-white/75 p-4 shadow-inner backdrop-blur-sm">
         <div className="grid grid-cols-4 gap-x-2 gap-y-4 md:grid-cols-7" role="list" aria-label={t("weekAria")}>
           {streak.recentDays.map((day) => {
-            const dayName = new Intl.DateTimeFormat(locale, { weekday: "long" }).format(new Date(`${day.date}T12:00:00`));
+            const dayName = formatLocaleDate(new Date(`${day.date}T12:00:00`), locale, { weekday: "long" });
             const missed = !day.active && !day.isToday && !day.isFuture;
             return <div key={day.date} role="listitem" className={`flex min-w-0 flex-col items-center gap-2 rounded-2xl px-1 py-2 ${day.isToday ? "journey-day-today bg-white/90" : ""}`}><span className={`whitespace-nowrap text-[11px] font-black md:text-xs ${day.isToday ? "text-[#E66C16]" : "text-[#78879A]"}`}>{day.isToday ? t("todayDay") : dayName}</span><span className={["relative flex h-11 w-11 items-center justify-center rounded-2xl border-2 text-xl font-black transition", day.active ? "journey-day-active border-[#FFB43D] bg-gradient-to-b from-[#FFCC62] to-[#FF9A2F] text-white shadow-[0_5px_0_#D97713]" : missed ? "border-[#B8DDF4] bg-gradient-to-b from-[#EAF8FF] to-[#CDEBFA] shadow-[0_4px_0_#9CCBE5]" : day.isToday ? "border-dashed border-[#F4A03C] bg-white text-[#F4A03C]" : "border-white bg-[#EDF2F6] text-[#A9B4C1]"].join(" ")}>{day.active ? "🔥" : missed ? "🧊" : day.isToday ? "●" : "·"}</span></div>;
           })}

@@ -14,6 +14,7 @@ type RequestOptions = Omit<RequestInit, "body"> & {
 };
 
 import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
+import { normalizeDisplayNumerals } from "@/lib/format/displayNumerals";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -60,7 +61,7 @@ async function parseJson(response: Response): Promise<unknown> {
   const text = await response.text();
   if (!text) return null;
   try {
-    return JSON.parse(text);
+    return normalizeDisplayNumerals(JSON.parse(text));
   } catch {
     return text;
   }

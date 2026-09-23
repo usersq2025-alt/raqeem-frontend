@@ -1,5 +1,6 @@
 "use client";
 
+import { readDisplayJson } from "@/lib/format/displayNumerals";
 import { useCallback, useEffect, useState } from "react";
 import {
   mapJourneyDashboard,
@@ -26,7 +27,7 @@ export function useStudentJourneyDashboard(childId: number, initialData?: Journe
         credentials: "include",
         cache: "no-store",
       });
-      const raw = await res.json().catch(() => null);
+      const raw = await readDisplayJson(res);
       if (!res.ok) {
         setState({ status: "error", message: "LOAD_FAILED" });
         return;
@@ -58,7 +59,7 @@ export function useStudentJourneyDashboard(childId: number, initialData?: Journe
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ target_lessons: target }),
         });
-        const raw = await res.json().catch(() => null);
+        const raw = await readDisplayJson(res);
         if (!res.ok) {
           setToast("goalSaveFailed");
           return false;

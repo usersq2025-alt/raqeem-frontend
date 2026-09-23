@@ -1,3 +1,4 @@
+import { readDisplayJson } from "@/lib/format/displayNumerals";
 import { cookies } from "next/headers";
 import { asRows, mapStreak, mapSubject, mapUnit, orderSubjects, type StudentStreak, type SubjectProgress, type UnitProgress } from "@/lib/api/student";
 import { mapUnitPath, type UnitPath } from "@/lib/api/units";
@@ -20,7 +21,7 @@ async function laravelGet(path: string): Promise<unknown | null> {
       signal: AbortSignal.timeout(12_000),
     });
     if (!response.ok) return null;
-    return response.json().catch(() => null);
+    return readDisplayJson(response);
   } catch {
     return null;
   }

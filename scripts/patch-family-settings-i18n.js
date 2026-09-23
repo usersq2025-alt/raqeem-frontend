@@ -115,9 +115,6 @@ function patch(file, locale) {
     panelTitle: ar ? "المظهر وسهولة الاستخدام" : "Appearance and accessibility",
     panelLead: ar ? "اضبط طريقة ظهور رقيم على هذا الجهاز." : "Adjust how Raqeem looks on this device.",
     applied: ar ? "تم تطبيق التفضيل." : "Preference applied.",
-    reduceMotionHint: ar
-      ? "يقلّل الحركات والانتقالات البصرية داخل المنصة."
-      : "Reduces motion and visual transitions in the app.",
     contrastOptions: {
       default: ar ? "افتراضي" : "Default",
       high: ar ? "تباين عالٍ" : "High contrast",

@@ -1,3 +1,4 @@
+import { readDisplayJson } from "@/lib/format/displayNumerals";
 import type { ParentAccount } from "@/lib/api/parentAccount";
 
 export type ChildLearningSummary = {
@@ -104,7 +105,7 @@ export async function getChildLearningSummary(studentId: number): Promise<ChildL
     credentials: "include",
     cache: "no-store",
   });
-  const raw = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  const raw = (await readDisplayJson(response)) as Record<string, unknown> | null;
   if (!response.ok || !raw) {
     const code =
       (raw && typeof raw.code === "string" && raw.code) ||

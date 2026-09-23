@@ -19,6 +19,8 @@ import {
 } from "@/lib/api/review";
 import type { PlayQuestion } from "@/lib/api/lessonPlay";
 import { withChildQuery } from "@/lib/config/subjects";
+import { playUiTone } from "@/lib/play/uiSounds";
+import { isExperienceCelebrationEnabled } from "@/lib/experience/experiencePrefs";
 
 type Props = {
   unitId: number;
@@ -67,7 +69,9 @@ export function ReviewStationExperience({ unitId, childId }: Props) {
   }, [unitId, childId]);
 
   useEffect(() => {
-    if (phase !== "feedback" || isCorrect !== true) return;
+    if (phase !== "feedback" || isCorrect == null) return;
+    playUiTone(isCorrect ? "success" : "wrong");
+    if (!isCorrect || !isExperienceCelebrationEnabled()) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     void confetti({
       particleCount: 32,
@@ -124,7 +128,8 @@ export function ReviewStationExperience({ unitId, childId }: Props) {
   }
 
   useEffect(() => {
-    if (phase !== "done") return;
+    if (phase !== "done" || !isExperienceCelebrationEnabled()) return;
+    playUiTone("bigSuccess");
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     void confetti({
       particleCount: 70,
@@ -252,6 +257,7 @@ export function ReviewStationExperience({ unitId, childId }: Props) {
           correctLabel={t("correct")}
           incorrectLabel={t("incorrect")}
           niceTryLabel={t("niceTry")}
+          explanation={typeof feedback.explanation === "string" ? feedback.explanation : null}
         />
       ) : null}
 

@@ -132,13 +132,6 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
             ))}
           </div>
         </fieldset>
-        <ul className="mt-4 space-y-3">
-          <ToggleRow
-            label={t("display.reduceMotion")}
-            checked={prefs.reduceMotion}
-            onChange={(reduceMotion) => update({ reduceMotion })}
-          />
-        </ul>
       </section>
 
       <section className="rounded-[28px] bg-white p-5 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.28)]">

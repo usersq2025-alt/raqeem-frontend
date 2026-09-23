@@ -10,6 +10,7 @@ import {
   type ChildLearningSummary,
 } from "@/lib/api/parentSummary";
 import { professionAvatarSrc } from "@/lib/config/professions";
+import { formatLocaleDate } from "@/lib/i18n/latinNumerals";
 import {
   CardShell,
   ComingSoonCard,
@@ -288,8 +289,5 @@ export function LearningSection({
 function formatDate(iso: string, locale: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return new Intl.DateTimeFormat(locale.startsWith("ar") ? "ar" : "en", {
-    day: "numeric",
-    month: "short",
-  }).format(date);
+  return formatLocaleDate(date, locale, { day: "numeric", month: "short" });
 }

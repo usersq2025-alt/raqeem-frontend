@@ -1,3 +1,4 @@
+import { readDisplayJson } from "@/lib/format/displayNumerals";
 import { SUBJECT_KEYS, subjectKeyFromRow, type SubjectKey } from "@/lib/config/subjects";
 
 export type SubjectProgress = {
@@ -163,7 +164,7 @@ async function studentFetch(path: string): Promise<unknown> {
   } catch {
     throw new StudentApiError("NETWORK", "NETWORK", 503);
   }
-  const raw = await response.json().catch(() => null);
+  const raw = await readDisplayJson(response);
   if (response.status === 401) {
     throw new StudentApiError("UNAUTHENTICATED", "UNAUTHENTICATED", 401);
   }

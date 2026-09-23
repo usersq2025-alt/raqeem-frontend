@@ -85,31 +85,6 @@ export function AppearanceSection({ prefs, onPrefs, onSaved }: Props) {
           </div>
         </fieldset>
       </CardShell>
-
-      <CardShell>
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-extrabold text-text-navy">{t("appearance.reduceMotion")}</p>
-            <p className="mt-1 text-xs font-medium text-text-gray">{t("appearance.reduceMotionHint")}</p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={prefs.reduceMotion}
-            aria-label={t("appearance.reduceMotion")}
-            className={`relative h-8 w-14 shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold ${
-              prefs.reduceMotion ? "bg-primary-orange" : "bg-neutral-300"
-            }`}
-            onClick={() => update({ reduceMotion: !prefs.reduceMotion })}
-          >
-            <span
-              className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow ${
-                prefs.reduceMotion ? "start-7" : "start-1"
-              }`}
-            />
-          </button>
-        </div>
-      </CardShell>
     </div>
   );
 }

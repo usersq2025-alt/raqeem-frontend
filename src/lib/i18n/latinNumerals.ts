@@ -32,3 +32,18 @@ export function withLatinNumerals(locale: string): string {
   const base = locale.split("-u-")[0] || "ar";
   return `${base}-u-nu-latn`;
 }
+
+/**
+ * The ONE place in the app that should ever construct `Intl.DateTimeFormat`
+ * for a locale-only ("ar" | "en") value. Always resolves Arabic to the
+ * Western-numeral variant so day/month/year digits never render as
+ * Eastern Arabic-Indic characters. Use this instead of calling
+ * `new Intl.DateTimeFormat(...)` directly with a raw locale string.
+ */
+export function formatLocaleDate(
+  date: Date,
+  locale: string,
+  options: Intl.DateTimeFormatOptions
+): string {
+  return new Intl.DateTimeFormat(locale, { ...options, numberingSystem: "latn" }).format(date);
+}

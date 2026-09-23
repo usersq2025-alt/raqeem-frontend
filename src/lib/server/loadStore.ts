@@ -1,3 +1,4 @@
+import { readDisplayJson } from "@/lib/format/displayNumerals";
 import { cookies } from "next/headers";
 import { mapHeadquarters, mapStoreCatalog, type HeadquartersSceneData, type StoreCatalog } from "@/lib/api/store";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
@@ -19,7 +20,7 @@ async function laravelGet(path: string): Promise<unknown | null> {
       signal: AbortSignal.timeout(12_000),
     });
     if (!response.ok) return null;
-    return response.json().catch(() => null);
+    return readDisplayJson(response);
   } catch {
     return null;
   }

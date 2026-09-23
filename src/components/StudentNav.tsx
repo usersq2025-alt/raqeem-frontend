@@ -43,36 +43,51 @@ export function StudentNav({ childId }: Props) {
         </ul>
       </nav>
 
+      {/*
+        Fixed (not sticky) on purpose: this aside must always span the full
+        viewport height, however long the page content is. `position: sticky`
+        stops working reliably the moment ANY ancestor picks up a non-"visible"
+        overflow (for example `overflow-x-hidden`, which forces the browser to
+        compute `overflow-y: auto` on that ancestor too) — its "stuck" box then
+        gets clipped to that ancestor instead of the viewport, which is exactly
+        what made the sidebar's background look like it "ran out" partway down
+        long pages. `fixed` is always relative to the viewport, so it can't be
+        hijacked that way, and `inset-y-0` alone gives it a true 100dvh box
+        without needing h-screen/h-dvh math. The content column reserves the
+        matching width via `md:ms-[16.75rem]` in StudentShell.
+      */}
       <aside
-        className="sticky top-0 z-40 hidden h-screen w-[16.75rem] shrink-0 flex-col border-e border-neutral-100 bg-white/95 py-5 backdrop-blur md:flex"
+        className="fixed inset-y-0 start-0 z-40 hidden w-[16.75rem] flex-col border-e border-neutral-100 bg-white/95 backdrop-blur md:flex"
         aria-label={t("aria")}
       >
-        <Link href={withChildQuery("/subjects", childId)} className="mb-6 flex items-center justify-center px-4">
-          <Image
-            src="/images/brand/logo.png"
-            alt={tBrand("brandAlt")}
-            width={1012}
-            height={551}
-            priority
-            className="h-12 w-auto object-contain"
-          />
-        </Link>
-
-        <nav className="flex flex-1 flex-col gap-1.5 px-3">
-          {ITEMS.map((item) => (
-            <NavItem
-              key={item.key}
-              item={item}
-              label={t(item.key)}
-              active={active === item.key}
-              childId={childId}
-              desktop
+        <div className="flex h-full min-h-0 flex-col overflow-y-auto py-5">
+          <Link href={withChildQuery("/subjects", childId)} className="mb-6 flex shrink-0 items-center justify-center px-4">
+            <Image
+              src="/images/brand/logo.png"
+              alt={tBrand("brandAlt")}
+              width={1012}
+              height={551}
+              priority
+              className="h-12 w-auto object-contain"
             />
-          ))}
-        </nav>
+          </Link>
 
-        <div className="mt-auto px-3 pt-4">
-          <SidebarStudentCard />
+          <nav className="flex flex-1 flex-col gap-1.5 px-3">
+            {ITEMS.map((item) => (
+              <NavItem
+                key={item.key}
+                item={item}
+                label={t(item.key)}
+                active={active === item.key}
+                childId={childId}
+                desktop
+              />
+            ))}
+          </nav>
+
+          <div className="mt-auto shrink-0 px-3 pt-4">
+            <SidebarStudentCard />
+          </div>
         </div>
       </aside>
     </>

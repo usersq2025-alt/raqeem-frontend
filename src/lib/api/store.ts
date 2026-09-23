@@ -1,3 +1,4 @@
+import { readDisplayJson } from "@/lib/format/displayNumerals";
 import { asRows } from "@/lib/api/student";
 
 export type StoreCategory = "equipment" | "furniture";
@@ -131,7 +132,7 @@ async function storeFetch(path: string, init?: RequestInit): Promise<unknown> {
   } catch {
     throw new StoreApiError("NETWORK", 503);
   }
-  const raw = await response.json().catch(() => null);
+  const raw = await readDisplayJson(response);
   if (!response.ok) {
     const message =
       raw && typeof raw === "object" && "message" in raw && typeof raw.message === "string"

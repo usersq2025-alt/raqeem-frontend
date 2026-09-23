@@ -1,3 +1,4 @@
+import { readDisplayJson } from "@/lib/format/displayNumerals";
 import { mapPlayQuestion, type PlayQuestion } from "@/lib/api/lessonPlay";
 
 export type ReviewSummary = {
@@ -13,7 +14,7 @@ export type ReviewSummary = {
 };
 
 async function parse(res: Response): Promise<Record<string, unknown>> {
-  const raw = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+  const raw = (await readDisplayJson(res)) as Record<string, unknown> | null;
   if (!res.ok) {
     const err = new Error(typeof raw?.message === "string" ? raw.message : "NETWORK") as Error & {
       status: number;
