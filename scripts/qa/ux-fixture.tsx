@@ -48,6 +48,8 @@ export default function UxFixture() {
       iconUrl: null,
       completedLessons: index === 6 ? row.completed_lessons : 0,
       totalLessons: index === 6 ? row.total_lessons : 0,
+      catalogUnitCount: index < 5 || index === 6 ? 1 : 0,
+      catalogLessonCount: index < 5 || index === 6 ? 1 : 0,
     }));
     return <StudentShell><SubjectsHome child={qaChild} subjects={subjects} streak={mapStreak(mockStreak(1))} /></StudentShell>;
   }

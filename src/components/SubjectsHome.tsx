@@ -53,7 +53,7 @@ export function SubjectsHome({ child, subjects, streak }: Props) {
     .sort((a, b) => b.completedLessons / Math.max(b.totalLessons, 1) - a.completedLessons / Math.max(a.totalLessons, 1))
     .slice(0, 3);
   const visibleSubjects = [...subjects].sort(
-    (a, b) => Number(b.totalLessons > 0) - Number(a.totalLessons > 0)
+    (a, b) => Number(b.catalogUnitCount > 0) - Number(a.catalogUnitCount > 0) || Number(b.totalLessons > 0) - Number(a.totalLessons > 0)
   );
 
   return (

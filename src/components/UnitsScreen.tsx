@@ -60,7 +60,7 @@ export function UnitsScreen({ childId, subjectId, subjectKey, subjectName, iconU
             <div className="text-center md:text-start">
               <h1 className="text-xl font-extrabold text-text-navy md:text-2xl">{subjectName}</h1>
               <p className="mt-0.5 text-sm font-semibold text-text-gray">
-                {t("subjectOutline", { units: units.length, lessons: units.reduce((sum, unit) => sum + unit.totalLessons, 0) })}
+                {t("subjectOutline", { units: units.length, lessons: units.reduce((sum, unit) => sum + unit.catalogLessonCount, 0) })}
               </p>
             </div>
           </div>
@@ -97,7 +97,7 @@ export function UnitsScreen({ childId, subjectId, subjectKey, subjectName, iconU
             </div>
             <p className="mt-4 text-lg font-extrabold text-text-navy">{preview.title}</p>
             <p className="mt-1 text-sm font-semibold text-text-gray">
-              {t("unitLessons", { completed: preview.completedLessons, total: preview.totalLessons })}
+              {preview.totalLessons > 0 ? t("unitLessons", { completed: preview.completedLessons, total: preview.totalLessons }) : t("catalogLessons", { count: preview.catalogLessonCount })}
             </p>
             <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-neutral-100">
               <div className="h-full rounded-full" style={{ width: `${preview.percentage}%`, background: accent }} />
@@ -110,7 +110,7 @@ export function UnitsScreen({ childId, subjectId, subjectKey, subjectName, iconU
                 {preview.lessons.map((lesson, lessonIndex) => (
                   <li key={lesson.lessonId} className="flex gap-2 font-semibold text-text-navy">
                     <span className="shrink-0 text-text-gray">{lessonIndex + 1}.</span>
-                    <span className={lesson.status === "locked" ? "text-text-gray" : undefined}>
+                    <span className={lesson.status === "locked" || lesson.status === "coming_soon" ? "text-text-gray" : undefined}>
                       {lesson.title || t("untitledLesson", { number: lessonIndex + 1 })}
                     </span>
                   </li>
@@ -128,9 +128,11 @@ export function UnitsScreen({ childId, subjectId, subjectKey, subjectName, iconU
                   {t("units.gift")}
                 </Button>
               ) : null}
-              <Button href={previewHref} fullWidth>
-                {tDesk("openUnit")}
-              </Button>
+              {preview.totalLessons > 0 ? (
+                <Button href={previewHref} fullWidth>
+                  {tDesk("openUnit")}
+                </Button>
+              ) : null}
             </div>
           </>
         ) : (

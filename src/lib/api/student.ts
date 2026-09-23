@@ -9,6 +9,8 @@ export type SubjectProgress = {
   iconUrl: string | null;
   completedLessons: number;
   totalLessons: number;
+  catalogUnitCount: number;
+  catalogLessonCount: number;
 };
 
 export type UnitGift = {
@@ -22,7 +24,7 @@ export type UnitLessonSummary = {
   lessonId: number;
   title: string;
   sortOrder: number;
-  status: "completed" | "available" | "locked";
+  status: "completed" | "available" | "locked" | "coming_soon";
   stars: number | null;
 };
 
@@ -34,6 +36,8 @@ export type UnitProgress = {
   sortOrder: number;
   completedLessons: number;
   totalLessons: number;
+  catalogLessonCount: number;
+  isPublished: boolean;
   percentage: number;
   playLessonId: number | null;
   isComplete: boolean;
@@ -94,6 +98,8 @@ function mapSubject(row: Record<string, unknown>): SubjectProgress | null {
     iconUrl: typeof row.icon_url === "string" ? row.icon_url : typeof row.iconUrl === "string" ? row.iconUrl : null,
     completedLessons: Number(row.completed_lessons ?? row.completedLessons ?? 0) || 0,
     totalLessons: Number(row.total_lessons ?? row.totalLessons ?? 0) || 0,
+    catalogUnitCount: Number(row.catalog_unit_count ?? row.catalogUnitCount ?? (Number(row.total_lessons ?? row.totalLessons ?? 0) > 0 ? 1 : 0)) || 0,
+    catalogLessonCount: Number(row.catalog_lesson_count ?? row.catalogLessonCount ?? row.total_lessons ?? row.totalLessons ?? 0) || 0,
   };
 }
 
@@ -102,7 +108,7 @@ function mapUnitLesson(row: Record<string, unknown>): UnitLessonSummary | null {
   if (!Number.isFinite(lessonId) || lessonId <= 0) return null;
   const statusRaw = String(row.status ?? "locked");
   const status: UnitLessonSummary["status"] =
-    statusRaw === "completed" || statusRaw === "available" ? statusRaw : "locked";
+    statusRaw === "completed" || statusRaw === "available" || statusRaw === "coming_soon" ? statusRaw : "locked";
   const starsRaw = row.stars;
   const stars = starsRaw == null ? null : Number(starsRaw);
   return {
@@ -145,6 +151,8 @@ function mapUnit(row: Record<string, unknown>): UnitProgress | null {
     sortOrder: Number(row.sort_order ?? row.sortOrder ?? 0) || 0,
     completedLessons: completed,
     totalLessons: total,
+    catalogLessonCount: Number(row.catalog_lesson_count ?? row.catalogLessonCount ?? lessons.length) || 0,
+    isPublished: Boolean(row.is_published ?? row.isPublished ?? true),
     percentage: Math.max(0, Math.min(100, percentage)),
     playLessonId: (() => {
       const rawId = row.play_lesson_id ?? row.playLessonId;

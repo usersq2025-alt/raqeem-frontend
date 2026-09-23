@@ -32,7 +32,7 @@ export function SubjectCard({ subject, childId, index }: Props) {
       ? Math.min(100, Math.round((subject.completedLessons / subject.totalLessons) * 100))
       : 0;
   const fill = useAnimatedFill(percentage);
-  const available = subject.totalLessons > 0;
+  const available = subject.catalogUnitCount > 0;
   const subjectName = subject.nameAr?.trim() || subject.nameEn?.trim() || t(`subjects.${subject.key}`);
 
   return (
@@ -70,7 +70,7 @@ export function SubjectCard({ subject, childId, index }: Props) {
       <span className="text-[0.95rem] font-extrabold leading-tight text-text-navy sm:text-lg">
         {subjectName}
       </span>
-      {available ? (
+      {subject.totalLessons > 0 ? (
         <SubjectLessonProgress
           completed={subject.completedLessons}
           total={subject.totalLessons}
@@ -83,6 +83,10 @@ export function SubjectCard({ subject, childId, index }: Props) {
           })}
           className="mt-2.5 w-full"
         />
+      ) : available ? (
+        <span className="mt-2.5 rounded-full bg-white/80 px-3 py-1 text-xs font-extrabold text-text-navy">
+          {t("catalogUnits", { count: subject.catalogUnitCount })}
+        </span>
       ) : (
         <span className="mt-2.5 rounded-full bg-white/80 px-3 py-1 text-xs font-extrabold text-text-gray">
           {t("comingSoon")}
