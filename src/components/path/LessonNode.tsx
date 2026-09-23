@@ -123,37 +123,15 @@ export function LessonNode({
         {!locked && isFinale ? <TrophyIcon /> : null}
       </button>
 
-      {showStars ? (
-        <div
-          className="pointer-events-none absolute start-1/2 top-[calc(100%+6px)] z-[3] flex -translate-x-1/2 items-center gap-[3px] rounded-full bg-white/60 px-2 py-0.5 backdrop-blur-[2px] md:gap-1"
-          aria-label={tPath("stars", { count: earned })}
-        >
-          {[0, 1, 2].map((i) => (
-            <StarIcon key={i} filled={i < earned} />
-          ))}
-        </div>
-      ) : null}
-
-      <LessonLabel title={title} state={state} side={labelSide} />
-    </div>
-  );
-}
-
-function StarIcon({ filled }: { filled: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="h-[15px] w-[15px] md:h-[19px] md:w-[19px]"
-      aria-hidden="true"
-    >
-      <path
-        d="M12 2.8L14.7 9.1L21.5 9.8L16.4 14.3L17.9 21L12 17.6L6.1 21L7.6 14.3L2.5 9.8L9.3 9.1L12 2.8Z"
-        fill={filled ? "#F8C830" : "transparent"}
-        stroke={filled ? "#E0A820" : "#C5B896"}
-        strokeWidth="1.6"
-        strokeLinejoin="round"
+      <LessonLabel
+        title={title}
+        state={state}
+        side={labelSide}
+        showStars={showStars}
+        earnedStars={earned}
+        starsAriaLabel={tPath("stars", { count: earned })}
       />
-    </svg>
+    </div>
   );
 }
 
