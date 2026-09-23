@@ -40,7 +40,15 @@ export default function UxFixture() {
   if (mode === "headquarters") return <StudentShell><HeadquartersExperience child={qaChild} scene={mapHeadquarters(MOCK_HEADQUARTERS)} catalog={mapStoreCatalog(MOCK_STORE)} highlightId={null} fromBalance={null} /></StudentShell>;
   if (mode === "settings") return <StudentShell><ExperiencePreferencesExperience childId={1} /></StudentShell>;
   if (mode === "subjects") {
-    const subjects: SubjectProgress[] = MOCK_SUBJECTS.map((row, index) => ({ subjectId: row.subject_id, key: SUBJECT_KEYS[index], iconUrl: null, completedLessons: index === 6 ? row.completed_lessons : 0, totalLessons: index === 6 ? row.total_lessons : 0 }));
+    const subjects: SubjectProgress[] = MOCK_SUBJECTS.map((row, index) => ({
+      subjectId: row.subject_id,
+      key: SUBJECT_KEYS[index],
+      nameAr: typeof row.name_ar === "string" ? row.name_ar : null,
+      nameEn: typeof row.name_en === "string" ? row.name_en : null,
+      iconUrl: null,
+      completedLessons: index === 6 ? row.completed_lessons : 0,
+      totalLessons: index === 6 ? row.total_lessons : 0,
+    }));
     return <StudentShell><SubjectsHome child={qaChild} subjects={subjects} streak={mapStreak(mockStreak(1))} /></StudentShell>;
   }
   if (mode === "journey") return <StudentShell><StudentJourneyDashboard childId={1} initialData={mockJourneyDashboard(1)} /></StudentShell>;

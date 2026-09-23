@@ -15,11 +15,12 @@ type Props = {
   childId: number;
   subjectId: number;
   subjectKey: SubjectKey;
+  subjectName: string;
   iconUrl: string | null;
   units: UnitProgress[];
 };
 
-export function UnitsScreen({ childId, subjectId, subjectKey, iconUrl, units }: Props) {
+export function UnitsScreen({ childId, subjectId, subjectKey, subjectName, iconUrl, units }: Props) {
   const t = useTranslations("student");
   const tDesk = useTranslations("student.desktop");
   const cover = subjectCoverSrc(subjectKey, iconUrl);
@@ -56,14 +57,19 @@ export function UnitsScreen({ childId, subjectId, subjectKey, iconUrl, units }: 
             <span className="relative mb-1 flex h-14 w-14 items-center justify-center md:mb-0" style={coverTransition}>
               <Image src={cover} alt="" width={160} height={160} unoptimized className="h-full w-full object-contain" />
             </span>
-            <h1 className="text-xl font-extrabold text-text-navy md:text-2xl">{t(`subjects.${subjectKey}`)}</h1>
+            <div className="text-center md:text-start">
+              <h1 className="text-xl font-extrabold text-text-navy md:text-2xl">{subjectName}</h1>
+              <p className="mt-0.5 text-sm font-semibold text-text-gray">
+                {t("subjectOutline", { units: units.length, lessons: units.reduce((sum, unit) => sum + unit.totalLessons, 0) })}
+              </p>
+            </div>
           </div>
         </header>
 
         {units.length === 0 ? (
           <p className="py-10 text-center font-semibold text-text-gray">{t("emptyUnits")}</p>
         ) : (
-          <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-3">
+          <div className="flex flex-col gap-3">
             {units.map((unit, index) => (
               <UnitCard
                 key={unit.unitId}
@@ -99,6 +105,18 @@ export function UnitsScreen({ childId, subjectId, subjectKey, iconUrl, units }: 
             <p className="mt-1 text-end text-xs font-extrabold" style={{ color: accent }}>
               {preview.percentage}%
             </p>
+            {preview.lessons.length > 0 ? (
+              <ol className="mt-4 max-h-56 space-y-1.5 overflow-y-auto text-sm">
+                {preview.lessons.map((lesson, lessonIndex) => (
+                  <li key={lesson.lessonId} className="flex gap-2 font-semibold text-text-navy">
+                    <span className="shrink-0 text-text-gray">{lessonIndex + 1}.</span>
+                    <span className={lesson.status === "locked" ? "text-text-gray" : undefined}>
+                      {lesson.title || t("untitledLesson", { number: lessonIndex + 1 })}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            ) : null}
             <div className="mt-4 flex flex-col gap-2.5">
               {preview.reviewSessionId && preview.reviewStatus !== "completed" ? (
                 <Button href={unitReviewPath(preview.unitId, childId)} variant="secondary" fullWidth>

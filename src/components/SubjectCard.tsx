@@ -33,6 +33,7 @@ export function SubjectCard({ subject, childId, index }: Props) {
       : 0;
   const fill = useAnimatedFill(percentage);
   const available = subject.totalLessons > 0;
+  const subjectName = subject.nameAr?.trim() || subject.nameEn?.trim() || t(`subjects.${subject.key}`);
 
   return (
     <button
@@ -67,7 +68,7 @@ export function SubjectCard({ subject, childId, index }: Props) {
         ) : null}
       </span>
       <span className="text-[0.95rem] font-extrabold leading-tight text-text-navy sm:text-lg">
-        {t(`subjects.${subject.key}`)}
+        {subjectName}
       </span>
       {available ? (
         <SubjectLessonProgress

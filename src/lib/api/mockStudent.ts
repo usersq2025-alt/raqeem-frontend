@@ -35,23 +35,39 @@ export const MOCK_UNITS: Record<number, Array<Record<string, unknown>>> = {
 function unitSet(titles: string[]) {
   const totals = [10, 8, 10, 6];
   const completed = [10, 4, 2, 0];
-  return titles.map((title, index) => ({
-    unit_id: index + 1 + titles.length * 10,
-    title,
-    cover_url: null,
-    sort_order: index + 1,
-    completed_lessons: completed[index],
-    total_lessons: totals[index],
-    play_lesson_id: index === 0 ? 1 : index === 1 ? 2 : index === 2 ? 3 : null,
-    is_complete: completed[index] >= totals[index],
-    review_session_id: index === 0 ? 1 : null,
-    review_status: index === 0 ? "pending" : null,
-    review_remaining: index === 0 ? 3 : 0,
-    gift:
-      index === 0
-        ? { id: 1, reward_type: "points", points_amount: 25, store_item_id: null }
-        : null,
-  }));
+  return titles.map((title, index) => {
+    const totalLessons = totals[index];
+    const completedLessons = completed[index];
+    const lessons = Array.from({ length: totalLessons }, (_, lessonIndex) => {
+      const status =
+        lessonIndex < completedLessons ? "completed" : lessonIndex === completedLessons ? "available" : "locked";
+      return {
+        lesson_id: (index + 1) * 100 + lessonIndex + 1,
+        title: `درس ${lessonIndex + 1} — ${title}`,
+        sort_order: lessonIndex + 1,
+        status,
+        stars: status === "completed" ? 3 : null,
+      };
+    });
+    return {
+      unit_id: index + 1 + titles.length * 10,
+      title,
+      cover_url: null,
+      sort_order: index + 1,
+      completed_lessons: completedLessons,
+      total_lessons: totalLessons,
+      play_lesson_id: index === 0 ? 1 : index === 1 ? 2 : index === 2 ? 3 : null,
+      is_complete: completedLessons >= totalLessons,
+      review_session_id: index === 0 ? 1 : null,
+      review_status: index === 0 ? "pending" : null,
+      review_remaining: index === 0 ? 3 : 0,
+      gift:
+        index === 0
+          ? { id: 1, reward_type: "points", points_amount: 25, store_item_id: null }
+          : null,
+      lessons,
+    };
+  });
 }
 
 export const MOCK_STORE = {

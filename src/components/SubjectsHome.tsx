@@ -124,7 +124,9 @@ export function SubjectsHome({ child, subjects, streak }: Props) {
                 />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-extrabold text-text-navy">{t(`subjects.${nextSubject.key}`)}</span>
+                <span className="block text-sm font-extrabold text-text-navy">
+                  {nextSubject.nameAr?.trim() || nextSubject.nameEn?.trim() || t(`subjects.${nextSubject.key}`)}
+                </span>
                 <SubjectLessonProgress
                   completed={nextSubject.completedLessons}
                   total={nextSubject.totalLessons}
@@ -202,7 +204,9 @@ function RecentSubjectRow({ subject, childId }: { subject: SubjectProgress; chil
         className="flex flex-col gap-1.5 rounded-2xl bg-neutral-50 px-3 py-2.5"
       >
         <span className="flex items-center justify-between gap-2">
-          <span className="text-sm font-extrabold text-text-navy">{t(`subjects.${subject.key}`)}</span>
+          <span className="text-sm font-extrabold text-text-navy">
+            {subject.nameAr?.trim() || subject.nameEn?.trim() || t(`subjects.${subject.key}`)}
+          </span>
         </span>
         <SubjectLessonProgress
           completed={subject.completedLessons}

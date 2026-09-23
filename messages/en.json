@@ -637,6 +637,8 @@
     "lessonsTitle": "Lessons",
     "emptyUnits": "No published units for this subject yet.",
     "emptyLessons": "No playable lessons in this unit yet.",
+    "untitledLesson": "Lesson {number}",
+    "subjectOutline": "{units} units · {lessons} lessons",
     "points": "{count} points",
     "lessonsCount": "{completed} of {total} lessons",
     "comingSoon": "Coming soon",

@@ -637,6 +637,8 @@
     "lessonsTitle": "الدروس",
     "emptyUnits": "لا توجد وحدات منشورة بعد لهذه المادة.",
     "emptyLessons": "لا توجد دروس جاهزة للعب في هذه الوحدة بعد.",
+    "untitledLesson": "درس {number}",
+    "subjectOutline": "{units} وحدات · {lessons} دروس",
     "points": "{count} نقطة",
     "lessonsCount": "{completed} من {total} درساً",
     "comingSoon": "قريبًا",

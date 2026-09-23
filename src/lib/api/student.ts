@@ -4,6 +4,8 @@ import { SUBJECT_KEYS, subjectKeyFromRow, type SubjectKey } from "@/lib/config/s
 export type SubjectProgress = {
   subjectId: number;
   key: SubjectKey;
+  nameAr: string | null;
+  nameEn: string | null;
   iconUrl: string | null;
   completedLessons: number;
   totalLessons: number;
@@ -14,6 +16,14 @@ export type UnitGift = {
   rewardType: string;
   pointsAmount: number;
   storeItemId: number | null;
+};
+
+export type UnitLessonSummary = {
+  lessonId: number;
+  title: string;
+  sortOrder: number;
+  status: "completed" | "available" | "locked";
+  stars: number | null;
 };
 
 export type UnitProgress = {
@@ -31,6 +41,7 @@ export type UnitProgress = {
   reviewStatus: string | null;
   reviewRemaining: number;
   gift: UnitGift | null;
+  lessons: UnitLessonSummary[];
 };
 
 export type StudentBadge = {
@@ -78,9 +89,28 @@ function mapSubject(row: Record<string, unknown>): SubjectProgress | null {
       sort_order: Number(row.sort_order ?? row.sortOrder),
       sortOrder: Number(row.sortOrder ?? row.sort_order),
     }),
+    nameAr: typeof row.name_ar === "string" ? row.name_ar : typeof row.nameAr === "string" ? row.nameAr : null,
+    nameEn: typeof row.name_en === "string" ? row.name_en : typeof row.nameEn === "string" ? row.nameEn : null,
     iconUrl: typeof row.icon_url === "string" ? row.icon_url : typeof row.iconUrl === "string" ? row.iconUrl : null,
     completedLessons: Number(row.completed_lessons ?? row.completedLessons ?? 0) || 0,
     totalLessons: Number(row.total_lessons ?? row.totalLessons ?? 0) || 0,
+  };
+}
+
+function mapUnitLesson(row: Record<string, unknown>): UnitLessonSummary | null {
+  const lessonId = Number(row.lesson_id ?? row.lessonId);
+  if (!Number.isFinite(lessonId) || lessonId <= 0) return null;
+  const statusRaw = String(row.status ?? "locked");
+  const status: UnitLessonSummary["status"] =
+    statusRaw === "completed" || statusRaw === "available" ? statusRaw : "locked";
+  const starsRaw = row.stars;
+  const stars = starsRaw == null ? null : Number(starsRaw);
+  return {
+    lessonId,
+    title: String(row.title ?? "").trim(),
+    sortOrder: Number(row.sort_order ?? row.sortOrder ?? 0) || 0,
+    status,
+    stars: stars != null && Number.isFinite(stars) ? Math.max(0, Math.min(3, stars)) : null,
   };
 }
 
@@ -96,9 +126,17 @@ function mapUnit(row: Record<string, unknown>): UnitProgress | null {
       : total > 0
         ? Math.round((completed / total) * 100)
         : 0;
+  const lessonsRaw = row.lessons;
+  const lessons = Array.isArray(lessonsRaw)
+    ? lessonsRaw
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map(mapUnitLesson)
+        .filter((lesson): lesson is UnitLessonSummary => lesson !== null)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+    : [];
   return {
     unitId,
-    title: String(row.title ?? ""),
+    title: String(row.title ?? "").trim(),
     coverUrl: typeof row.cover_url === "string" ? row.cover_url : typeof row.coverUrl === "string" ? row.coverUrl : null,
     iconUrl: (() => {
       const icon = row.unit_icon_url ?? row.unitIconUrl ?? row.icon_url ?? row.iconUrl;
@@ -122,6 +160,7 @@ function mapUnit(row: Record<string, unknown>): UnitProgress | null {
     reviewStatus: typeof row.review_status === "string" ? row.review_status : typeof row.reviewStatus === "string" ? row.reviewStatus : null,
     reviewRemaining: Number(row.review_remaining ?? row.reviewRemaining ?? 0) || 0,
     gift: mapGift(row.gift),
+    lessons,
   };
 }
 
