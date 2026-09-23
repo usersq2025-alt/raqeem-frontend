@@ -50,7 +50,11 @@ export function WeeklyInsightsCard({ studentId }: { studentId: number }) {
         {report.recommendations.length > 0 ? <div className="mt-5">
           <h4 className="text-sm font-extrabold text-text-navy">{t("recommendations")}</h4>
           <ul className="mt-2 space-y-3">{report.recommendations.map((item) => <li key={item.lesson_id} className="rounded-xl bg-[#F4F8FC] p-3 text-sm leading-relaxed text-text-navy">
-            <strong>{item.lesson}</strong><p className="mt-1">{item.activity}</p><p className="mt-1 text-text-gray">{item.tip}</p>
+            <strong>{item.lesson}</strong>
+            {item.question ? <p className="mt-2 font-semibold">{t("question", { question: item.question })}</p> : null}
+            {item.selected_answer && item.correct_answer ? <p className="mt-1 text-text-gray">{t("answerComparison", { selected: item.selected_answer, correct: item.correct_answer })}</p> : null}
+            {item.insight ? <p className="mt-2">{item.insight}</p> : null}
+            <p className="mt-2 font-semibold">{t("homeActivity", { activity: item.activity })}</p><p className="mt-1 text-text-gray">{item.tip}</p>
           </li>)}</ul>
         </div> : <p className="mt-4 text-sm leading-relaxed text-text-gray">{t("steady")}</p>}
         <p className="mt-4 text-xs leading-relaxed text-text-gray">{t("disclaimer")}</p>

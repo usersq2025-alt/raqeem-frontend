@@ -1259,6 +1259,9 @@
         "practice": "Topics worth more practice",
         "evidence": "{correct} correct out of {answers} answers",
         "recommendations": "Short activities to try",
+        "question": "Question to revisit: {question}",
+        "answerComparison": "Chose: {selected} · Correct answer: {correct}",
+        "homeActivity": "At-home activity: {activity}",
         "steady": "Keep learning in short, regular sessions. More specific suggestions will appear when there are enough answers.",
         "disclaimer": "These are learning indicators for support, not a diagnosis or a judgment of ability."
       }
