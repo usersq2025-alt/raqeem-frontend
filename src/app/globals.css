@@ -1751,6 +1751,12 @@
   isolation: isolate;
 }
 
+.path-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+}
+
 .path-sky-glow {
   background:
     radial-gradient(circle at 18% 12%, rgb(255 255 255 / 0.55), transparent 34%),

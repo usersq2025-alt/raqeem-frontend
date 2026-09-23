@@ -167,7 +167,7 @@ export function LessonPathCanvas({ data, childId, focusLessonId = null }: Props)
 
   return (
     <div
-      className="path-screen relative mx-auto flex min-h-0 w-full max-w-[100vw] flex-1 flex-col overflow-hidden md:h-full md:max-w-3xl"
+      className="path-screen relative mx-auto flex h-full min-h-0 w-full max-w-[100vw] flex-1 flex-col overflow-hidden md:max-w-3xl"
       style={{ ["--path-accent" as string]: data.accentColor }}
     >
       <PathBackground />
@@ -176,7 +176,7 @@ export function LessonPathCanvas({ data, childId, focusLessonId = null }: Props)
 
       <div
         ref={scrollRef}
-        className="relative z-10 min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
+        className="path-scroll relative z-10 min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain touch-pan-y"
       >
         {canCollapseCompleted ? (
           <div className="sticky top-0 z-20 mx-auto flex w-[92%] max-w-md justify-center px-1 pb-2 pt-2 md:w-[78%]">

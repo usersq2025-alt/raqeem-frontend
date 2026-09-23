@@ -74,7 +74,11 @@ export function StudentShell({ children }: Props) {
     <StudentChromeProvider value={chrome}>
       <ExperiencePrefsBootstrap />
       <div
-        className={`relative min-h-screen overflow-x-hidden ${
+        className={`relative ${
+          isPathScreen
+            ? "h-[100dvh] overflow-hidden"
+            : "min-h-screen overflow-x-hidden"
+        } ${
           hideNav ? "bg-[#F7FBFF]" : isPathScreen ? "bg-[#F4F7FB]" : "student-sky bg-[#F7FBFF]"
         }`}
       >
@@ -84,7 +88,7 @@ export function StudentShell({ children }: Props) {
             !hideNav && validChild ? "md:ms-[16.75rem] md:w-[calc(100%-16.75rem)]" : ""
           } ${
             isPathScreen
-              ? "flex flex-col px-0 pt-0 pb-24 md:h-[100dvh] md:overflow-hidden md:pb-0"
+              ? "flex h-[100dvh] flex-col overflow-hidden px-0 pt-0 pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-0"
               : hideNav
                 ? "mx-auto w-full max-w-full px-4 pt-3 pb-6 md:max-w-3xl md:px-8"
                 : "w-full max-w-full px-4 pt-3 pb-28 md:max-w-none md:px-8 md:py-6 md:pb-8"
