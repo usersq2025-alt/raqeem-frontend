@@ -1246,7 +1246,22 @@
       "nextStepTitle": "A simple next step",
       "startGuidance": "Encourage your child to finish a first lesson, then follow their progress here.",
       "nextSubject": "Continue the remaining lessons in {name}. This shows completion, not your child's ability.",
-      "keepGoing": "Keep a short, regular learning routine."
+      "keepGoing": "Keep a short, regular learning routine.",
+      "insights": {
+        "title": "Learning report and recommendations",
+        "loading": "Preparing the report...",
+        "error": "The report could not be loaded right now.",
+        "period": "{start} to {end}",
+        "noActivity": "There are no answers or completed lessons in this period yet. Try a short lesson and come back to see the report.",
+        "activity": "{lessons} lessons completed · {answers} answers",
+        "limited": "The evidence is limited; it cannot establish your child's ability on its own.",
+        "strengths": "Topics with strong performance",
+        "practice": "Topics worth more practice",
+        "evidence": "{correct} correct out of {answers} answers",
+        "recommendations": "Short activities to try",
+        "steady": "Keep learning in short, regular sessions. More specific suggestions will appear when there are enough answers.",
+        "disclaimer": "These are learning indicators for support, not a diagnosis or a judgment of ability."
+      }
     },
     "alerts": {
       "panelTitle": "Alerts and follow-up",
@@ -1256,11 +1271,11 @@
       "inApp": "In the platform",
       "inAppHint": "Show new events here in your alert inbox.",
       "email": "Email",
-      "emailHint": "Email for weekly goals and purchases. A verified email address is required.",
+      "emailHint": "Email for weekly goals, purchases, and learning reports. A verified email address is required.",
       "emailNotReady": "Email alerts will start after you verify your email address in account settings.",
       "eventsTitle": "Events to follow",
-      "events": {"lesson_completed": "Lesson completed", "weekly_goal_reached": "Weekly goal reached", "purchase_made": "Student store purchase"},
-      "eventHints": {"lesson_completed": "In-app only to keep email quiet.", "weekly_goal_reached": "In-app and email when enabled.", "purchase_made": "In-app and email when enabled."},
+      "events": {"lesson_completed": "Lesson completed", "weekly_goal_reached": "Weekly goal reached", "purchase_made": "Student store purchase", "weekly_report": "Weekly learning report"},
+      "eventHints": {"lesson_completed": "In-app only to keep email quiet.", "weekly_goal_reached": "In-app and email when enabled.", "purchase_made": "In-app and email when enabled.", "weekly_report": "One email per active child each week."},
       "inboxTitle": "Alert inbox",
       "unread": "Unread: {count}",
       "readAll": "Mark all as read",

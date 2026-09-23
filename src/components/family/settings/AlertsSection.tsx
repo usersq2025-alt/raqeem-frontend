@@ -9,7 +9,7 @@ import {
 } from "@/lib/api/parentAlerts";
 import { CardShell, EmptyBlock, ErrorBlock, SectionIntro, SkeletonBlock } from "./SettingsUi";
 
-const eventKeys = ["lesson_completed", "weekly_goal_reached", "purchase_made"] as const;
+const eventKeys = ["lesson_completed", "weekly_goal_reached", "purchase_made", "weekly_report"] as const;
 
 export function AlertsSection({ emailReady, accountLoaded, onUnreadChange }: { emailReady: boolean; accountLoaded: boolean; onUnreadChange: (count: number) => void }) {
   const t = useTranslations("familySettings");

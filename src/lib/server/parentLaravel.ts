@@ -14,6 +14,7 @@ let mockAlertPreferences = {
   lesson_completed: true,
   weekly_goal_reached: true,
   purchase_made: true,
+  weekly_report: true,
 };
 
 export function getMockGuardianState() {
@@ -112,6 +113,13 @@ function mockParentLaravel(
     });
   }
 
+  if (path.includes("/parent/students/") && path.includes("/weekly-report")) {
+    return NextResponse.json({ student_id: 1, saved: false, report: {
+      week_start: new Date().toISOString().slice(0, 10), week_end: new Date().toISOString().slice(0, 10),
+      completed_lessons: 0, answers: 0, correct_answers: 0, strengths: [], practice: [], recommendations: [],
+      limited_evidence: true, has_activity: false,
+    } });
+  }
   if (path.includes("/parent/students/") && path.includes("/summary")) {
     return NextResponse.json({
       student_id: 1,

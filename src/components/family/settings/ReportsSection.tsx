@@ -18,6 +18,7 @@ import {
   SectionIntro,
   SkeletonBlock,
 } from "./SettingsUi";
+import { WeeklyInsightsCard } from "./WeeklyInsightsCard";
 
 type Props = {
   childrenList: ChildProfile[];
@@ -147,6 +148,7 @@ export function ReportsSection({
       ) : null}
 
       {!loading && !error && summary ? <>
+        {selectedId ? <WeeklyInsightsCard key={selectedId} studentId={selectedId} /> : null}
         <CardShell className="bg-[#FFF7EC] ring-1 ring-[#F9DCB7]">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>

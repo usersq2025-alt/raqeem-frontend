@@ -6,6 +6,7 @@ export type AlertPreferences = {
   lesson_completed: boolean;
   weekly_goal_reached: boolean;
   purchase_made: boolean;
+  weekly_report: boolean;
 };
 
 export type ParentAlert = {
