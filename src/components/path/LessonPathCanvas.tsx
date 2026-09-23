@@ -132,7 +132,8 @@ export function LessonPathCanvas({ data, childId, focusLessonId = null }: Props)
       const scrollerBox = scroller.getBoundingClientRect();
       const nextTop =
         scroller.scrollTop + (nodeBox.top - scrollerBox.top) - scrollerBox.height * 0.38;
-      scroller.scrollTo({ top: Math.max(0, nextTop), behavior: "smooth" });
+      const maxTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      scroller.scrollTo({ top: Math.min(maxTop, Math.max(0, nextTop)), behavior: "smooth" });
     };
     const timer = window.setTimeout(scrollToCurrent, 180);
     return () => window.clearTimeout(timer);
@@ -279,6 +280,8 @@ export function LessonPathCanvas({ data, childId, focusLessonId = null }: Props)
             )}
           </div>
         </div>
+        {/* Extra scroll room so the first lesson (near stage bottom) clears the mobile nav. */}
+        <div className="h-[7.5rem] shrink-0 md:h-10" aria-hidden="true" />
       </div>
 
       {lockedToast ? (

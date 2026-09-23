@@ -2,7 +2,8 @@ export type PathPoint = { x: number; y: number };
 
 /** Percentages inside the scrollable path stage (0–100). */
 const TOP = 10;
-const BOTTOM = 92;
+/** Keep the first lesson above the mobile bottom nav clearance. */
+const BOTTOM = 78;
 /** Stronger zigzag so nodes clearly alternate left/right. */
 const AMPLITUDE = 18;
 

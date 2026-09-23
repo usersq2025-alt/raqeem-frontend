@@ -1755,6 +1755,13 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   touch-action: pan-y;
+  scroll-padding-bottom: 7.5rem;
+}
+
+@media (min-width: 768px) {
+  .path-scroll {
+    scroll-padding-bottom: 2.5rem;
+  }
 }
 
 .path-sky-glow {

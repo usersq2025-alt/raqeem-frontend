@@ -88,7 +88,7 @@ export function StudentShell({ children }: Props) {
             !hideNav && validChild ? "md:ms-[16.75rem] md:w-[calc(100%-16.75rem)]" : ""
           } ${
             isPathScreen
-              ? "flex h-[100dvh] flex-col overflow-hidden px-0 pt-0 pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-0"
+              ? "flex h-[100dvh] flex-col overflow-hidden px-0 pt-0 pb-[calc(5.75rem+env(safe-area-inset-bottom))] md:pb-0"
               : hideNav
                 ? "mx-auto w-full max-w-full px-4 pt-3 pb-6 md:max-w-3xl md:px-8"
                 : "w-full max-w-full px-4 pt-3 pb-28 md:max-w-none md:px-8 md:py-6 md:pb-8"
