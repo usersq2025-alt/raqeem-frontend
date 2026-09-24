@@ -78,6 +78,7 @@ export function WeeklyInsightsCard({ studentId }: { studentId: number }) {
             {item.selected_answer && item.correct_answer ? <p className="mt-1 text-text-gray">{t("answerComparison", { selected: item.selected_answer, correct: item.correct_answer })}</p> : null}
             {item.insight ? <p className="mt-2">{item.insight}</p> : null}
             <p className="mt-2 font-semibold">{t("homeActivity", { activity: item.activity })}</p><p className="mt-1 text-text-gray">{item.tip}</p>
+            {item.check ? <p className="mt-2 rounded-lg bg-white p-2 text-xs text-text-navy"><strong>{t("checkLabel")}</strong> {item.check}</p> : null}
           </li>)}</ul>
         </div> : <p className="mt-4 text-sm leading-relaxed text-text-gray">{t("steady")}</p>}
         <p className="mt-4 text-xs leading-relaxed text-text-gray">{t("disclaimer")}</p>

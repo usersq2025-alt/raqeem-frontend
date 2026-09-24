@@ -1262,6 +1262,7 @@
         "question": "Question to revisit: {question}",
         "answerComparison": "Chose: {selected} · Correct answer: {correct}",
         "homeActivity": "At-home activity: {activity}",
+        "checkLabel": "How can you tell they improved?",
         "sendEmailTitle": "Email me this report",
         "sendEmailHint": "Get a summary of your child's latest activity at the email address on your account.",
         "sendNow": "Send report now",

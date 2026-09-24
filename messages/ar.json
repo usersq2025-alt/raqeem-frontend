@@ -1262,6 +1262,7 @@
         "question": "السؤال الذي يحتاج مراجعة: {question}",
         "answerComparison": "اختار: {selected} · الإجابة الصحيحة: {correct}",
         "homeActivity": "نشاط منزلي: {activity}",
+        "checkLabel": "كيف تعرفون أنه تحسّن؟",
         "sendEmailTitle": "أرسل التقرير إلى بريدي",
         "sendEmailHint": "يصلك ملخص أحدث نشاط للطفل إلى البريد الإلكتروني المسجّل في حسابك.",
         "sendNow": "إرسال التقرير الآن",

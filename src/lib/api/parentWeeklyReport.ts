@@ -17,7 +17,7 @@ export type ParentWeeklyReport = {
   correct_answers: number;
   strengths: LessonEvidence[];
   practice: LessonEvidence[];
-  recommendations: { lesson_id: number; lesson: string; question?: string; selected_answer?: string | null; correct_answer?: string | null; insight?: string; activity: string; tip: string; source: "ai" | "local" }[];
+  recommendations: { lesson_id: number; lesson: string; question?: string; selected_answer?: string | null; correct_answer?: string | null; insight?: string; activity: string; tip: string; check?: string; source: "ai" | "local" }[];
   limited_evidence: boolean;
   has_activity: boolean;
 };
