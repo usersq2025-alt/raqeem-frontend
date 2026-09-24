@@ -4,6 +4,9 @@ import type { ParentAccount } from "@/lib/api/parentAccount";
 export type ChildLearningSummary = {
   studentId: number;
   weeklyGoalLessons: number;
+  dailyGoalTarget: number;
+  completedLessonsToday: number;
+  goalDate: string;
   completedLessonsThisWeek: number;
   completedLessonsTotal: number;
   totalAnswers: number;
@@ -62,6 +65,9 @@ export function mapLearningSummary(raw: Record<string, unknown>): ChildLearningS
   return {
     studentId: Number(raw.student_id ?? raw.studentId),
     weeklyGoalLessons: Number(raw.weekly_goal_lessons ?? raw.weeklyGoalLessons ?? 5) || 5,
+    dailyGoalTarget: Number(raw.daily_goal_target ?? raw.dailyGoalTarget ?? 3) || 3,
+    completedLessonsToday: Number(raw.completed_lessons_today ?? raw.completedLessonsToday ?? 0) || 0,
+    goalDate: String(raw.goal_date ?? raw.goalDate ?? ""),
     completedLessonsThisWeek: Number(raw.completed_lessons_this_week ?? raw.completedLessonsThisWeek ?? 0) || 0,
     completedLessonsTotal: Number(raw.completed_lessons_total ?? raw.completedLessonsTotal ?? 0) || 0,
     totalAnswers: Number(raw.total_answers ?? raw.totalAnswers ?? 0) || 0,

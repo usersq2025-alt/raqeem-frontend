@@ -125,6 +125,17 @@ export async function updateStudentWeeklyGoal(studentId: number, weeklyGoalLesso
   return Number(raw.weekly_goal_lessons ?? weeklyGoalLessons);
 }
 
+export async function updateStudentDailyGoal(studentId: number, targetLessons: number): Promise<number> {
+  const response = await fetch(`/api/parent/students/${studentId}/daily-goal`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ target_lessons: targetLessons }),
+  });
+  const raw = await parseResponse(response);
+  return Number(raw.target_lessons ?? targetLessons);
+}
+
 export async function updateChildProfile(
   childId: number,
   payload: { fullName?: string; gradeId?: number }

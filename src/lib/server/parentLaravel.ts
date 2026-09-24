@@ -106,6 +106,7 @@ function mockParentLaravel(
       public_id: "RQMP-000001",
       full_name: nameFromBody || sessionParent?.full_name || "ولي الأمر",
       email: sessionParent?.email ?? "parent@example.com",
+      email_verified_at: new Date().toISOString(),
       phone: null,
       preferred_locale: "ar",
       created_at: new Date().toISOString(),
@@ -118,6 +119,9 @@ function mockParentLaravel(
   if (path.includes("/parent/students/") && path.endsWith("/weekly-report/email")) {
     return NextResponse.json({ status: "QUEUED", email_quota: { used: 1, limit: 1, remaining: 0, unlimited: false, resets_at: new Date().toISOString().slice(0, 10) } });
   }
+  if (path.includes("/parent/students/") && path.endsWith("/weekly-report/email-quota")) {
+    return NextResponse.json({ email_quota: { used: 0, limit: 1, remaining: 1, unlimited: false, resets_at: new Date().toISOString().slice(0, 10) } });
+  }
   if (path.includes("/parent/students/") && path.includes("/weekly-report")) {
     return NextResponse.json({ student_id: 1, saved: false, email_quota: { used: 0, limit: 1, remaining: 1, unlimited: false, resets_at: new Date().toISOString().slice(0, 10) }, report: {
       week_start: new Date().toISOString().slice(0, 10), week_end: new Date().toISOString().slice(0, 10),
@@ -129,6 +133,9 @@ function mockParentLaravel(
     return NextResponse.json({
       student_id: 1,
       weekly_goal_lessons: 5,
+      daily_goal_target: 3,
+      completed_lessons_today: 0,
+      goal_date: new Date().toISOString().slice(0, 10),
       completed_lessons_this_week: 0,
       completed_lessons_total: 0,
       total_answers: 0,
@@ -148,6 +155,9 @@ function mockParentLaravel(
 
   if (path.includes("/weekly-goal")) {
     return NextResponse.json({ id: 1, weekly_goal_lessons: 5 });
+  }
+  if (path.includes("/daily-goal")) {
+    return NextResponse.json({ target_lessons: Number((body as { target_lessons?: number } | null)?.target_lessons ?? 3), completed_lessons: 0 });
   }
 
   if (path.endsWith("/exhibition/reset-purchases")) {

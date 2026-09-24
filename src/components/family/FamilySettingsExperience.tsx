@@ -279,7 +279,8 @@ export function FamilySettingsExperience({ seed, initialSection }: Props) {
                   childrenLoading={childrenLoading}
                   childrenError={childrenError}
                   onRetryChildren={loadChildren}
-                  onSummaryLoaded={onSummaryLoaded}
+                  email={account?.email ?? null}
+                  emailVerified={Boolean(account?.emailVerifiedAt)}
                 />
               ) : null}
               {active === "alerts" ? <AlertsSection emailReady={Boolean(account?.email && account.emailVerifiedAt)} accountLoaded={!accountLoading} onUnreadChange={setUnreadAlerts} /> : null}

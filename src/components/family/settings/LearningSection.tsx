@@ -4,13 +4,12 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { type ChildProfile } from "@/lib/api/children";
-import { updateStudentWeeklyGoal } from "@/lib/api/parentAccount";
+import { updateStudentDailyGoal } from "@/lib/api/parentAccount";
 import {
   getChildLearningSummary,
   type ChildLearningSummary,
 } from "@/lib/api/parentSummary";
 import { professionAvatarSrc } from "@/lib/config/professions";
-import { formatLocaleDate } from "@/lib/i18n/latinNumerals";
 import {
   CardShell,
   ComingSoonCard,
@@ -48,7 +47,6 @@ export function LearningSection({
   const [summary, setSummary] = useState<ChildLearningSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState(false);
-  const [customGoal, setCustomGoal] = useState("5");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -78,7 +76,6 @@ export function LearningSection({
         const next = await getChildLearningSummary(selectedId);
         if (cancelled) return;
         setSummary(next);
-        setCustomGoal(String(next.weeklyGoalLessons));
         onSummaryLoaded?.(selectedId, next);
       } catch {
         if (!cancelled) {
@@ -108,20 +105,16 @@ export function LearningSection({
   }
 
   const selected = childrenList.find((c) => c.id === selectedId) ?? null;
-  const goal = summary?.weeklyGoalLessons ?? selected?.weeklyGoalLessons ?? 5;
-  const done = summary?.completedLessonsThisWeek ?? 0;
+  const goal = summary?.dailyGoalTarget ?? 3;
+  const done = summary?.completedLessonsToday ?? 0;
 
   async function saveGoal(n: number) {
     if (!selected) return;
-    if (!Number.isFinite(n) || n < 1 || n > 15) {
-      setError(t("learning.customInvalid"));
-      return;
-    }
     setBusy(true);
     setError("");
     try {
-      const saved = await updateStudentWeeklyGoal(selected.id, n);
-      setSummary((current) => (current ? { ...current, weeklyGoalLessons: saved } : current));
+      const saved = await updateStudentDailyGoal(selected.id, n);
+      setSummary((current) => (current ? { ...current, dailyGoalTarget: saved } : current));
       onSaved(t("learning.saved"));
     } catch {
       setError(t("errors.saveFailed"));
@@ -184,7 +177,7 @@ export function LearningSection({
           <CardShell>
             <p className="text-sm font-extrabold text-text-navy">{t("learning.goalTitle")}</p>
             <p className="mt-1 text-xs font-medium leading-relaxed text-text-gray">{t("learning.goalHint")}</p>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="mt-3 grid grid-cols-3 gap-2">
               {PRESETS.map((n) => (
                 <button
                   key={n}
@@ -199,30 +192,13 @@ export function LearningSection({
                   onClick={() => void saveGoal(n)}
                 >
                   {t(`learning.presets.${n}`)}
-                  {n === 5 ? (
+                  {n === 3 ? (
                     <span className="mt-0.5 block text-[10px] font-bold text-primary-orange">
                       {t("learning.recommended")}
                     </span>
                   ) : null}
                 </button>
               ))}
-              <div className="col-span-2 flex gap-2 sm:col-span-4">
-                <input
-                  aria-label={t("learning.custom")}
-                  inputMode="numeric"
-                  value={customGoal}
-                  onChange={(e) => setCustomGoal(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                  className="min-h-11 w-full rounded-2xl border border-neutral-200 bg-white px-3 text-center text-sm font-extrabold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
-                />
-                <button
-                  type="button"
-                  disabled={busy || !customGoal}
-                  className="min-h-11 shrink-0 rounded-2xl bg-primary-orange px-4 text-sm font-extrabold text-white disabled:opacity-45"
-                  onClick={() => void saveGoal(Number(customGoal))}
-                >
-                  {t("learning.custom")}
-                </button>
-              </div>
             </div>
             {error ? <p className="mt-2 text-sm font-semibold text-red-600">{error}</p> : null}
 
@@ -231,7 +207,7 @@ export function LearningSection({
                 {t("learning.currentGoal", { count: goal })}
               </p>
               <p className="mt-1 text-sm font-semibold text-text-gray">
-                {t("learning.weekProgress", { done, goal })}
+                {t("learning.dayProgress", { done, goal })}
               </p>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-100">
                 <div
@@ -239,14 +215,6 @@ export function LearningSection({
                   style={{ width: `${Math.min(100, Math.round((done / Math.max(goal, 1)) * 100))}%` }}
                 />
               </div>
-              {summary?.weekStart && summary?.weekEnd ? (
-                <p className="mt-2 text-xs font-semibold text-text-gray">
-                  {t("learning.weekRange", {
-                    start: formatDate(summary.weekStart, locale),
-                    end: formatDate(summary.weekEnd, locale),
-                  })}
-                </p>
-              ) : null}
             </div>
           </CardShell>
 
@@ -284,10 +252,4 @@ export function LearningSection({
       ) : null}
     </div>
   );
-}
-
-function formatDate(iso: string, locale: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return formatLocaleDate(date, locale, { day: "numeric", month: "short" });
 }
