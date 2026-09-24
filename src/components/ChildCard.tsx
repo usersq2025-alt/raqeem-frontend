@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import type { ChildProfile } from "@/lib/api/children";
 import { hasChosenProfession } from "@/lib/api/children";
 import { professionAvatarSrc } from "@/lib/config/professions";
+import { lockGuardianMode } from "@/lib/api/guardian";
 
 const TINTS = [
   "from-violet-100 to-violet-50",
@@ -61,6 +62,7 @@ export function ChildCard({ child, index, animatePoints }: Props) {
   const t = useTranslations("hub");
   const tGrades = useTranslations("child.grades");
   const router = useRouter();
+  const [entryError, setEntryError] = useState(false);
   const chosen = hasChosenProfession(child);
   const avatarSrc = chosen
     ? professionAvatarSrc(child.professionCode, child.gender) ?? "/images/brand/logo.png"
@@ -70,7 +72,14 @@ export function ChildCard({ child, index, animatePoints }: Props) {
   const gradeKey = String(child.gradeId) as "1" | "2" | "3" | "4" | "5" | "6";
   const gradeLabel = child.gradeId >= 1 && child.gradeId <= 6 ? tGrades(gradeKey) : "";
 
-  function go() {
+  async function go() {
+    setEntryError(false);
+    try {
+      await lockGuardianMode();
+    } catch {
+      setEntryError(true);
+      return;
+    }
     const navigate = () => {
       if (chosen) {
         router.push(`/subjects?childId=${child.id}`);
@@ -88,11 +97,11 @@ export function ChildCard({ child, index, animatePoints }: Props) {
     navigate();
   }
 
-  return (
+  return (<div className="w-[min(72vw,17.5rem)] shrink-0 md:w-full">
     <button
       type="button"
-      onClick={go}
-      className={`hub-card group relative flex w-[min(72vw,17.5rem)] shrink-0 flex-col items-center rounded-[28px] bg-gradient-to-b px-5 pb-5 pt-6 text-center shadow-[0_16px_36px_-22px_rgba(26,43,71,0.45)] transition-transform duration-150 ease-out hover:-translate-y-1 active:scale-[0.96] md:w-full ${TINTS[index % TINTS.length]}`}
+      onClick={() => void go()}
+      className={`hub-card group relative flex w-full flex-col items-center rounded-[28px] bg-gradient-to-b px-5 pb-5 pt-6 text-center shadow-[0_16px_36px_-22px_rgba(26,43,71,0.45)] transition-transform duration-150 ease-out hover:-translate-y-1 active:scale-[0.96] ${TINTS[index % TINTS.length]}`}
     >
       {!chosen ? (
         <span className="absolute start-3 top-3 rounded-full bg-primary-orange px-2.5 py-1 text-[10px] font-extrabold text-white shadow-sm">
@@ -130,5 +139,7 @@ export function ChildCard({ child, index, animatePoints }: Props) {
         {t("points", { count: points })}
       </span>
     </button>
+    {entryError ? <p role="alert" className="mt-2 text-center text-xs font-bold text-rose-700">{t("entryLockFailed")}</p> : null}
+  </div>
   );
 }

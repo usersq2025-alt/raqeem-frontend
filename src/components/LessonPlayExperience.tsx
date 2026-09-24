@@ -991,10 +991,11 @@ function MatchingBody({
     () => (Array.isArray(payload.right_items) ? (payload.right_items as Array<{ id: string; text: string }>) : []),
     [payload.right_items]
   );
+  const manyToOne = payload.match_mode === "many_to_one";
   const matchItemsKey = useMemo(
     () =>
-      `${left.map((item) => item.id).join("\0")}\0${right.map((item) => item.id).join("\0")}`,
-    [left, right]
+      `${manyToOne}\0${left.map((item) => item.id).join("\0")}\0${right.map((item) => item.id).join("\0")}`,
+    [left, right, manyToOne]
   );
   const [matches, setMatches] = useState<Record<string, string>>(() => readMatches(selected));
   const [pick, setPick] = useState<{ side: "left" | "right"; id: string } | null>(null);
@@ -1109,9 +1110,11 @@ function MatchingBody({
     if (locked) return;
     playUiTone("pop");
     const next = { ...matches, [leftId]: rightId };
-    // drop any other left that pointed at this right
-    for (const [lid, rid] of Object.entries(next)) {
-      if (lid !== leftId && rid === rightId) delete next[lid];
+    // In one-to-many matching the same answer remains available for another item.
+    if (!manyToOne) {
+      for (const [lid, rid] of Object.entries(next)) {
+        if (lid !== leftId && rid === rightId) delete next[lid];
+      }
     }
     publish(next);
     setPick(null);
@@ -1136,7 +1139,7 @@ function MatchingBody({
   function onRightClick(id: string) {
     if (locked) return;
     const owner = Object.entries(matches).find(([, rid]) => rid === id)?.[0];
-    if (owner) {
+    if (owner && !manyToOne) {
       clearMatch(owner);
       return;
     }
@@ -1191,6 +1194,7 @@ function MatchingBody({
 
   return (
     <div id={boardId} className="relative space-y-3">
+      {manyToOne && !locked ? <p className="rounded-xl bg-sky-50 px-3 py-2 text-center text-xs font-bold text-sky-800">{t("matchManyHint")}</p> : null}
       <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible" aria-hidden="true">
         {lines.map((line) => (
           <line

@@ -207,8 +207,12 @@ export async function parentLaravelPut(
   return parentLaravelWrite("PUT", path, body, timeoutMs);
 }
 
+export async function parentLaravelDelete(path: string, timeoutMs: number): Promise<NextResponse> {
+  return parentLaravelWrite("DELETE", path, {}, timeoutMs);
+}
+
 async function parentLaravelWrite(
-  method: "POST" | "PATCH" | "PUT",
+  method: "POST" | "PATCH" | "PUT" | "DELETE",
   path: string,
   body: unknown,
   timeoutMs: number
@@ -219,6 +223,11 @@ async function parentLaravelWrite(
   }
 
   if (isMockAuthEnabled()) {
+    if (method === "DELETE" && path.startsWith("/students/")) {
+      return mockGuardianUnlocked
+        ? NextResponse.json({ message: "DELETED" })
+        : NextResponse.json({ code: "GUARDIAN_LOCKED" }, { status: 403 });
+    }
     return mockParentLaravel(path, body, session.parent);
   }
 

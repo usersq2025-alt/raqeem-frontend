@@ -37,6 +37,7 @@ type Props = {
   child: ChildProfile;
   scene: HeadquartersSceneData;
   catalog: StoreCatalog | null;
+  highlightId: number | null;
   fromBalance: number | null;
   welcome?: boolean;
 };
@@ -72,6 +73,7 @@ export function DoctorHeadquartersExperience({
   child,
   scene,
   catalog,
+  highlightId,
   fromBalance,
   welcome = false,
 }: Props) {
@@ -84,6 +86,7 @@ export function DoctorHeadquartersExperience({
   const setChromePoints = chrome?.setPoints;
 
   const profession = resolveProfession(child, scene);
+  const highlightedPurchase = catalog?.items.find((item) => item.id === highlightId && item.isOwned) ?? null;
 
   const [pointsBalance, setPointsBalance] = useState(scene.pointsBalance);
   const [ownedKeys, setOwnedKeys] = useState(() => ownedKeysForProfession(scene.items, profession));
@@ -94,7 +97,7 @@ export function DoctorHeadquartersExperience({
   );
   const [sceneSync, setSceneSync] = useState({ profession, items: scene.items });
   const [prevStageForFade, setPrevStageForFade] = useState<number | null>(null);
-  const [phase, setPhase] = useState<ViewPhase>("idle");
+  const [phase, setPhase] = useState<ViewPhase>(highlightedPurchase ? "success" : "idle");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
@@ -103,7 +106,8 @@ export function DoctorHeadquartersExperience({
   const [itemImageBroken, setItemImageBroken] = useState(false);
   const [trackedStageImage, setTrackedStageImage] = useState<string | null>(null);
   const [trackedItemImage, setTrackedItemImage] = useState<string | undefined | null>(null);
-  const [lastPurchasedName, setLastPurchasedName] = useState("");
+  const [lastPurchasedName, setLastPurchasedName] = useState(highlightedPurchase?.name ?? "");
+  const [lastPurchasedDescription, setLastPurchasedDescription] = useState(highlightedPurchase?.description ?? "");
   const buyButtonRef = useRef<HTMLButtonElement>(null);
   const purchaseLock = useRef(false);
 
@@ -161,7 +165,7 @@ export function DoctorHeadquartersExperience({
       : null);
 
   const itemDisplayName = nextStage?.nameAr ?? nextItem?.name ?? "";
-  const itemDescription = nextStage?.descriptionAr ?? "";
+  const itemDescription = nextItem?.description || nextStage?.descriptionAr || "";
   const itemThumb =
     nextStage?.itemImage ?? nextItem?.imageUrl ?? "/images/brand/logo.png";
 
@@ -258,6 +262,7 @@ export function DoctorHeadquartersExperience({
       setPointsBalance(result.pointsBalance);
       setOwnedKeys(nextOwned);
       setLastPurchasedName(purchasedName);
+      setLastPurchasedDescription(nextItem.description || itemDescription);
       setCatalogItems((prev) =>
         prev.map((item) => (item.id === nextItem.id ? { ...item, canPurchase: false } : item))
       );
@@ -512,9 +517,9 @@ export function DoctorHeadquartersExperience({
       {phase === "success" ? (
         <SuccessOverlay
           title={tDev("successTitle")}
-          body={tDev("successBody", {
+          body={`${tDev("successBody", {
             item: lastPurchasedName || itemDisplayName || tDev("items.heartbeat_rug"),
-          })}
+          })} ${lastPurchasedDescription}`}
           action={tDev("successAction")}
           onClose={() => setPhase("idle")}
         />

@@ -5,7 +5,8 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { hasChosenProfession, type ChildProfile } from "@/lib/api/children";
-import { ParentAccountApiError, updateChildProfile } from "@/lib/api/parentAccount";
+import { ParentAccountApiError, deleteChildProfile, updateChildProfile } from "@/lib/api/parentAccount";
+import { lockGuardianMode } from "@/lib/api/guardian";
 import { professionAvatarSrc } from "@/lib/config/professions";
 import { GRADE_IDS } from "@/lib/config/grades";
 import { CardShell, EmptyBlock, ErrorBlock, SectionIntro, SkeletonBlock } from "./SettingsUi";
@@ -34,11 +35,15 @@ export function ChildrenSection({
   const locale = useLocale();
   const router = useRouter();
   const [editChild, setEditChild] = useState<ChildProfile | null>(null);
+  const [deleteChild, setDeleteChild] = useState<ChildProfile | null>(null);
+  const [deleteName, setDeleteName] = useState("");
+  const [deleteError, setDeleteError] = useState("");
   const [editName, setEditName] = useState("");
   const [editGrade, setEditGrade] = useState<number | null>(null);
   const [gradeConfirm, setGradeConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [entryError, setEntryError] = useState<number | null>(null);
 
   if (loading) return <SkeletonBlock rows={4} />;
   if (error) {
@@ -101,7 +106,14 @@ export function ChildrenSection({
               <button
                 type="button"
                 className="min-h-11 rounded-2xl bg-primary-orange px-4 text-sm font-extrabold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
-                onClick={() => {
+                onClick={async () => {
+                  setEntryError(null);
+                  try {
+                    await lockGuardianMode();
+                  } catch {
+                    setEntryError(child.id);
+                    return;
+                  }
                   router.push(
                     hasChosenProfession(child)
                       ? `/subjects?childId=${child.id}`
@@ -124,7 +136,15 @@ export function ChildrenSection({
               >
                 {t("children.editData")}
               </button>
+              <button
+                type="button"
+                className="min-h-11 rounded-2xl bg-white px-4 text-sm font-extrabold text-rose-700 ring-1 ring-rose-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+                onClick={() => { setDeleteChild(child); setDeleteName(""); setDeleteError(""); }}
+              >
+                {t("children.deleteAccount")}
+              </button>
             </div>
+            {entryError === child.id ? <p role="alert" className="mt-2 text-xs font-bold text-rose-700">{t("children.enterFailed")}</p> : null}
           </CardShell>
         );
       })}
@@ -252,6 +272,37 @@ export function ChildrenSection({
               >
                 {t("save")}
               </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {deleteChild ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+          <div role="dialog" aria-modal="true" aria-labelledby="delete-child-title" className="w-full max-w-md rounded-[28px] bg-white p-5 shadow-xl">
+            <h3 id="delete-child-title" className="text-lg font-extrabold text-rose-700">{t("children.deleteTitle", { name: deleteChild.fullName })}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-text-gray">{t("children.deleteWarning")}</p>
+            <label htmlFor="delete-child-name" className="mt-4 block text-sm font-bold text-text-navy">{t("children.deleteConfirmName", { name: deleteChild.fullName })}</label>
+            <input id="delete-child-name" value={deleteName} onChange={(event) => setDeleteName(event.target.value)} autoComplete="off"
+              className="mt-2 min-h-11 w-full rounded-2xl border border-neutral-200 px-3 outline-none focus-visible:ring-2 focus-visible:ring-rose-400" />
+            {deleteError ? <p role="alert" className="mt-2 text-sm font-bold text-rose-700">{deleteError}</p> : null}
+            <div className="mt-5 flex gap-2">
+              <button type="button" disabled={busy} onClick={() => setDeleteChild(null)} className="min-h-11 flex-1 rounded-2xl bg-neutral-100 font-extrabold disabled:opacity-50">{t("cancel")}</button>
+              <button type="button" disabled={busy || deleteName.trim() !== deleteChild.fullName} className="min-h-11 flex-1 rounded-2xl bg-rose-700 font-extrabold text-white disabled:opacity-45"
+                onClick={async () => {
+                  setBusy(true);
+                  setDeleteError("");
+                  try {
+                    await deleteChildProfile(deleteChild.id);
+                    onChildren(childrenList.filter((child) => child.id !== deleteChild.id));
+                    setDeleteChild(null);
+                    onSaved(t("children.deleted"));
+                  } catch (caught) {
+                    const code = caught instanceof ParentAccountApiError ? caught.code : "ERROR";
+                    setDeleteError(code === "GUARDIAN_LOCKED" ? t("errors.guardianLocked") : t("children.deleteFailed"));
+                  } finally {
+                    setBusy(false);
+                  }
+                }}>{t("children.deleteAccount")}</button>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { FamilySettingsExperience } from "@/components/family/FamilySettingsExperience";
 import { FamilyGuardianUnlockPanel } from "@/components/family/FamilyGuardianUnlockPanel";
+import { GuardianLiveGuard } from "@/components/family/GuardianLiveGuard";
 import { requireGuardianPage } from "@/lib/server/requireGuardianPage";
 
 export default async function FamilySettingsPage() {
@@ -22,5 +23,5 @@ export default async function FamilySettingsPage() {
     );
   }
 
-  return <FamilySettingsExperience seed={seed} />;
+  return <GuardianLiveGuard seed={seed} redirectTo="/family/settings"><FamilySettingsExperience seed={seed} /></GuardianLiveGuard>;
 }

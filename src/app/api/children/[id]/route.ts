@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { parentLaravelPatch } from "@/lib/server/parentLaravel";
+import { parentLaravelDelete, parentLaravelPatch } from "@/lib/server/parentLaravel";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -20,5 +20,14 @@ export async function PATCH(request: Request, { params }: Params) {
   if (typeof body.grade_id === "number") payload.grade_id = body.grade_id;
   if (typeof body.gradeId === "number") payload.grade_id = body.gradeId;
 
-  return parentLaravelPatch(`/api/students/${studentId}`, payload, 8_000);
+  return parentLaravelPatch(`/students/${studentId}`, payload, 8_000);
+}
+
+export async function DELETE(_request: Request, { params }: Params) {
+  const { id } = await params;
+  const studentId = Number(id);
+  if (!Number.isSafeInteger(studentId) || studentId <= 0) {
+    return NextResponse.json({ message: "VALIDATION" }, { status: 422 });
+  }
+  return parentLaravelDelete(`/students/${studentId}`, 8_000);
 }

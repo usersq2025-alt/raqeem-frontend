@@ -15,13 +15,7 @@ export default async function UnitLessonsPage({ params, searchParams }: Props) {
   const { unitId } = await params;
   const child = await requireStudentChild((await searchParams).childId);
   const lessons = await loadLessonsProgress(Number(unitId), child.id);
-  const playable = lessons.filter((lesson) => lesson.status !== "locked" && Number.isFinite(lesson.lessonId));
-
-  if (playable.length === 1 && lessons.length <= 1) {
-    redirect({ href: lessonPlayPath(playable[0].lessonId, child.id), locale });
-  }
-
-  if (lessons.length > 1) {
+  if (lessons.length > 0) {
     redirect({ href: unitLessonPath(Number(unitId), child.id), locale });
   }
 

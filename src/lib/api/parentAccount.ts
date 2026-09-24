@@ -141,6 +141,15 @@ export async function updateChildProfile(
   void raw;
 }
 
+export async function deleteChildProfile(childId: number): Promise<void> {
+  const response = await fetch(`/api/children/${childId}`, {
+    method: "DELETE",
+    credentials: "include",
+    cache: "no-store",
+  });
+  await parseResponse(response);
+}
+
 export function isGuardianLockedError(error: unknown): error is ParentAccountApiError {
   return error instanceof ParentAccountApiError && error.code === "GUARDIAN_LOCKED";
 }

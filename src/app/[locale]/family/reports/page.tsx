@@ -1,4 +1,5 @@
 import { FamilyGuardianUnlockPanel } from "@/components/family/FamilyGuardianUnlockPanel";
+import { GuardianLiveGuard } from "@/components/family/GuardianLiveGuard";
 import { requireGuardianPage } from "@/lib/server/requireGuardianPage";
 import { FamilySettingsExperience } from "@/components/family/FamilySettingsExperience";
 
@@ -22,5 +23,5 @@ export default async function FamilyReportsPage() {
     );
   }
 
-  return <FamilySettingsExperience seed={seed} initialSection="reports" />;
+  return <GuardianLiveGuard seed={seed} redirectTo="/family/reports"><FamilySettingsExperience seed={seed} initialSection="reports" /></GuardianLiveGuard>;
 }

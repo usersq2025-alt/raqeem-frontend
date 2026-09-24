@@ -51,7 +51,6 @@ export function RegisterForm() {
   const [emailTaken, setEmailTaken] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const [nameTouched, setNameTouched] = useState(false);
-  const [oauthNotice, setOauthNotice] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
@@ -149,34 +148,6 @@ export function RegisterForm() {
 
   return (
     <form className="mt-7 flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          className="oauth-btn"
-          onClick={() => setOauthNotice(true)}
-        >
-          <GoogleIcon />
-          {t("oauth.google")}
-        </button>
-        <button
-          type="button"
-          className="oauth-btn"
-          onClick={() => setOauthNotice(true)}
-        >
-          <AppleIcon />
-          {t("oauth.apple")}
-        </button>
-      </div>
-      {oauthNotice ? (
-        <p className="text-start text-xs font-medium leading-relaxed text-text-gray">{t("oauth.soon")}</p>
-      ) : null}
-
-      <div className="flex items-center gap-3 text-xs font-bold text-neutral-400">
-        <span className="h-px flex-1 bg-neutral-200" />
-        {t("or")}
-        <span className="h-px flex-1 bg-neutral-200" />
-      </div>
-
       <div>
         <label htmlFor="fullName" className="mb-1.5 block text-start text-sm font-semibold text-text-gray">
           {t("fields.fullName")}
@@ -362,24 +333,5 @@ export function RegisterForm() {
         </Link>
       </p>
     </form>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-      <path
-        fill="#EA4335"
-        d="M12 10.2v3.6h5.1c-.2 1.2-1.4 3.6-5.1 3.6-3.1 0-5.6-2.5-5.6-5.6S8.9 6.2 12 6.2c1.8 0 3 .7 3.7 1.4l2.4-2.3C16.7 3.8 14.6 3 12 3 6.9 3 2.8 7.1 2.8 12.2S6.9 21.4 12 21.4c5.2 0 8.6-3.6 8.6-8.7 0-.6 0-1-.1-1.5H12Z"
-      />
-    </svg>
-  );
-}
-
-function AppleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
-      <path d="M16.3 12.6c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.3-.1-2.6.8-3.3.8-.7 0-1.8-.8-2.8-.7-1.4 0-2.8.8-3.5 2.1-1.5 2.6-.4 6.5 1.1 8.6.7 1 1.6 2.2 2.7 2.1 1.1 0 1.5-.7 2.8-.7s1.6.7 2.8.7c1.2 0 1.9-1 2.6-2 .9-1.2 1.2-2.4 1.2-2.5-.1 0-2.3-.9-2.3-3.3Zm-2.2-6.4c.6-.8 1-1.8.9-2.9-0.9.1-1.9.6-2.5 1.4-.6.7-1.1 1.8-.9 2.8 1 .1 1.9-.4 2.5-1.3Z" />
-    </svg>
   );
 }

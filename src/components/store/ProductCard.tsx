@@ -75,6 +75,7 @@ export function ProductCard({ item, index, onBuy }: Props) {
       <h3 className="mt-2 line-clamp-2 text-center text-[13px] font-extrabold leading-snug text-text-navy sm:text-sm">
         {displayName}
       </h3>
+      {item.description ? <p className="mt-1 line-clamp-3 text-center text-xs font-medium leading-relaxed text-text-gray">{item.description}</p> : null}
       {state === "owned" ? (
         <p className="mt-auto pb-1 text-center text-[12px] font-extrabold text-[#2DBEA1]">{t("purchased")}</p>
       ) : state === "locked" ? (

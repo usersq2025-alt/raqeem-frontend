@@ -72,6 +72,7 @@ export function PurchaseConfirmModal({ open, item, currentBalance, submitting, o
           ) : null}
         </div>
         <p className="text-center text-lg font-extrabold text-text-navy">{displayName}</p>
+        {item.description ? <p className="mt-2 text-center text-sm font-medium leading-relaxed text-text-gray">{item.description}</p> : null}
         <p className="mt-1 text-center text-base font-extrabold text-primary-orange">
           {t("points", { count: item.pricePoints })}
         </p>

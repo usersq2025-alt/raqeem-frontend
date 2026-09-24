@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { UnitProgress } from "@/lib/api/student";
 import type { SubjectKey } from "@/lib/config/subjects";
-import { lessonPlayPath, subjectCoverSrc, UNIT_ACCENTS, unitLessonPath, unitReviewPath, withChildQuery } from "@/lib/config/subjects";
+import { subjectCoverSrc, UNIT_ACCENTS, unitLessonPath, unitReviewPath, withChildQuery } from "@/lib/config/subjects";
 import { UnitCard } from "@/components/UnitCard";
 import { UnitTopicIcon } from "@/components/UnitTopicIcon";
 import { Button } from "@/components/ui/Button";
@@ -36,11 +36,7 @@ export function UnitsScreen({ childId, subjectId, subjectKey, subjectName, iconU
   );
   const previewIndex = preview ? units.findIndex((unit) => unit.unitId === preview.unitId) : 0;
   const accent = UNIT_ACCENTS[Math.max(0, previewIndex) % UNIT_ACCENTS.length];
-  const previewHref = preview
-    ? preview.playLessonId
-      ? lessonPlayPath(preview.playLessonId, childId)
-      : unitLessonPath(preview.unitId, childId)
-    : withChildQuery("/subjects", childId);
+  const previewHref = preview ? unitLessonPath(preview.unitId, childId) : withChildQuery("/subjects", childId);
 
   return (
     <div className="md:grid md:grid-cols-[minmax(0,1fr)_20rem] md:items-start md:gap-7">

@@ -8,6 +8,7 @@ export type StoreCatalogItem = {
   category: StoreCategory;
   slotKey: string | null;
   name: string | null;
+  description: string | null;
   imageUrl: string | null;
   pricePoints: number | null;
   isHidden: boolean;
@@ -90,6 +91,7 @@ function mapItem(row: Record<string, unknown>): StoreCatalogItem | null {
     category,
     slotKey: typeof row.slot_key === "string" ? row.slot_key : typeof row.slotKey === "string" ? row.slotKey : null,
     name: isHidden ? null : typeof row.name === "string" ? row.name : null,
+    description: isHidden ? null : typeof row.description === "string" ? row.description : null,
     imageUrl: isHidden
       ? null
       : withAssetVersion(

@@ -21,6 +21,7 @@ export function HeadquartersExperience({
   child,
   scene,
   catalog = null,
+  highlightId,
   fromBalance,
   welcome = false,
 }: Props) {
@@ -38,6 +39,7 @@ export function HeadquartersExperience({
       child={child}
       scene={scene}
       catalog={catalog}
+      highlightId={highlightId}
       fromBalance={fromBalance}
       welcome={welcome}
     />

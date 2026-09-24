@@ -17,9 +17,10 @@ type Props = {
   pinSet: boolean;
   pinLocked: boolean;
   redirectTo?: string;
+  onUnlocked?: () => void;
 };
 
-export function FamilyGuardianUnlockPanel({ seed, pinSet, pinLocked, redirectTo = "/family/settings" }: Props) {
+export function FamilyGuardianUnlockPanel({ seed, pinSet, pinLocked, redirectTo = "/family/settings", onUnlocked }: Props) {
   const t = useTranslations("familySettings.guardian");
   const tSettings = useTranslations("familySettings");
   const router = useRouter();
@@ -44,6 +45,10 @@ export function FamilyGuardianUnlockPanel({ seed, pinSet, pinLocked, redirectTo 
         await verifyGuardianPassword(password);
       }
       await getGuardianStatus();
+      if (onUnlocked) {
+        onUnlocked();
+        return;
+      }
       router.replace(redirectTo);
       router.refresh();
     } catch (caught) {
@@ -68,13 +73,13 @@ export function FamilyGuardianUnlockPanel({ seed, pinSet, pinLocked, redirectTo 
       <div className="relative z-10 mx-auto flex min-h-screen max-w-lg flex-col px-4 py-6 sm:px-6">
         <header className="flex items-center justify-between">
           <BrandLogo size="sm" />
-          <button
+          {redirectTo !== "/children" ? <button
             type="button"
             className="min-h-11 rounded-2xl bg-white px-4 text-sm font-extrabold text-text-navy ring-1 ring-brand-navy/10"
             onClick={() => router.push("/children")}
           >
             {tSettings("backToHub")}
-          </button>
+          </button> : null}
         </header>
 
         <div
