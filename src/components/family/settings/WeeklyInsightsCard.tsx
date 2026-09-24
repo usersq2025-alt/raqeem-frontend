@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { getParentWeeklyReport, requestParentWeeklyReportEmail, type ParentWeeklyReport } from "@/lib/api/parentWeeklyReport";
+import { getParentWeeklyReport, requestParentWeeklyReportEmail, type ParentWeeklyReport, type ReportEmailQuota } from "@/lib/api/parentWeeklyReport";
 import { formatLocaleDate } from "@/lib/i18n/latinNumerals";
 import { CardShell } from "./SettingsUi";
 
@@ -10,6 +10,7 @@ export function WeeklyInsightsCard({ studentId }: { studentId: number }) {
   const t = useTranslations("familySettings.reports.insights");
   const locale = useLocale();
   const [report, setReport] = useState<ParentWeeklyReport | null>(null);
+  const [quota, setQuota] = useState<ReportEmailQuota | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [sending, setSending] = useState(false);
@@ -19,7 +20,7 @@ export function WeeklyInsightsCard({ studentId }: { studentId: number }) {
   useEffect(() => {
     let cancelled = false;
     void getParentWeeklyReport(studentId).then((value) => {
-      if (!cancelled) { setReport(value); setFailed(false); }
+      if (!cancelled) { setReport(value.report); setQuota(value.email_quota); setFailed(false); }
     }).catch(() => { if (!cancelled) { setReport(null); setFailed(true); } })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -32,7 +33,8 @@ export function WeeklyInsightsCard({ studentId }: { studentId: number }) {
     setSending(true);
     setSendError(null);
     try {
-      await requestParentWeeklyReportEmail(studentId);
+      const nextQuota = await requestParentWeeklyReportEmail(studentId);
+      setQuota(nextQuota);
       setSent(true);
     } catch (error) {
       setSendError(error instanceof Error ? error.message : "SEND_FAILED");
@@ -42,7 +44,7 @@ export function WeeklyInsightsCard({ studentId }: { studentId: number }) {
   }
 
   const sendErrorKey = sendError === "EMAIL_NOT_VERIFIED" ? "emailNotVerified"
-    : sendError === "REPORT_EMAIL_RATE_LIMITED" ? "rateLimited"
+    : sendError === "WEEKLY_REPORT_LIMIT_REACHED" ? "weeklyLimitReached"
       : sendError === "GUARDIAN_LOCKED" ? "guardianLocked" : "sendFailed";
 
   return <CardShell className="bg-white ring-1 ring-brand-navy/10">
@@ -83,9 +85,10 @@ export function WeeklyInsightsCard({ studentId }: { studentId: number }) {
       {report.has_activity ? <div className="mt-5 rounded-2xl border border-brand-navy/10 bg-[#F8FBFE] p-4">
         <p className="text-sm font-bold text-text-navy">{t("sendEmailTitle")}</p>
         <p className="mt-1 text-xs leading-relaxed text-text-gray">{t("sendEmailHint")}</p>
-        <button type="button" onClick={sendEmail} disabled={sending || sent}
+        {quota ? <p className="mt-2 text-xs font-semibold text-text-navy">{quota.unlimited ? t("unlimited") : t("quota", { used: quota.used, limit: quota.limit ?? 1, reset: date(quota.resets_at) })}</p> : null}
+        <button type="button" onClick={sendEmail} disabled={sending || (quota !== null && !quota.unlimited && quota.remaining === 0)}
           className="mt-3 rounded-xl bg-brand-navy px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold disabled:cursor-not-allowed disabled:opacity-60">
-          {sending ? t("sending") : sent ? t("sentButton") : t("sendNow")}
+          {sending ? t("sending") : quota !== null && !quota.unlimited && quota.remaining === 0 ? t("limitButton") : sent ? t("sendAgain") : t("sendNow")}
         </button>
         <div aria-live="polite" role="status" className="mt-2 text-xs font-semibold">
           {sent ? <p className="text-[#267C68]">{t("sent")}</p> : null}

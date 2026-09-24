@@ -15,6 +15,7 @@ let mockAlertPreferences = {
   weekly_goal_reached: true,
   purchase_made: true,
   weekly_report: true,
+  report_email_weekly_limit: 1 as 1 | 3,
 };
 
 export function getMockGuardianState() {
@@ -38,7 +39,7 @@ function mockParentLaravel(
     return NextResponse.json({ preferences: mockAlertPreferences });
   }
   if (path === "/parent/alerts") {
-    return NextResponse.json({ preferences: mockAlertPreferences, unread_count: 0, alerts: [] });
+    return NextResponse.json({ preferences: mockAlertPreferences, report_email_unlimited: false, unread_count: 0, alerts: [] });
   }
   if (path.startsWith("/parent/alerts/") && path.endsWith("/read") || path === "/parent/alerts/read-all") {
     return NextResponse.json({ unread_count: 0 });
@@ -114,10 +115,10 @@ function mockParentLaravel(
   }
 
   if (path.includes("/parent/students/") && path.endsWith("/weekly-report/email")) {
-    return NextResponse.json({ status: "QUEUED" });
+    return NextResponse.json({ status: "QUEUED", email_quota: { used: 1, limit: 1, remaining: 0, unlimited: false, resets_at: new Date().toISOString().slice(0, 10) } });
   }
   if (path.includes("/parent/students/") && path.includes("/weekly-report")) {
-    return NextResponse.json({ student_id: 1, saved: false, report: {
+    return NextResponse.json({ student_id: 1, saved: false, email_quota: { used: 0, limit: 1, remaining: 1, unlimited: false, resets_at: new Date().toISOString().slice(0, 10) }, report: {
       week_start: new Date().toISOString().slice(0, 10), week_end: new Date().toISOString().slice(0, 10),
       completed_lessons: 0, answers: 0, correct_answers: 0, strengths: [], practice: [], recommendations: [],
       limited_evidence: true, has_activity: false,

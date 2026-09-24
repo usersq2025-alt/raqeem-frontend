@@ -111,6 +111,19 @@ export function AlertsSection({ emailReady, accountLoaded, onUnreadChange }: { e
           <div className="mt-3 space-y-2">
             {eventKeys.map((key) => <Toggle key={key} label={t(`alerts.events.${key}`)} description={t(`alerts.eventHints.${key}`)} checked={draft[key]} onChange={(checked) => setDraft({ ...draft, [key]: checked })} />)}
           </div>
+          <div className="mt-6 rounded-2xl bg-[#F8FAFC] p-4">
+            <h4 className="text-sm font-extrabold text-text-navy">{t("alerts.reportLimitTitle")}</h4>
+            {data.report_email_unlimited ? <p className="mt-2 text-sm text-text-gray">{t("alerts.reportLimitUnlimited")}</p> : <>
+              <p className="mt-1 text-xs leading-relaxed text-text-gray">{t("alerts.reportLimitHint")}</p>
+              <div className="mt-3 flex flex-wrap gap-3" role="radiogroup" aria-label={t("alerts.reportLimitTitle")}>
+                {([1, 3] as const).map((limit) => <label key={limit} className="flex cursor-pointer items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-bold text-text-navy ring-1 ring-brand-navy/10">
+                  <input type="radio" name="report-email-weekly-limit" checked={draft.report_email_weekly_limit === limit}
+                    onChange={() => setDraft({ ...draft, report_email_weekly_limit: limit })} className="accent-[#F48232]" />
+                  {t(limit === 1 ? "alerts.reportLimitOne" : "alerts.reportLimitThree")}
+                </label>)}
+              </div>
+            </>}
+          </div>
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <button type="button" onClick={save} disabled={working || JSON.stringify(draft) === JSON.stringify(data.preferences)} className="min-h-11 rounded-2xl bg-primary-orange px-5 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold">{t("save")}</button>
             {feedback ? <span role="status" className="text-sm font-bold text-text-navy">{feedback}</span> : null}

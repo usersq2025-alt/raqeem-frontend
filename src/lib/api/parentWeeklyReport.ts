@@ -22,17 +22,20 @@ export type ParentWeeklyReport = {
   has_activity: boolean;
 };
 
-export async function getParentWeeklyReport(studentId: number): Promise<ParentWeeklyReport> {
+export type ReportEmailQuota = { used: number; limit: number | null; remaining: number | null; unlimited: boolean; resets_at: string };
+
+export async function getParentWeeklyReport(studentId: number): Promise<{ report: ParentWeeklyReport; email_quota: ReportEmailQuota }> {
   const response = await fetch(`/api/parent/students/${studentId}/weekly-report`, { credentials: "include", cache: "no-store" });
-  const raw = (await readDisplayJson(response)) as { report?: ParentWeeklyReport } | null;
-  if (!response.ok || !raw?.report) throw new Error("WEEKLY_REPORT_UNAVAILABLE");
-  return raw.report;
+  const raw = (await readDisplayJson(response)) as { report?: ParentWeeklyReport; email_quota?: ReportEmailQuota } | null;
+  if (!response.ok || !raw?.report || !raw.email_quota) throw new Error("WEEKLY_REPORT_UNAVAILABLE");
+  return { report: raw.report, email_quota: raw.email_quota };
 }
 
-export async function requestParentWeeklyReportEmail(studentId: number): Promise<void> {
+export async function requestParentWeeklyReportEmail(studentId: number): Promise<ReportEmailQuota> {
   const response = await fetch(`/api/parent/students/${studentId}/weekly-report/email`, {
     method: "POST", credentials: "include", cache: "no-store",
   });
-  const raw = (await readDisplayJson(response)) as { code?: string; status?: string } | null;
-  if (!response.ok || raw?.status !== "QUEUED") throw new Error(raw?.code ?? "SEND_FAILED");
+  const raw = (await readDisplayJson(response)) as { code?: string; status?: string; email_quota?: ReportEmailQuota } | null;
+  if (!response.ok || raw?.status !== "QUEUED" || !raw.email_quota) throw new Error(raw?.code ?? "SEND_FAILED");
+  return raw.email_quota;
 }

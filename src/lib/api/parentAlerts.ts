@@ -7,6 +7,7 @@ export type AlertPreferences = {
   weekly_goal_reached: boolean;
   purchase_made: boolean;
   weekly_report: boolean;
+  report_email_weekly_limit: 1 | 3;
 };
 
 export type ParentAlert = {
@@ -20,6 +21,7 @@ export type ParentAlert = {
 
 export type ParentAlertsData = {
   preferences: AlertPreferences;
+  report_email_unlimited: boolean;
   unread_count: number;
   alerts: ParentAlert[];
 };
