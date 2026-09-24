@@ -11,6 +11,7 @@ export type ParentAccount = {
   createdAt: string | null;
   pinSet: boolean;
   guardianUnlocked: boolean;
+  exhibitionMode: boolean;
 };
 
 export class ParentAccountApiError extends Error {
@@ -56,6 +57,7 @@ function mapAccount(raw: Record<string, unknown>): ParentAccount {
           : null,
     pinSet: Boolean(raw.pin_set ?? raw.pinSet),
     guardianUnlocked: Boolean(raw.guardian_unlocked ?? raw.guardianUnlocked),
+    exhibitionMode: Boolean(raw.exhibition_mode ?? raw.exhibitionMode),
   };
 }
 
@@ -148,6 +150,17 @@ export async function deleteChildProfile(childId: number): Promise<void> {
     cache: "no-store",
   });
   await parseResponse(response);
+}
+
+export async function resetExhibitionPurchases(childId: number): Promise<{ resetCount: number; pointsRefunded: number }> {
+  const response = await fetch(`/api/parent/students/${childId}/exhibition/reset-purchases`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: "{}",
+  });
+  const raw = await parseResponse(response);
+  return { resetCount: Number(raw.reset_count ?? 0), pointsRefunded: Number(raw.points_refunded ?? 0) };
 }
 
 export function isGuardianLockedError(error: unknown): error is ParentAccountApiError {

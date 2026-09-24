@@ -1004,7 +1004,6 @@ function MatchingBody({
   const [lines, setLines] = useState<Array<{ leftId: string; rightId: string; x1: number; y1: number; x2: number; y2: number }>>(
     []
   );
-  const [, setPairTimer] = useState<number | null>(null);
 
   if (matchItemsKey !== matchesKey) {
     setMatchesKey(matchItemsKey);
@@ -1029,29 +1028,10 @@ function MatchingBody({
   }, [correctMap]);
   const visibleMatches = locked && correctMap ? correctMap : matches;
 
-  useEffect(() => {
-    return () => {
-      setPairTimer((current) => {
-        if (current != null) window.clearTimeout(current);
-        return null;
-      });
-    };
-  }, []);
-
   function publish(next: Record<string, string>) {
     setMatches(next);
     const ready = left.length > 0 && left.every((item) => next[item.id]);
     onChange({ matches: next }, ready);
-  }
-
-  function schedulePair(leftId: string, rightId: string) {
-    setPairTimer((current) => {
-      if (current != null) window.clearTimeout(current);
-      return window.setTimeout(() => {
-        setPairTimer(null);
-        pair(leftId, rightId);
-      }, 220);
-    });
   }
 
   function edgeLine(leftId: string, rightId: string) {
@@ -1117,20 +1097,20 @@ function MatchingBody({
       }
     }
     publish(next);
-    setPick(null);
+    // Keep a shared answer selected so the child can connect the next item to it.
+    setPick(manyToOne ? { side: "right", id: rightId } : null);
   }
 
   function onLeftClick(id: string) {
     if (locked) return;
-    if (matches[id]) {
+    if (matches[id] && pick?.side !== "right") {
       clearMatch(id);
       return;
     }
     playUiTone("click");
     if (pick?.side === "right") {
       const rightId = pick.id;
-      setPick({ side: "left", id });
-      schedulePair(id, rightId);
+      pair(id, rightId);
       return;
     }
     setPick(pick?.side === "left" && pick.id === id ? null : { side: "left", id });
@@ -1146,8 +1126,7 @@ function MatchingBody({
     playUiTone("click");
     if (pick?.side === "left") {
       const leftId = pick.id;
-      setPick({ side: "right", id });
-      schedulePair(leftId, id);
+      pair(leftId, id);
       return;
     }
     setPick(pick?.side === "right" && pick.id === id ? null : { side: "right", id });
@@ -1186,6 +1165,7 @@ function MatchingBody({
         ? "border-sky-300 bg-sky-50/70"
         : "border-violet-300 bg-violet-50/70";
     }
+    if (opts.paired && manyToOne && opts.side === "right") return "border-violet-200 bg-violet-50/80";
     if (opts.paired) return "border-slate-200 bg-slate-50/80";
     return opts.side === "left" ? "border-sky-100 bg-white" : "border-violet-100 bg-white";
   }
@@ -1250,6 +1230,7 @@ function MatchingBody({
             {rightItem ? (
               (() => {
                 const paired = Object.values(matches).includes(rightItem.id);
+                const linkedCount = Object.values(matches).filter((id) => id === rightItem.id).length;
                 const owner = Object.entries(matches).find(([, rid]) => rid === rightItem.id)?.[0];
                 const ok = locked && correctMap && owner ? correctMap[owner] === rightItem.id : null;
                 const correctOwnerLeftId = correctMap
@@ -1268,7 +1249,8 @@ function MatchingBody({
                     )}`}
                   >
                     {pairIndex != null ? <PairBadge accent={PAIR_ACCENTS[pairIndex]!} /> : null}
-                    {rightItem.text}
+                    <span>{rightItem.text}</span>
+                    {manyToOne && linkedCount > 0 && !locked ? <span className="ms-auto rounded-full bg-violet-100 px-2 py-1 text-xs text-violet-800" aria-label={t("matchLinkedCount", { count: linkedCount })}>{linkedCount}</span> : null}
                   </button>
                 );
               })()

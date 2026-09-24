@@ -5,13 +5,14 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { hasChosenProfession, type ChildProfile } from "@/lib/api/children";
-import { ParentAccountApiError, deleteChildProfile, updateChildProfile } from "@/lib/api/parentAccount";
+import { ParentAccountApiError, deleteChildProfile, resetExhibitionPurchases, updateChildProfile } from "@/lib/api/parentAccount";
 import { lockGuardianMode } from "@/lib/api/guardian";
 import { professionAvatarSrc } from "@/lib/config/professions";
 import { GRADE_IDS } from "@/lib/config/grades";
 import { CardShell, EmptyBlock, ErrorBlock, SectionIntro, SkeletonBlock } from "./SettingsUi";
 
 type Props = {
+  exhibitionMode?: boolean;
   childrenList: ChildProfile[];
   loading: boolean;
   error: boolean;
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export function ChildrenSection({
+  exhibitionMode = false,
   childrenList,
   loading,
   error,
@@ -36,6 +38,7 @@ export function ChildrenSection({
   const router = useRouter();
   const [editChild, setEditChild] = useState<ChildProfile | null>(null);
   const [deleteChild, setDeleteChild] = useState<ChildProfile | null>(null);
+  const [resetChild, setResetChild] = useState<ChildProfile | null>(null);
   const [deleteName, setDeleteName] = useState("");
   const [deleteError, setDeleteError] = useState("");
   const [editName, setEditName] = useState("");
@@ -143,6 +146,10 @@ export function ChildrenSection({
               >
                 {t("children.deleteAccount")}
               </button>
+              {exhibitionMode ? <button type="button" className="min-h-11 rounded-2xl bg-sky-50 px-4 text-sm font-extrabold text-sky-800 ring-1 ring-sky-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                onClick={() => { setResetChild(child); setSaveError(""); }}>
+                {t("children.resetPurchases")}
+              </button> : null}
             </div>
             {entryError === child.id ? <p role="alert" className="mt-2 text-xs font-bold text-rose-700">{t("children.enterFailed")}</p> : null}
           </CardShell>
@@ -303,6 +310,36 @@ export function ChildrenSection({
                     setBusy(false);
                   }
                 }}>{t("children.deleteAccount")}</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {resetChild ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+          <div role="dialog" aria-modal="true" aria-labelledby="reset-purchases-title" className="w-full max-w-md rounded-[28px] bg-white p-5 shadow-xl">
+            <h3 id="reset-purchases-title" className="text-lg font-extrabold text-text-navy">{t("children.resetPurchasesTitle", { name: resetChild.fullName })}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-text-gray">{t("children.resetPurchasesWarning")}</p>
+            {saveError ? <p role="alert" className="mt-3 text-sm font-bold text-rose-700">{saveError}</p> : null}
+            <div className="mt-5 flex gap-2">
+              <button type="button" disabled={busy} onClick={() => setResetChild(null)} className="min-h-11 flex-1 rounded-2xl bg-neutral-100 font-extrabold disabled:opacity-50">{t("cancel")}</button>
+              <button type="button" disabled={busy} className="min-h-11 flex-1 rounded-2xl bg-sky-700 font-extrabold text-white disabled:opacity-45"
+                onClick={async () => {
+                  setBusy(true);
+                  setSaveError("");
+                  try {
+                    const result = await resetExhibitionPurchases(resetChild.id);
+                    onChildren(childrenList.map((child) => child.id === resetChild.id
+                      ? { ...child, pointsBalance: child.pointsBalance + result.pointsRefunded }
+                      : child));
+                    setResetChild(null);
+                    onSaved(t("children.purchasesReset", { count: result.resetCount, points: result.pointsRefunded }));
+                  } catch (caught) {
+                    const code = caught instanceof ParentAccountApiError ? caught.code : "ERROR";
+                    setSaveError(code === "GUARDIAN_LOCKED" ? t("errors.guardianLocked") : t("children.resetPurchasesFailed"));
+                  } finally {
+                    setBusy(false);
+                  }
+                }}>{t("children.resetPurchases")}</button>
             </div>
           </div>
         </div>

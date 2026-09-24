@@ -111,6 +111,7 @@ function mockParentLaravel(
       created_at: new Date().toISOString(),
       pin_set: mockPinSet,
       guardian_unlocked: mockGuardianUnlocked,
+      exhibition_mode: sessionParent?.email === "raqeem2026@gmail.com",
     });
   }
 
@@ -147,6 +148,12 @@ function mockParentLaravel(
 
   if (path.includes("/weekly-goal")) {
     return NextResponse.json({ id: 1, weekly_goal_lessons: 5 });
+  }
+
+  if (path.endsWith("/exhibition/reset-purchases")) {
+    return sessionParent?.email === "raqeem2026@gmail.com" && mockGuardianUnlocked
+      ? NextResponse.json({ reset_count: 0, points_refunded: 0 })
+      : NextResponse.json({ code: "EXHIBITION_ONLY" }, { status: 403 });
   }
 
   if (path.includes("/students/") && body) {

@@ -90,6 +90,7 @@ export function FamilySettingsExperience({ seed, initialSection }: Props) {
           createdAt: null,
           pinSet: false,
           guardianUnlocked: true,
+          exhibitionMode: false,
         });
         setAccountError(false);
       } else {
@@ -252,6 +253,7 @@ export function FamilySettingsExperience({ seed, initialSection }: Props) {
               ) : null}
               {active === "children" ? (
                 <ChildrenSection
+                  exhibitionMode={Boolean(account?.exhibitionMode)}
                   childrenList={children}
                   loading={childrenLoading}
                   error={childrenError}

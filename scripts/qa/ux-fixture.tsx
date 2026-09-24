@@ -26,6 +26,7 @@ const fixtures: Record<string, { payload: Record<string, unknown>; feedback: Rec
   crossword: { payload: { words: [{ id: "w1", clue: "حيوان أليف", length: 3 }, { id: "w2", clue: "يضيء الليل", length: 3 }] }, feedback: { correct_answers: { w1: "قطة", w2: "قمر" } } },
   ordering: { payload: { tokens: ["A", "B", "C", "D", "E"].map((id) => ({ id, text: id })) }, feedback: { correct_order: ["A", "B", "C", "D", "E"] } },
   matching_pairs: { payload: { left_items: [{ id: "a", text: "الشمس" }, { id: "b", text: "القمر" }], right_items: [{ id: "x", text: "الليل" }, { id: "y", text: "النهار" }] }, feedback: { correct_matches: { a: "y", b: "x" } } },
+  matching_shared: { payload: { match_mode: "many_to_one", left_items: [{ id: "clam", text: "محار" }, { id: "spider", text: "عنكبوت" }, { id: "bird", text: "طائر" }], right_items: [{ id: "external", text: "هيكل خارجي" }, { id: "internal", text: "هيكل داخلي" }] }, feedback: { correct_matches: { clam: "external", spider: "external", bird: "internal" } } },
   drag_classify: { payload: { categories: [{ id: "a", name: "الفاكهة" }, { id: "b", name: "الخضار" }], items: [{ id: "x", text: "تفاح" }, { id: "y", text: "جزر" }] }, feedback: { correct_assignments: { x: "a", y: "b" } } },
 };
 
@@ -56,7 +57,7 @@ export default function UxFixture() {
   if (mode === "journey") return <StudentShell><StudentJourneyDashboard childId={1} initialData={mockJourneyDashboard(1)} /></StudentShell>;
   if (mode === "lesson-flow" || mode === "lesson-recharge") return <main className="mx-auto max-w-3xl p-4"><LessonPlayExperience lessonId={1} childId={1} pointsBalance={120} /></main>;
   const fixture = fixtures[mode] ?? fixtures.mcq;
-  const question: PlayQuestion = { id: 1, gameType: mode, questionText: "اختر الإجابة الصحيحة", imageUrl: null, payload: fixture.payload };
+  const question: PlayQuestion = { id: 1, gameType: mode === "matching_shared" ? "matching_pairs" : mode, questionText: "اختر الإجابة الصحيحة", imageUrl: null, payload: fixture.payload };
   return <main className="mx-auto max-w-3xl space-y-6 p-4">
     <PlayChrome progressPct={30} questionLabel="السؤال 3 / 10" pointsLabel="120" batteryTotal={3} batteryRemaining={3} totalQuestions={10} answeredCount={3} previousLabel="السابق" nextLabel="التالي" />
     <h1 className="text-center text-xl font-bold">{question.questionText}</h1>
