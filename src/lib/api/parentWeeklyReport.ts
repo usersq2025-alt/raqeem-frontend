@@ -28,3 +28,11 @@ export async function getParentWeeklyReport(studentId: number): Promise<ParentWe
   if (!response.ok || !raw?.report) throw new Error("WEEKLY_REPORT_UNAVAILABLE");
   return raw.report;
 }
+
+export async function requestParentWeeklyReportEmail(studentId: number): Promise<void> {
+  const response = await fetch(`/api/parent/students/${studentId}/weekly-report/email`, {
+    method: "POST", credentials: "include", cache: "no-store",
+  });
+  const raw = (await readDisplayJson(response)) as { code?: string; status?: string } | null;
+  if (!response.ok || raw?.status !== "QUEUED") throw new Error(raw?.code ?? "SEND_FAILED");
+}

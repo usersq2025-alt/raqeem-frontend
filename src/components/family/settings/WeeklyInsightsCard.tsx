@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { getParentWeeklyReport, type ParentWeeklyReport } from "@/lib/api/parentWeeklyReport";
+import { getParentWeeklyReport, requestParentWeeklyReportEmail, type ParentWeeklyReport } from "@/lib/api/parentWeeklyReport";
 import { formatLocaleDate } from "@/lib/i18n/latinNumerals";
 import { CardShell } from "./SettingsUi";
 
@@ -12,6 +12,9 @@ export function WeeklyInsightsCard({ studentId }: { studentId: number }) {
   const [report, setReport] = useState<ParentWeeklyReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,6 +26,24 @@ export function WeeklyInsightsCard({ studentId }: { studentId: number }) {
   }, [studentId]);
 
   const date = (value: string) => formatLocaleDate(new Date(`${value}T12:00:00`), locale, { dateStyle: "medium" });
+
+  async function sendEmail() {
+    if (sending || !report?.has_activity) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      await requestParentWeeklyReportEmail(studentId);
+      setSent(true);
+    } catch (error) {
+      setSendError(error instanceof Error ? error.message : "SEND_FAILED");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  const sendErrorKey = sendError === "EMAIL_NOT_VERIFIED" ? "emailNotVerified"
+    : sendError === "REPORT_EMAIL_RATE_LIMITED" ? "rateLimited"
+      : sendError === "GUARDIAN_LOCKED" ? "guardianLocked" : "sendFailed";
 
   return <CardShell className="bg-white ring-1 ring-brand-navy/10">
     <h3 className="text-base font-extrabold text-text-navy">{t("title")}</h3>
@@ -59,6 +80,18 @@ export function WeeklyInsightsCard({ studentId }: { studentId: number }) {
         </div> : <p className="mt-4 text-sm leading-relaxed text-text-gray">{t("steady")}</p>}
         <p className="mt-4 text-xs leading-relaxed text-text-gray">{t("disclaimer")}</p>
       </>}
+      {report.has_activity ? <div className="mt-5 rounded-2xl border border-brand-navy/10 bg-[#F8FBFE] p-4">
+        <p className="text-sm font-bold text-text-navy">{t("sendEmailTitle")}</p>
+        <p className="mt-1 text-xs leading-relaxed text-text-gray">{t("sendEmailHint")}</p>
+        <button type="button" onClick={sendEmail} disabled={sending || sent}
+          className="mt-3 rounded-xl bg-brand-navy px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold disabled:cursor-not-allowed disabled:opacity-60">
+          {sending ? t("sending") : sent ? t("sentButton") : t("sendNow")}
+        </button>
+        <div aria-live="polite" role="status" className="mt-2 text-xs font-semibold">
+          {sent ? <p className="text-[#267C68]">{t("sent")}</p> : null}
+          {sendError ? <p className="text-[#9B3F34]">{t(sendErrorKey)}</p> : null}
+        </div>
+      </div> : null}
     </> : null}
   </CardShell>;
 }

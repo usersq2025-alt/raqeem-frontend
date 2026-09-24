@@ -113,6 +113,9 @@ function mockParentLaravel(
     });
   }
 
+  if (path.includes("/parent/students/") && path.endsWith("/weekly-report/email")) {
+    return NextResponse.json({ status: "QUEUED" });
+  }
   if (path.includes("/parent/students/") && path.includes("/weekly-report")) {
     return NextResponse.json({ student_id: 1, saved: false, report: {
       week_start: new Date().toISOString().slice(0, 10), week_end: new Date().toISOString().slice(0, 10),
