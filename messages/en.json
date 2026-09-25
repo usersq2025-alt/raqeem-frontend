@@ -4,10 +4,10 @@
     "description": "A platform that helps elementary students review daily lessons and build their dream career HQ under parent guidance."
   },
   "welcome": {
-    "headline": "A fun learning journey toward your child's dream",
+    "headline": "A joyful learning journey that brings your child's dream closer",
     "headlineLine1": "A fun learning journey",
-    "headlineLine2": "toward your child's dream",
-    "subheadline": "Interactive curriculum questions, and points your child earns to furnish their dream career headquarters.",
+    "headlineLine2": "for your child's dream",
+    "subheadline": "Raqeem offers interactive questions from the Syrian curriculum. Your child chooses a character representing their dream career and earns points by answering questions to furnish their career headquarters.",
     "ctaPrimary": "Start your child's journey now",
     "ctaLoginPrompt": "Already have an account?",
     "ctaLogin": "Log in",
@@ -29,13 +29,14 @@
       "close": "Close"
     },
     "value": {
+      "heading": "Why Raqeem?",
       "carouselLabel": "Raqeem value cards",
       "dotsLabel": "Card indicators",
       "prev": "Previous card",
       "next": "Next card",
       "curriculum": {
         "title": "Curriculum-based review",
-        "body": "Short questions and activities drawn from your child's lessons, helping them review and reinforce learning day by day."
+        "body": "Interactive questions drawn from your child's lessons, with an explanation after every answer, whether correct or incorrect."
       },
       "rewards": {
         "title": "Rewards that build a dream",
@@ -124,7 +125,7 @@
             "oneAccount": "One account for all children",
             "childProfile": "An independent profile for each child",
             "progress": "Follow lessons and progress",
-            "aiReports": "Smart reports when the feature launches"
+            "aiReports": "Personalized reports for each child by email"
           }
         }
       }
@@ -143,21 +144,23 @@
     },
     "ai": {
       "title": "AI that understands your child's progress",
-      "body": "Raqeem is building AI features that turn a child's performance in lessons into more useful review and clearer insights for parents.",
-      "badge": "In development for the first release",
+      "body": "Raqeem uses your child's actual answers to create a personalized report sent to the parent's email, while developing smarter lesson review.",
+      "badge": "AI reports available now",
       "learnMore": "See how it works",
       "showLess": "Show less",
       "reports": {
+        "badge": "Available now",
         "title": "Reports that help you support them",
-        "body": "The system analyzes your child's performance on questions and activities, highlights strengths and areas that need more review, then provides the parent with a clear report and practical recommendations.",
+        "body": "A report for each child, based on their lesson answers and sent to the parent's email. It shows what they have mastered, what needs practice, and practical ways to support them at home.",
         "bullets": {
-          "patterns": "Notice patterns in the child's performance",
+          "personal": "A personalized experience based on each child's answers",
           "strengths": "Identify strengths",
           "gaps": "Identify areas that need review",
           "tips": "Offer practical recommendations for the parent"
         }
       },
       "review": {
+        "badge": "In development",
         "title": "A review station that adapts to mistakes",
         "body": "At the end of each unit, Raqeem revisits the questions the child missed and presents them in a new wording, while keeping the curriculum concepts and terminology from their textbook.",
         "bullets": {
@@ -177,7 +180,7 @@
         "oneAccount": "One account for all children",
         "childProfile": "A separate profile for each child",
         "progress": "Follow lessons and progress",
-        "aiReports": "AI-supported reports and insights when the feature launches"
+        "aiReports": "Personalized reports for each child by email"
       },
       "soon": "In development",
       "previewAlt": "Parent screen for switching between children profiles",
@@ -240,7 +243,7 @@
         },
         "ai": {
           "q": "How does Raqeem use artificial intelligence?",
-          "a": "Raqeem is building AI to analyze student performance and provide reports and recommendations for parents, and to rephrase questions the child missed inside review stations while keeping curriculum concepts and terminology. These features are in development for the first release of the platform."
+          "a": "Raqeem uses the child's actual answers to create a personalized report with strengths, areas for practice, and recommendations sent to the parent's email. Rephrasing missed questions in review stations is still in development."
         },
         "aiReplace": {
           "q": "Does AI replace the teacher or the parent?",
@@ -251,8 +254,8 @@
           "a": "No. The parent creates their account, adds a profile for each child, and manages all children from one account."
         },
         "free": {
-          "q": "Is Raqeem free to use?",
-          "a": "Yes. You can start using Raqeem for free during the current phase."
+          "q": "Is Raqeem free or paid?",
+          "a": "Raqeem is currently free to use. You can create an account and review available lessons without a paid subscription. If paid services are introduced later, their cost will be clear before you subscribe."
         },
         "availability": {
           "q": "Which grades and subjects are available now?",

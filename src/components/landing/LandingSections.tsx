@@ -96,10 +96,17 @@ export function ValueCardsSection() {
     if (!el) return;
     function onScroll() {
       if (!el) return;
-      const card = el.querySelector<HTMLElement>("[data-value-card]");
-      if (!card) return;
-      const index = Math.round(el.scrollLeft / (card.offsetWidth + 12));
-      setActive(Math.max(0, Math.min(LANDING_VALUE_CARDS.length - 1, index)));
+      const center = el.getBoundingClientRect().left + el.clientWidth / 2;
+      const cards = Array.from(el.querySelectorAll<HTMLElement>("[data-value-card]"));
+      const nearest = cards.reduce(
+        (best, card, index) => {
+          const rect = card.getBoundingClientRect();
+          const distance = Math.abs(rect.left + rect.width / 2 - center);
+          return distance < best.distance ? { index, distance } : best;
+        },
+        { index: 0, distance: Number.POSITIVE_INFINITY },
+      );
+      setActive(nearest.index);
     }
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
@@ -108,16 +115,16 @@ export function ValueCardsSection() {
   function scrollToIndex(index: number) {
     const el = scrollerRef.current;
     const card = el?.querySelectorAll<HTMLElement>("[data-value-card]")[index];
-    card?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+    card?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
     setActive(index);
   }
 
   return (
     <SectionShell id="features" className="!py-7 sm:!py-9">
-      <div className="mb-3 hidden items-center justify-end gap-2 md:flex" aria-hidden="true" />
+      <SectionHeading title={t("heading")} />
 
       {/* Desktop: compact row */}
-      <div className="hidden gap-4 sm:grid sm:grid-cols-3 sm:gap-4">
+      <div className="mt-5 hidden gap-4 sm:grid sm:grid-cols-3 sm:gap-4">
         {LANDING_VALUE_CARDS.map((card) => {
           const tint = TINT[card.tint];
           const Icon =
@@ -144,7 +151,7 @@ export function ValueCardsSection() {
       </div>
 
       {/* Mobile: horizontal snap */}
-      <div className="sm:hidden">
+      <div className="mt-5 sm:hidden">
         <div className="mb-2 flex items-center justify-between gap-2">
           <button
             type="button"
@@ -152,7 +159,7 @@ export function ValueCardsSection() {
             aria-label={t("prev")}
             onClick={() => scrollToIndex(Math.max(0, active - 1))}
           >
-            ‹
+            <span className="inline-block rtl:rotate-180" aria-hidden="true">‹</span>
           </button>
           <button
             type="button"
@@ -160,7 +167,7 @@ export function ValueCardsSection() {
             aria-label={t("next")}
             onClick={() => scrollToIndex(Math.min(LANDING_VALUE_CARDS.length - 1, active + 1))}
           >
-            ›
+            <span className="inline-block rtl:rotate-180" aria-hidden="true">›</span>
           </button>
         </div>
         <div
@@ -359,11 +366,6 @@ function ShowcaseBullets({ tabKey }: { tabKey: "progress" | "build" | "parent" }
             className="flex flex-wrap items-center gap-2 rounded-xl bg-brand-cream px-3 py-2.5 text-sm font-bold text-brand-navy-dark sm:text-base"
           >
             <span>{t(`tabs.parent.bullets.${item.key}`)}</span>
-            {"badge" in item && item.badge ? (
-              <span className="rounded-full bg-brand-gold/25 px-2 py-0.5 text-xs font-extrabold text-brand-orange">
-                {t("soon")}
-              </span>
-            ) : null}
           </li>
         ))}
       </ul>
@@ -568,7 +570,7 @@ export function AiSection() {
               key={card.key}
               className="rounded-[24px] border border-white/15 bg-white/10 p-5 backdrop-blur-sm sm:p-6"
             >
-              <p className="text-sm font-extrabold text-brand-gold">{t("badge")}</p>
+              <p className="text-sm font-extrabold text-brand-gold">{t(`${card.key}.badge`)}</p>
               <h3 className="mt-1 text-xl font-extrabold text-white">{t(`${card.key}.title`)}</h3>
               <p className="mt-2 font-body text-base font-medium leading-[1.75] text-white/85">
                 {t(`${card.key}.body`)}
@@ -621,7 +623,7 @@ export function AiSection() {
                 onClick={() => setOpen(expanded ? null : key)}
               >
                 <span>
-                  <span className="block text-sm font-extrabold text-brand-gold">{t("badge")}</span>
+                  <span className="block text-sm font-extrabold text-brand-gold">{t(`${key}.badge`)}</span>
                   <span className="mt-0.5 block text-lg font-extrabold text-white">{t(`${key}.title`)}</span>
                 </span>
                 <span aria-hidden="true">{expanded ? "−" : "+"}</span>

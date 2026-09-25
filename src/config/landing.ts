@@ -28,7 +28,7 @@ export const LANDING_PARENT_POINTS = [
   { key: "oneAccount" },
   { key: "childProfile" },
   { key: "progress" },
-  { key: "aiReports", badge: "soon" as const },
+  { key: "aiReports" },
 ] as const;
 
 export const LANDING_SAFETY_POINTS = [
@@ -87,13 +87,13 @@ export const LANDING_FAQ_KEYS = [
 export const LANDING_FAQ_PRIMARY_COUNT = 5;
 
 export const LANDING_AI_REPORT_BULLETS = [
-  "patterns",
+  "personal",
   "strengths",
   "gaps",
   "tips",
 ] as const;
 
-export const LANDING_AI_REPORT_PRIMARY = ["patterns", "tips"] as const;
+export const LANDING_AI_REPORT_PRIMARY = ["personal", "tips"] as const;
 
 export const LANDING_AI_REVIEW_BULLETS = [
   "focus",
