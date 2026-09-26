@@ -991,11 +991,10 @@ function MatchingBody({
     () => (Array.isArray(payload.right_items) ? (payload.right_items as Array<{ id: string; text: string }>) : []),
     [payload.right_items]
   );
-  const manyToOne = payload.match_mode === "many_to_one";
   const matchItemsKey = useMemo(
     () =>
-      `${manyToOne}\0${left.map((item) => item.id).join("\0")}\0${right.map((item) => item.id).join("\0")}`,
-    [left, right, manyToOne]
+      `${left.map((item) => item.id).join("\0")}\0${right.map((item) => item.id).join("\0")}`,
+    [left, right]
   );
   const [matches, setMatches] = useState<Record<string, string>>(() => readMatches(selected));
   const [pick, setPick] = useState<{ side: "left" | "right"; id: string } | null>(null);
@@ -1013,7 +1012,9 @@ function MatchingBody({
 
   const locked = phase === "feedback";
   const correctMap =
-    feedback.correct_matches && typeof feedback.correct_matches === "object"
+    feedback.label === "correct"
+      ? matches
+      : feedback.correct_matches && typeof feedback.correct_matches === "object"
       ? (feedback.correct_matches as Record<string, string>)
       : null;
   // Stable per-question color+glyph identity for each correct pair, revealed
@@ -1090,15 +1091,11 @@ function MatchingBody({
     if (locked) return;
     playUiTone("pop");
     const next = { ...matches, [leftId]: rightId };
-    // In one-to-many matching the same answer remains available for another item.
-    if (!manyToOne) {
-      for (const [lid, rid] of Object.entries(next)) {
-        if (lid !== leftId && rid === rightId) delete next[lid];
-      }
+    for (const [lid, rid] of Object.entries(next)) {
+      if (lid !== leftId && rid === rightId) delete next[lid];
     }
     publish(next);
-    // Keep a shared answer selected so the child can connect the next item to it.
-    setPick(manyToOne ? { side: "right", id: rightId } : null);
+    setPick(null);
   }
 
   function onLeftClick(id: string) {
@@ -1119,7 +1116,7 @@ function MatchingBody({
   function onRightClick(id: string) {
     if (locked) return;
     const owner = Object.entries(matches).find(([, rid]) => rid === id)?.[0];
-    if (owner && !manyToOne) {
+    if (owner) {
       clearMatch(owner);
       return;
     }
@@ -1165,7 +1162,6 @@ function MatchingBody({
         ? "border-sky-300 bg-sky-50/70"
         : "border-violet-300 bg-violet-50/70";
     }
-    if (opts.paired && manyToOne && opts.side === "right") return "border-violet-200 bg-violet-50/80";
     if (opts.paired) return "border-slate-200 bg-slate-50/80";
     return opts.side === "left" ? "border-sky-100 bg-white" : "border-violet-100 bg-white";
   }
@@ -1174,7 +1170,6 @@ function MatchingBody({
 
   return (
     <div id={boardId} className="relative space-y-3">
-      {manyToOne && !locked ? <p className="rounded-xl bg-sky-50 px-3 py-2 text-center text-xs font-bold text-sky-800">{t("matchManyHint")}</p> : null}
       <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible" aria-hidden="true">
         {lines.map((line) => (
           <line
@@ -1230,7 +1225,6 @@ function MatchingBody({
             {rightItem ? (
               (() => {
                 const paired = Object.values(matches).includes(rightItem.id);
-                const linkedCount = Object.values(matches).filter((id) => id === rightItem.id).length;
                 const owner = Object.entries(matches).find(([, rid]) => rid === rightItem.id)?.[0];
                 const ok = locked && correctMap && owner ? correctMap[owner] === rightItem.id : null;
                 const correctOwnerLeftId = correctMap
@@ -1250,7 +1244,6 @@ function MatchingBody({
                   >
                     {pairIndex != null ? <PairBadge accent={PAIR_ACCENTS[pairIndex]!} /> : null}
                     <span>{rightItem.text}</span>
-                    {manyToOne && linkedCount > 0 && !locked ? <span className="ms-auto rounded-full bg-violet-100 px-2 py-1 text-xs text-violet-800" aria-label={t("matchLinkedCount", { count: linkedCount })}>{linkedCount}</span> : null}
                   </button>
                 );
               })()
