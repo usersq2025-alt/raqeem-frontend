@@ -208,6 +208,7 @@ export function FamilySettingsExperience({ seed, initialSection }: Props) {
           <div className="mt-6 md:grid md:grid-cols-[15.5rem_minmax(0,1fr)] md:gap-6">
             <nav className={`${mobileDetail ? "hidden md:block" : "block"}`} aria-label={t("navAria")}>
               <ul className="space-y-1">
+                {account?.exhibitionMode && account.email === "raqeem2026@gmail.com" ? <li><Link href="/family/exhibition" className="mb-2 flex min-h-11 w-full items-center rounded-2xl bg-orange-50 px-3 py-3 text-sm font-extrabold text-primary-orange focus-visible:outline-2 focus-visible:outline-primary-orange">تبويب المعرض</Link></li> : null}
                 {SECTIONS.map((id) => {
                   const selected = active === id;
                   return (

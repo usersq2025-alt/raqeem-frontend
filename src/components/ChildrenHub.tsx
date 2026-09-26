@@ -6,6 +6,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { ChildCard } from "@/components/ChildCard";
 import { AddChildCard } from "@/components/AddChildCard";
 import { SettingsMenu } from "@/components/SettingsMenu";
+import { ExhibitionLink } from "@/components/family/ExhibitionLink";
 import { BrandPageDecor } from "@/components/BrandPageDecor";
 import { ChildrenApiError, getChildren, type ChildProfile } from "@/lib/api/children";
 import { useRouter } from "@/i18n/navigation";
@@ -106,7 +107,7 @@ export function ChildrenHub({ parentName }: Props) {
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-5 md:px-8 md:py-8">
         <header className="flex items-center justify-between">
           <BrandLogo size="sm" />
-          <SettingsMenu />
+          <div className="flex items-center gap-3"><ExhibitionLink /><SettingsMenu /></div>
         </header>
 
         <div className="mt-8 md:mt-10 md:grid md:grid-cols-[minmax(0,1fr)_19rem] md:items-start md:gap-10">
