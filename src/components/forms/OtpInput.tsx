@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { useLocale } from "next-intl";
 
 export const OTP_LENGTH = 4;
 
@@ -19,7 +18,11 @@ type Props = {
 };
 
 function onlyDigits(raw: string) {
-  return raw.replace(/\D/g, "");
+  return raw
+    .replace(/[\u0660-\u0669]/g, (digit) => String(digit.charCodeAt(0) - 0x0660))
+    .replace(/[\u06f0-\u06f9]/g, (digit) => String(digit.charCodeAt(0) - 0x06f0))
+    .replace(/[\uff10-\uff19]/g, (digit) => String(digit.charCodeAt(0) - 0xff10))
+    .replace(/\D/g, "");
 }
 
 export function OtpInput({
@@ -33,8 +36,6 @@ export function OtpInput({
   describedBy,
   groupLabel,
 }: Props) {
-  const locale = useLocale();
-  const isRtl = locale === "ar";
   const groupId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [focused, setFocused] = useState(false);
@@ -53,8 +54,9 @@ export function OtpInput({
     return () => window.clearTimeout(timer);
   }, [pulseIndex]);
 
-  function commit(nextRaw: string) {
+  function commit(nextRaw: string, input?: HTMLInputElement) {
     const clipped = onlyDigits(nextRaw).slice(0, OTP_LENGTH);
+    if (input && input.value !== clipped) input.value = clipped;
     if (clipped === value) return;
 
     onChange(clipped);
@@ -75,7 +77,9 @@ export function OtpInput({
       <div
         className="relative mx-auto w-fit"
         onPointerDown={() => {
-          if (!disabled) inputRef.current?.focus({ preventScroll: true });
+          if (disabled) return;
+          inputRef.current?.focus({ preventScroll: true });
+          inputRef.current?.setSelectionRange(value.length, value.length);
         }}
       >
         <input
@@ -90,7 +94,6 @@ export function OtpInput({
           spellCheck={false}
           enterKeyHint="done"
           pattern="[0-9]*"
-          maxLength={OTP_LENGTH}
           dir="ltr"
           lang="en"
           aria-label={groupLabel}
@@ -98,7 +101,14 @@ export function OtpInput({
           aria-invalid={error || undefined}
           disabled={disabled}
           value={value}
-          onChange={(event) => commit(event.target.value)}
+          onChange={(event) => commit(event.currentTarget.value, event.currentTarget)}
+          onPaste={(event) => {
+            event.preventDefault();
+            commit(event.clipboardData.getData("text"), event.currentTarget);
+          }}
+          onClick={(event) => {
+            event.currentTarget.setSelectionRange(value.length, value.length);
+          }}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           className="absolute inset-0 z-10 h-full w-full cursor-text touch-manipulation opacity-0 disabled:cursor-not-allowed"
@@ -106,7 +116,7 @@ export function OtpInput({
         />
 
         <div
-          dir={isRtl ? "rtl" : "ltr"}
+          dir="ltr"
           className="pointer-events-none flex justify-center gap-2.5 sm:gap-3"
           aria-hidden="true"
         >
