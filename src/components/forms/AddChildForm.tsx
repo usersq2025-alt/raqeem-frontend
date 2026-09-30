@@ -5,13 +5,11 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { FieldInput, UserIcon, WarningIcon } from "@/components/ui/FieldInput";
 import { GenderSelector } from "@/components/ui/GenderSelector";
+import { BirthDatePicker } from "@/components/forms/BirthDatePicker";
 import { GRADE_IDS } from "@/lib/config/grades";
 import { ChildrenApiError, createChild, type ChildGender } from "@/lib/api/children";
 import { NAME_PATTERN } from "@/lib/validation/registerSchema";
-import {
-  birthDateInputBounds,
-  createChildSchema,
-} from "@/lib/validation/childSchema";
+import { createChildSchema } from "@/lib/validation/childSchema";
 
 type FieldErrors = Partial<Record<"fullName" | "birthDate" | "gradeId" | "gender", string>>;
 
@@ -45,7 +43,6 @@ export function AddChildForm({ onSaved }: Props) {
     [t]
   );
   const schema = useMemo(() => createChildSchema(schemaMessages), [schemaMessages]);
-  const dateBounds = useMemo(() => birthDateInputBounds(), []);
 
   const [fullName, setFullName] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -169,12 +166,9 @@ export function AddChildForm({ onSaved }: Props) {
         <label htmlFor={dateId} className="mb-1.5 block text-sm font-medium text-text-gray">
           {birthLabel}
         </label>
-        <DateField
+        <BirthDatePicker
           id={dateId}
           value={birthDate}
-          min={dateBounds.min}
-          max={dateBounds.max}
-          placeholder={t("placeholders.birthDate")}
           invalid={Boolean(errors.birthDate)}
           onChange={(value) => {
             setBirthDate(value);
@@ -288,59 +282,6 @@ export function AddChildForm({ onSaved }: Props) {
         </Button>
       </div>
     </form>
-  );
-}
-
-function DateField({
-  id,
-  value,
-  min,
-  max,
-  placeholder,
-  invalid,
-  onChange,
-}: {
-  id: string;
-  value: string;
-  min: string;
-  max: string;
-  placeholder: string;
-  invalid?: boolean;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className="relative">
-      <span className="pointer-events-none absolute start-3 top-1/2 z-[1] -translate-y-1/2 text-neutral-400">
-        <CalendarIcon />
-      </span>
-      {!value ? (
-        <span className="pointer-events-none absolute inset-y-0 start-11 z-[1] flex items-center text-sm text-neutral-400">
-          {placeholder}
-        </span>
-      ) : null}
-      <input
-        id={id}
-        type="date"
-        name="birthDate"
-        value={value}
-        min={min}
-        max={max}
-        aria-invalid={invalid || undefined}
-        onChange={(event) => onChange(event.target.value)}
-        className={`child-date-input w-full rounded-xl border bg-white py-3 ps-11 pe-3 text-sm outline-none transition-[border-color,box-shadow] focus:border-primary-orange focus:ring-2 focus:ring-primary-orange/20 ${
-          value ? "text-text-navy" : "text-transparent"
-        } ${invalid ? "border-red-400" : "border-neutral-200"}`}
-      />
-    </div>
-  );
-}
-
-function CalendarIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
-      <rect x="4.5" y="5.5" width="15" height="14" rx="2.2" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M8 4v3M16 4v3M4.5 10h15" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
   );
 }
 

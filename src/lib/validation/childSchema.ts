@@ -33,6 +33,32 @@ export function birthDateInputBounds(now = new Date()) {
   return { min: toIsoDate(min), max: toIsoDate(max) };
 }
 
+// Shared allowed-range check used by the interactive birth date picker (year /
+// month / day carousels) so the same age rule (4–18 years old) that the zod
+// schema enforces is also reflected visually at every granularity, instead of
+// only being caught after the fact on submit. Called with just a year to test
+// "is any day in this year in range", with year+month to test "is any day in
+// this month in range", and with year+month+day for an exact date.
+export function isBirthComponentsAllowed(year: number, month?: number, day?: number, now = new Date()) {
+  const { min, max } = birthDateBounds(now);
+  if (month == null) {
+    const yearStart = new Date(year, 0, 1);
+    const yearEnd = new Date(year, 11, 31);
+    return yearEnd >= min && yearStart <= max;
+  }
+  if (day == null) {
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd = new Date(year, month, 0);
+    return monthEnd >= min && monthStart <= max;
+  }
+  const date = new Date(year, month - 1, day);
+  return date >= min && date <= max;
+}
+
+export function daysInMonth(year: number, month: number) {
+  return new Date(year, month, 0).getDate();
+}
+
 export function createChildSchema(messages: ChildSchemaMessages) {
   const { min, max } = birthDateBounds();
 

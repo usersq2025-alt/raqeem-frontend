@@ -4,10 +4,10 @@
     "description": "A platform that helps elementary students review daily lessons and build their dream career HQ under parent guidance."
   },
   "welcome": {
-    "headline": "A joyful learning journey that brings your child's dream closer",
+    "headline": "A fun learning journey toward your child's dream",
     "headlineLine1": "A fun learning journey",
-    "headlineLine2": "for your child's dream",
-    "subheadline": "Raqeem offers interactive questions from the Syrian curriculum. Your child chooses a character representing their dream career and earns points by answering questions to furnish their career headquarters.",
+    "headlineLine2": "toward your child's dream",
+    "subheadline": "Interactive curriculum questions, and points your child earns to furnish their dream career headquarters.",
     "ctaPrimary": "Start your child's journey now",
     "ctaLoginPrompt": "Already have an account?",
     "ctaLogin": "Log in",
@@ -29,14 +29,13 @@
       "close": "Close"
     },
     "value": {
-      "heading": "Why Raqeem?",
       "carouselLabel": "Raqeem value cards",
       "dotsLabel": "Card indicators",
       "prev": "Previous card",
       "next": "Next card",
       "curriculum": {
         "title": "Curriculum-based review",
-        "body": "Interactive questions drawn from your child's lessons, with an explanation after every answer, whether correct or incorrect."
+        "body": "Short questions and activities drawn from your child's lessons, helping them review and reinforce learning day by day."
       },
       "rewards": {
         "title": "Rewards that build a dream",
@@ -125,7 +124,7 @@
             "oneAccount": "One account for all children",
             "childProfile": "An independent profile for each child",
             "progress": "Follow lessons and progress",
-            "aiReports": "Personalized reports for each child by email"
+            "aiReports": "Smart reports when the feature launches"
           }
         }
       }
@@ -144,23 +143,21 @@
     },
     "ai": {
       "title": "AI that understands your child's progress",
-      "body": "Raqeem uses your child's actual answers to create a personalized report sent to the parent's email, while developing smarter lesson review.",
-      "badge": "AI reports available now",
+      "body": "Raqeem is building AI features that turn a child's performance in lessons into more useful review and clearer insights for parents.",
+      "badge": "In development for the first release",
       "learnMore": "See how it works",
       "showLess": "Show less",
       "reports": {
-        "badge": "Available now",
         "title": "Reports that help you support them",
-        "body": "A report for each child, based on their lesson answers and sent to the parent's email. It shows what they have mastered, what needs practice, and practical ways to support them at home.",
+        "body": "The system analyzes your child's performance on questions and activities, highlights strengths and areas that need more review, then provides the parent with a clear report and practical recommendations.",
         "bullets": {
-          "personal": "A personalized experience based on each child's answers",
+          "patterns": "Notice patterns in the child's performance",
           "strengths": "Identify strengths",
           "gaps": "Identify areas that need review",
           "tips": "Offer practical recommendations for the parent"
         }
       },
       "review": {
-        "badge": "In development",
         "title": "A review station that adapts to mistakes",
         "body": "At the end of each unit, Raqeem revisits the questions the child missed and presents them in a new wording, while keeping the curriculum concepts and terminology from their textbook.",
         "bullets": {
@@ -180,7 +177,7 @@
         "oneAccount": "One account for all children",
         "childProfile": "A separate profile for each child",
         "progress": "Follow lessons and progress",
-        "aiReports": "Personalized reports for each child by email"
+        "aiReports": "AI-supported reports and insights when the feature launches"
       },
       "soon": "In development",
       "previewAlt": "Parent screen for switching between children profiles",
@@ -243,7 +240,7 @@
         },
         "ai": {
           "q": "How does Raqeem use artificial intelligence?",
-          "a": "Raqeem uses the child's actual answers to create a personalized report with strengths, areas for practice, and recommendations sent to the parent's email. Rephrasing missed questions in review stations is still in development."
+          "a": "Raqeem is building AI to analyze student performance and provide reports and recommendations for parents, and to rephrase questions the child missed inside review stations while keeping curriculum concepts and terminology. These features are in development for the first release of the platform."
         },
         "aiReplace": {
           "q": "Does AI replace the teacher or the parent?",
@@ -254,8 +251,8 @@
           "a": "No. The parent creates their account, adds a profile for each child, and manages all children from one account."
         },
         "free": {
-          "q": "Is Raqeem free or paid?",
-          "a": "Raqeem is currently free to use. You can create an account and review available lessons without a paid subscription. If paid services are introduced later, their cost will be clear before you subscribe."
+          "q": "Is Raqeem free to use?",
+          "a": "Yes. You can start using Raqeem for free during the current phase."
         },
         "availability": {
           "q": "Which grades and subjects are available now?",
@@ -301,6 +298,12 @@
     "submitting": "Creating...",
     "haveAccount": "Already have an account?",
     "haveAccountLogin": "Log in",
+    "or": "or",
+    "oauth": {
+      "google": "Google",
+      "apple": "Apple",
+      "soon": "Quick sign-up with Google and Apple is coming soon."
+    },
     "assistantAlt": "A child holding a magic key in front of a learning gateway",
     "fields": {
       "fullName": "Full name",
@@ -545,6 +548,23 @@
       "yes": "Yes, add another child",
       "no": "No, go to the platform",
       "close": "Close"
+    },
+    "birthPicker": {
+      "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+      "dragYear": "Drag to pick the birth year",
+      "yearSelected": "Birth year: {year}",
+      "dragMonth": "Pick the birth month",
+      "dragDay": "Pick the birth day",
+      "daySelected": "Day: {day}",
+      "back": "Back",
+      "edit": "Edit",
+      "summary": "{day} {month} {year}",
+      "rangeHint": "Allowed ages are between {min} and {max}",
+      "aria": {
+        "year": "Choose birth year",
+        "month": "Choose birth month",
+        "day": "Choose birth day"
+      }
     }
   },
   "hub": {
@@ -553,7 +573,6 @@
     "addChild": "Add a new child",
     "points": "{count} points",
     "startNow": "Start now!",
-    "entryLockFailed": "Could not secure parent mode. Please try again.",
     "loadError": "Could not load your children. Please try again.",
     "prev": "Previous",
     "next": "Next",
@@ -633,15 +652,10 @@
     "back": "Back",
     "comingSoon": "Coming soon",
     "lessonsTitle": "Lessons",
-    "emptyUnits": "No units for this subject yet.",
+    "emptyUnits": "No published units for this subject yet.",
     "emptyLessons": "No playable lessons in this unit yet.",
-    "untitledLesson": "Lesson {number}",
-    "subjectOutline": "{units} units · {lessons} lessons",
-    "catalogUnits": "{count} units",
-    "catalogLessons": "{count} lessons · coming soon",
     "points": "{count} points",
     "lessonsCount": "{completed} of {total} lessons",
-    "comingSoon": "Coming soon",
     "unitLessons": "{completed} of {total} lessons",
     "path": {
       "aria": "Unit lesson path",
@@ -815,7 +829,6 @@
       "continueLearning": "Continue learning",
       "openSubject": "Open subject",
       "allCaughtUp": "Nice work — you are caught up on available subjects.",
-      "lessonsComingSoon": "Lessons will appear here when they are published.",
       "streakTitle": "Day streak",
       "streakLongest": "Longest streak: {count}",
       "streakKeep": "Finish a lesson today to keep the streak going.",
@@ -924,9 +937,6 @@
     "stars": "{count, plural, one {# star} other {# stars}}",
     "previousQuestion": "Previous",
     "nextQuestion": "Next",
-    "finishLesson": "See your results",
-    "goToBreak": "Got it, take a break",
-    "explanation": "Why?",
     "backToCurrent": "Back to current question",
     "viewingPast": "Viewing your past answer",
     "reviewPast": "My past questions",
@@ -942,7 +952,6 @@
       "Well done — this is a real win!"
     ],
     "rechargeTitle": "Take a short break!",
-    "resumeAfterBreak": "Break over, continue lesson",
     "rechargeBody": "Review the lesson while you wait, then come back with a full battery",
     "rechargeTimer": "{time} min",
     "rechargeHq": "Go to headquarters",
@@ -952,12 +961,9 @@
     "game": "Game {current} of {total}",
     "questionProgress": "Question {current} of {total}",
     "hintChoose": "Pick an answer, then tap Check",
-    "hintMatch": "Tap one item in each column to link a pair, then finish the others",
-    "matchManyHint": "Choose an answer, then tap each matching item. More than one item can share the same answer.",
-    "matchLinkedCount": "Linked to {count} items",
-    "hintClassify": "Drag a card into its box, or tap the card and then the box",
+    "hintMatch": "",
+    "hintClassify": "Drag each card into a box — you can move it again anytime",
     "hintOrder": "Tap a card to place it in the first empty slot",
-    "hintOrderClear": "Tap a placed card to send it and everything after it back",
     "hintCrossword": "Read the clue and type the word",
     "matchLeft": "Pick here",
     "matchRight": "Then match here",
@@ -971,11 +977,7 @@
     "reset": "Reset",
     "expected": "Correct",
     "classifyTray": "Cards",
-    "classifyTrayEmpty": "All cards are in boxes",
-    "belongsIn": "Belongs in: {category}",
-    "batteryLabel": "Battery {remaining} of {total}",
-    "questionsRemaining": "{count} left",
-    "allDone": "You finished every question"
+    "classifyTrayEmpty": "All cards are in boxes"
   },
   "review": {
     "title": "Review station",
@@ -1076,19 +1078,7 @@
       "emptyBody": "Create your child’s profile and choose a grade so they can start reviewing lessons and building their HQ.",
       "addFirst": "Add my first child",
       "openProfile": "Open child profile",
-      "enterFailed": "Could not secure parent mode. Please try again.",
       "editData": "Edit details",
-      "deleteAccount": "Delete student account",
-      "deleteTitle": "Delete {name}'s account",
-      "deleteWarning": "This permanently deletes the student profile, answers, points, purchases, and reports. It cannot be undone.",
-      "deleteConfirmName": "To confirm, type the student's name exactly: {name}",
-      "deleteFailed": "Could not delete the student account. Please try again.",
-      "deleted": "Student account deleted.",
-      "resetPurchases": "Reset exhibition purchases",
-      "resetPurchasesTitle": "Restart {name}'s store",
-      "resetPurchasesWarning": "Purchased items will return to the store and their spent points will be refunded. Lesson answers and progress stay saved.",
-      "resetPurchasesFailed": "Could not reset purchases. Please try again.",
-      "purchasesReset": "{count} items are available to buy again, and {points} points were refunded.",
       "addCardTitle": "Add a new child",
       "addCardBody": "Create another profile and start an independent journey.",
       "completedLessons": "{count} lessons completed",
@@ -1102,29 +1092,28 @@
     },
     "learning": {
       "pickChild": "Select a child",
-      "hint": "Daily lesson goal applies to the selected child.",
-      "lessonsPerWeek": "{count} lessons / day",
+      "hint": "Weekly lesson goal applies to the selected child.",
+      "lessonsPerWeek": "{count} lessons / week",
       "customPlaceholder": "Custom (1–21)",
       "customSave": "Apply",
-      "saved": "Daily goal updated.",
-      "saveError": "Could not update daily goal.",
-      "lead": "Daily lesson goal applies to the selected child.",
-      "goalTitle": "Daily goal",
+      "saved": "Weekly goal updated.",
+      "saveError": "Could not update weekly goal.",
+      "lead": "Weekly lesson goal applies to the selected child.",
+      "goalTitle": "Weekly goal",
       "goalHint": "Motivational only — does not block extra lessons.",
-      "needChild": "Add a child first to set a daily goal.",
+      "needChild": "Add a child first to set a weekly goal.",
       "presets": {
-        "3": "3 lessons",
-        "5": "5 lessons",
-        "7": "7 lessons"
+        "3": "Light: 3 lessons",
+        "5": "Balanced: 5 lessons",
+        "7": "Active: 7 lessons"
       },
       "custom": "Custom",
       "customInvalid": "Enter a number from 1 to 15.",
       "panelTitle": "Learning plan",
-      "panelLead": "Set a daily goal for your child. We suggest 3 lessons a day, with room to do more.",
+      "panelLead": "Set a weekly goal for each child without blocking extra lessons.",
       "needChildTitle": "Add a child first",
       "recommended": "Suggested",
-      "currentGoal": "Current goal: {count} lessons per day",
-      "dayProgress": "Today: {done} of {goal}",
+      "currentGoal": "Current goal: {count} lessons per week",
       "weekProgress": "This week: {done} of {goal}",
       "weekRange": "From {start} to {end}",
       "subjectsTitle": "Current subjects",
@@ -1147,9 +1136,11 @@
         "xlarge": "Extra large"
       },
       "contrast": "Increase contrast",
+      "reduceMotion": "Reduce motion",
       "panelTitle": "Appearance and accessibility",
       "panelLead": "Adjust how Raqeem looks on this device.",
       "applied": "Preference applied.",
+      "reduceMotionHint": "Reduces motion and visual transitions in the app.",
       "contrastOptions": {
         "default": "Default",
         "high": "High contrast"
@@ -1234,95 +1225,36 @@
     "comingSoonBadge": "Coming soon",
     "cancel": "Cancel",
     "save": "Save",
+    "reportsDisclaimer": "These recommendations are educational aids and do not replace a teacher assessment.",
+    "alertsDisclaimer": "Alert channels are not enabled yet — no fake settings are stored.",
     "errors": {
       "guardianLocked": "Unlock parent mode first.",
       "saveFailed": "Could not save. Try again."
     },
     "reports": {
       "panelTitle": "Progress reports",
-      "panelLead": "Select your child and email their learning report and recommendations directly to your inbox.",
+      "panelLead": "Follow what your child completed and what needs more review.",
+      "emptyTitle": "Your child’s report appears after the first lesson",
+      "emptyBody": "When your child starts reviewing, progress details will appear here.",
+      "weekLessons": "Lessons this week: {count}",
+      "totalAnswers": "Total answers: {count}",
+      "correctRate": "Correct answers: {percent}%",
+      "correctRateUnknown": "Correct-answer rate: not available yet",
+      "longestStreak": "Longest streak: {count} days",
+      "mostActive": "Most active subject: {name}",
+      "mostActiveUnknown": "Most active subject: not available yet",
+      "needsReview": "Needs review: {name}",
+      "needsReviewUnknown": "Needs review: not available yet",
       "lastActivity": "Last activity: {date}",
-      "weeklyGoal": "Weekly goal",
-      "weekRange": "{start} to {end}",
-      "goalReached": "Great! The weekly goal is complete.",
-      "goalRemaining": "{count} more lessons to reach the goal.",
-      "completedLabel": "Lessons completed",
-      "completedHint": "Since learning began",
-      "accuracyLabel": "Correct answers",
-      "noAnswers": "No answers yet",
-      "answersCount": "Out of {count} answers",
-      "streakLabel": "Learning days in a row",
-      "streakHint": "Current streak",
-      "subjectsTitle": "Progress by subject",
-      "subjectsHint": "Completed lessons out of available lessons in each subject.",
-      "noSubjects": "No subject lessons are available yet.",
-      "nextStepTitle": "A simple next step",
-      "startGuidance": "Encourage your child to finish a first lesson, then follow their progress here.",
-      "nextSubject": "Continue the remaining lessons in {name}. This shows completion, not your child's ability.",
-      "keepGoing": "Keep a short, regular learning routine.",
-      "insights": {
-        "title": "Learning report by email",
-        "loadingQuota": "Checking available report emails...",
-        "quotaError": "Could not check available emails. Please reopen this page.",
-        "loading": "Preparing the report...",
-        "error": "The report could not be loaded right now.",
-        "period": "{start} to {end}",
-        "noActivity": "There are not enough answers or completed lessons for a report this period. Let your child complete a lesson, then try again.",
-        "activity": "{lessons} lessons completed · {answers} answers",
-        "limited": "The evidence is limited; it cannot establish your child's ability on its own.",
-        "strengths": "Topics with strong performance",
-        "practice": "Topics worth more practice",
-        "evidence": "{correct} correct out of {answers} answers",
-        "recommendations": "Short activities to try",
-        "question": "Question to revisit: {question}",
-        "answerComparison": "Chose: {selected} · Correct answer: {correct}",
-        "homeActivity": "At-home activity: {activity}",
-        "checkLabel": "How can you tell they improved?",
-        "sendEmailTitle": "Email me this report",
-        "sendEmailHint": "We'll prepare a report on your child's answers, strengths, and practice needs, then email it to your account address. The report is not shown in the platform.",
-        "sendNow": "Send report now",
-        "sendAgain": "Send another report",
-        "limitButton": "Weekly limit reached",
-        "quota": "{used} of {limit} report emails sent this week. Your allowance resets on {reset}.",
-        "unlimited": "Raqeem trial account: report emails have no weekly limit.",
-        "sending": "Preparing email...",
-        "sent": "Your report is queued for your account email. It may take a few minutes to arrive.",
-        "emailNotVerified": "Verify your account email first to receive the report.",
-        "weeklyLimitReached": "You've reached the weekly report email limit. Try again when it resets.",
-        "guardianLocked": "Unlock parent mode, then try again.",
-        "sendFailed": "We couldn't send the report right now. Please try again shortly.",
-        "steady": "Keep learning in short, regular sessions. More specific suggestions will appear when there are enough answers.",
-        "disclaimer": "These are learning indicators for support, not a diagnosis or a judgment of ability."
-      }
+      "detailedCta": "View detailed report",
+      "aiTitle": "Smart analysis of your child’s performance",
+      "aiBody": "We are building a report that highlights strengths and support areas with practical parent recommendations."
     },
     "alerts": {
       "panelTitle": "Alerts and follow-up",
       "panelLead": "Choose the events you want Raqeem to notify you about.",
-      "deliveryTitle": "How should alerts reach you?",
-      "deliveryLead": "Choose the channels and events that matter. Saved choices apply to new activity.",
-      "inApp": "In the platform",
-      "inAppHint": "Show new events here in your alert inbox.",
-      "email": "Email",
-      "emailHint": "Email for daily goals, purchases, and learning reports. A verified email address is required.",
-      "emailNotReady": "Email alerts will start after you verify your email address in account settings.",
-      "eventsTitle": "Events to follow",
-      "events": {"lesson_completed": "Lesson completed", "weekly_goal_reached": "Daily goal reached", "purchase_made": "Student store purchase", "weekly_report": "Weekly learning report"},
-      "eventHints": {"lesson_completed": "In-app only to keep email quiet.", "weekly_goal_reached": "In-app and email when enabled.", "purchase_made": "In-app and email when enabled.", "weekly_report": "Sent when there is activity, subject to the account's report email allowance."},
-      "reportLimitTitle": "Weekly report email allowance",
-      "reportLimitHint": "Shared across all children and includes scheduled and requested reports.",
-      "reportLimitOne": "One email per week",
-      "reportLimitThree": "3 emails per week",
-      "reportLimitUnlimited": "Raqeem trial account: report emails have no weekly limit.",
-      "inboxTitle": "Alert inbox",
-      "unread": "Unread: {count}",
-      "readAll": "Mark all as read",
-      "markRead": "Mark read",
-      "emptyTitle": "No alerts yet",
-      "emptyBody": "New events will appear here as your child learns.",
-      "childFallback": "Your child",
-      "lessonFallback": "a lesson",
-      "itemFallback": "an item",
-      "messages": {"lesson_completed": "{name} completed {lesson}", "weekly_goal_reached": "{name} reached the daily goal: {count} lessons", "purchase_made": "{name} bought {item} for {points} points"}
+      "soonTitle": "Follow-up alerts",
+      "soonBody": "We are preparing alerts that help you follow progress without noise."
     }
   },
   "familyHelp": {
@@ -1363,6 +1295,7 @@
       "contrast": "Contrast",
       "contrast_default": "Default",
       "contrast_high": "High",
+      "reduceMotion": "Reduce motion",
       "contrastHint": "High contrast darkens text and strengthens borders."
     },
     "language": {
@@ -1413,12 +1346,5 @@
     "usePassword": "Use password instead",
     "skipPin": "Skip for now",
     "passwordHint": "You have not set a parent PIN yet, so we ask for the same login password you use for Raqeem."
-  },
-  "questionImage": {
-    "description": "Illustration for the question",
-    "enlarge": "Enlarge image",
-    "close": "Close image",
-    "failed": "The question image could not load. Please retry before answering.",
-    "retry": "Reload image"
-}
+  }
 }
