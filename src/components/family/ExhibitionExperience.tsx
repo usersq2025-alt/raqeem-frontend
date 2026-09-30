@@ -1,5 +1,7 @@
 "use client";
 
+import { QuestionImage } from "@/components/QuestionImage";
+
 import { useEffect, useRef, useState } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -122,6 +124,7 @@ export function ExhibitionExperience() {
           </section> : question ? <section className={card} aria-label="لعبة المعرض">
             <PlayChrome progressPct={answered / playlist.length * 100} questionLabel={`السؤال ${index + 1} من ${playlist.length}`} gameLabel={GAMES[question.gameType]} pointsLabel={`${score} إجابات صحيحة`} />
             <h2 dir="auto" className="my-7 text-center text-xl font-extrabold leading-relaxed sm:text-2xl">{question.questionText}</h2>
+            <QuestionImage key={`${question.id}-${question.imageUrl}`} src={question.imageUrl} alt={question.imageAlt} />
             <fieldset disabled={busy} className={busy ? "pointer-events-none opacity-70" : ""}>
               <QuestionBody key={`${round}-${question.id}`} question={question} phase={result ? "feedback" : "playing"} selected={selected} feedback={result?.feedback ?? {}} isCorrect={result?.isCorrect ?? null} onChange={(value, canSubmit) => { if (!busy) { setSelected(value); setReady(canSubmit); } }} />
             </fieldset>

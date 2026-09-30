@@ -1,5 +1,7 @@
 "use client";
 
+import { QuestionImage } from "@/components/QuestionImage";
+
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import confetti from "canvas-confetti";
@@ -227,6 +229,7 @@ export function ReviewStationExperience({ unitId, childId }: Props) {
           <p className="text-center text-xl font-extrabold leading-relaxed text-text-navy sm:text-2xl">
             {question.questionText}
           </p>
+          <QuestionImage key={`${question.id}-${question.imageUrl}`} src={question.imageUrl} alt={question.imageAlt} />
         </div>
       ) : null}
 

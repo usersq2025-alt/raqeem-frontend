@@ -1,5 +1,7 @@
 "use client";
 
+import { QuestionImage } from "@/components/QuestionImage";
+
 import {
   useEffect,
   useId,
@@ -362,6 +364,7 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
           <p className="text-center text-xl font-extrabold leading-relaxed text-text-navy sm:text-2xl">
             {question.questionText}
           </p>
+          <QuestionImage key={`${question.id}-${question.imageUrl}`} src={question.imageUrl} alt={question.imageAlt} />
         </div>
       ) : null}
 

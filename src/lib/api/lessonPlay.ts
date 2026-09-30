@@ -35,6 +35,7 @@ export type PlayQuestion = {
   gameType: string;
   questionText: string;
   imageUrl: string | null;
+  imageAlt?: string | null;
   payload: Record<string, unknown>;
 };
 
@@ -64,12 +65,23 @@ function optionalId(raw: unknown): number | null {
   return Number.isFinite(id) && id > 0 ? id : null;
 }
 
+function questionImageUrl(value: unknown): string | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  if (/^https?:\/\//i.test(value)) return value;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  if (value.startsWith("/storage/") && process.env.NEXT_PUBLIC_API_URL) {
+    try { return new URL(value, process.env.NEXT_PUBLIC_API_URL).href; } catch { return null; }
+  }
+  return value;
+}
+
 export function mapPlayQuestion(raw: Record<string, unknown>): PlayQuestion {
   return {
     id: Number(raw.id),
     gameType: String(raw.game_type ?? raw.gameType ?? ""),
     questionText: String(raw.question_text ?? raw.questionText ?? ""),
-    imageUrl: typeof raw.image_url === "string" ? raw.image_url : typeof raw.imageUrl === "string" ? raw.imageUrl : null,
+    imageUrl: questionImageUrl(raw.image_url ?? raw.imageUrl),
+    imageAlt: typeof raw.image_alt === "string" ? raw.image_alt : typeof raw.imageAlt === "string" ? raw.imageAlt : null,
     payload: raw.payload && typeof raw.payload === "object" ? (raw.payload as Record<string, unknown>) : {},
   };
 }

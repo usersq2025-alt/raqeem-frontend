@@ -1413,5 +1413,12 @@
     "usePassword": "Use password instead",
     "skipPin": "Skip for now",
     "passwordHint": "You have not set a parent PIN yet, so we ask for the same login password you use for Raqeem."
-  }
+  },
+  "questionImage": {
+    "description": "Illustration for the question",
+    "enlarge": "Enlarge image",
+    "close": "Close image",
+    "failed": "The question image could not load. Please retry before answering.",
+    "retry": "Reload image"
+}
 }
