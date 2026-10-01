@@ -94,6 +94,7 @@ try {
     assert.equal(monthOptions.length,12);
     monthOptions.forEach((label,index) => assert(label.endsWith(`(${index+1})`),`Month ${index+1} must include its number`));
     await pick(locale === "ar" ? "فبراير (2)" : "February (2)");
+    assert.equal(await page.$eval('#birth > p', el => el.textContent),locale === "ar" ? "فبراير" : "February","Selected month hint must show its name only");
     await verifyArrows();
     assert.equal(await phase(),monthLabel,"Month requires confirmation");
     await confirm();
@@ -106,7 +107,9 @@ try {
     assert.equal(await saved(),"","Unconfirmed date must not update the form");
     await confirm();
     assert.equal(await saved(),"2016-02-29");
-    assert((await page.$eval('#birth', el => el.textContent)).includes('(2)'),"Confirmed date must include the month number");
+    const summary = await page.$eval('#birth', el => el.textContent);
+    assert(summary.includes(locale === "ar" ? "فبراير" : "February"),"Confirmed date must include the month name");
+    assert(!summary.includes('(2)'),"Confirmed date must omit the month number");
     assert.equal(await page.$("[role=listbox]"),null);
     await page.click("#birth");
     await pause();

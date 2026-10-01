@@ -136,7 +136,7 @@ export function BirthDatePicker({ id, value, invalid, onChange }: Props) {
         >
           <span className="flex items-center gap-2 font-bold text-text-navy">
             <CalendarCheckIcon />
-            {t("summary", { day, month: `${monthNames[month - 1] ?? month} (${month})`, year })}
+            {t("summary", { day, month: monthNames[month - 1] ?? month, year })}
           </span>
           <span className="flex items-center gap-1 text-xs font-extrabold text-primary-orange">
             <PencilIcon />
@@ -154,7 +154,7 @@ export function BirthDatePicker({ id, value, invalid, onChange }: Props) {
         : t("dragYear")
       : phase === "month"
         ? month != null
-          ? `${monthNames[month - 1] ?? month} (${month})`
+          ? monthNames[month - 1] ?? String(month)
           : t("dragMonth")
         : day != null
           ? t("daySelected", { day })
