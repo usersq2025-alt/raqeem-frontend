@@ -46,14 +46,7 @@ export function BirthDatePicker({ id, value, invalid, onChange }: Props) {
   const [year, setYear] = useState<number | null>(initial?.year ?? null);
   const [month, setMonth] = useState<number | null>(initial?.month ?? null);
   const [day, setDay] = useState<number | null>(initial?.day ?? null);
-  const advanceTimer = useRef<number | null>(null);
-
-  useEffect(
-    () => () => {
-      if (advanceTimer.current) window.clearTimeout(advanceTimer.current);
-    },
-    []
-  );
+  const [wheelMoving, setWheelMoving] = useState(false);
 
   const yearItems = useMemo<WheelItem[]>(() => {
     const items: WheelItem[] = [];
@@ -86,40 +79,43 @@ export function BirthDatePicker({ id, value, invalid, onChange }: Props) {
     return items;
   }, [year, month]);
 
-  function scheduleAdvance(next: Phase) {
-    if (advanceTimer.current) window.clearTimeout(advanceTimer.current);
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    advanceTimer.current = window.setTimeout(() => setPhase(next), reduced ? 120 : 520);
-  }
-
   function handleYearSettle(y: number) {
+    if (y === year) return;
     setYear(y);
     setMonth((m) => (m != null && isBirthComponentsAllowed(y, m) ? m : null));
     setDay(null);
-    scheduleAdvance("month");
   }
 
   function handleMonthSettle(m: number) {
     if (year == null) return;
+    if (m === month) return;
     setMonth(m);
     setDay((d) => (d != null && isBirthComponentsAllowed(year, m, d) ? d : null));
-    scheduleAdvance("day");
   }
 
   function handleDaySettle(d: number) {
     if (year == null || month == null) return;
     setDay(d);
-    onChange(toIso(year, month, d));
-    scheduleAdvance("summary");
+  }
+
+  function confirmSelection() {
+    if (phase === "year" && year != null && isBirthComponentsAllowed(year)) {
+      setPhase("month");
+    } else if (phase === "month" && year != null && month != null && isBirthComponentsAllowed(year, month)) {
+      setPhase("day");
+    } else if (phase === "day" && year != null && month != null && day != null && isBirthComponentsAllowed(year, month, day)) {
+      onChange(toIso(year, month, day));
+      setPhase("summary");
+    }
   }
 
   function reopen() {
-    if (advanceTimer.current) window.clearTimeout(advanceTimer.current);
+    setWheelMoving(false);
     setPhase("year");
   }
 
   function goBack(target: Phase) {
-    if (advanceTimer.current) window.clearTimeout(advanceTimer.current);
+    setWheelMoving(false);
     setPhase(target);
   }
 
@@ -205,6 +201,7 @@ export function BirthDatePicker({ id, value, invalid, onChange }: Props) {
               : t("aria.day")
         }
         wide={phase === "month"}
+        onMovingChange={setWheelMoving}
       />
 
       {phase === "year" ? (
@@ -212,6 +209,14 @@ export function BirthDatePicker({ id, value, invalid, onChange }: Props) {
           {t("rangeHint", { min: minYear, max: maxYear })}
         </p>
       ) : null}
+      <button
+        type="button"
+        onClick={confirmSelection}
+        disabled={wheelMoving || (phase === "year" ? year == null : phase === "month" ? month == null : day == null)}
+        className="mt-3 w-full rounded-xl bg-primary-orange px-4 py-2.5 text-sm font-extrabold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-orange disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {t(phase === "year" ? "confirmYear" : phase === "month" ? "confirmMonth" : "confirmDate")}
+      </button>
     </div>
   );
 }
@@ -254,12 +259,14 @@ function WheelStrip({
   onSettle,
   ariaLabel,
   wide,
+  onMovingChange,
 }: {
   items: WheelItem[];
   selected: number | null;
   onSettle: (value: number) => void;
   ariaLabel: string;
   wide?: boolean;
+  onMovingChange: (moving: boolean) => void;
 }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
@@ -279,6 +286,11 @@ function WheelStrip({
     return idx >= 0 ? idx : Math.floor(items.length / 2);
   }, [items, selected]);
   const [focusIndex, setFocusIndex] = useState(initialIndex);
+
+  useEffect(() => () => {
+    if (settleTimer.current != null) window.clearTimeout(settleTimer.current);
+    if (rafRef.current != null) window.cancelAnimationFrame(rafRef.current);
+  }, []);
 
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
@@ -350,6 +362,7 @@ function WheelStrip({
   }
 
   function onScroll() {
+    onMovingChange(true);
     if (rafRef.current == null) {
       rafRef.current = window.requestAnimationFrame(() => {
         rafRef.current = null;
@@ -359,6 +372,7 @@ function WheelStrip({
     if (settleTimer.current) window.clearTimeout(settleTimer.current);
     settleTimer.current = window.setTimeout(() => {
       settleTimer.current = null;
+      onMovingChange(false);
       const { nearestIndex } = applyScales();
       if (suppressSettleRef.current) {
         suppressSettleRef.current = false;
