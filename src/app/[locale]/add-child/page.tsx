@@ -4,6 +4,8 @@ import { redirect } from "@/i18n/navigation";
 import { AuthShell } from "@/components/AuthShell";
 import { AddChildExperience } from "@/components/forms/AddChildExperience";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
+import { requireGuardianPage } from "@/lib/server/requireGuardianPage";
+import { FamilyGuardianUnlockPanel } from "@/components/family/FamilyGuardianUnlockPanel";
 
 export default async function AddChildPage() {
   const locale = await getLocale();
@@ -13,6 +15,16 @@ export default async function AddChildPage() {
   if (!session) {
     redirect({ href: "/register", locale });
     return;
+  }
+
+  const { guardian } = await requireGuardianPage();
+  if (!guardian.unlocked) {
+    return <FamilyGuardianUnlockPanel
+      seed={{ id: session.parent.id, fullName: session.parent.full_name ?? "", email: session.parent.email ?? null }}
+      pinSet={guardian.pinSet}
+      pinLocked={guardian.pinLocked}
+      redirectTo="/add-child"
+    />;
   }
 
   return (

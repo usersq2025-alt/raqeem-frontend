@@ -32,7 +32,7 @@ export type CreateChildResult = {
 export class ChildrenApiError extends Error {
   constructor(
     message: string,
-    public readonly code: "VALIDATION" | "NETWORK" | "UNAUTHENTICATED",
+    public readonly code: "VALIDATION" | "NETWORK" | "UNAUTHENTICATED" | "GUARDIAN_LOCKED",
     public readonly status = 400
   ) {
     super(message);
@@ -41,6 +41,9 @@ export class ChildrenApiError extends Error {
 }
 
 function toChildrenError(status: number, message: string): ChildrenApiError {
+  if (status === 403 && message === "GUARDIAN_LOCKED") {
+    return new ChildrenApiError(message, "GUARDIAN_LOCKED", status);
+  }
   if (status === 401) {
     return new ChildrenApiError(message, "UNAUTHENTICATED", 401);
   }
@@ -78,6 +81,7 @@ export async function createChild(payload: CreateChildPayload): Promise<CreateCh
   const raw = (await response.json().catch(() => null)) as Record<string, unknown> | null;
   const safe = raw && typeof raw === "object" ? stripSecretIds(raw) : null;
   const message =
+    safe?.code === "GUARDIAN_LOCKED" ? "GUARDIAN_LOCKED" :
     safe && typeof safe.message === "string" ? safe.message : "NETWORK";
 
   if (!response.ok) {

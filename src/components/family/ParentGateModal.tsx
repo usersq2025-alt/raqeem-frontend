@@ -17,11 +17,12 @@ type Props = {
   open: boolean;
   onClose: () => void;
   returnFocusRef?: React.RefObject<HTMLElement | null>;
+  onUnlocked?: () => void;
 };
 
 type Step = "auth" | "suggestPin" | "setPin";
 
-export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
+export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: Props) {
   const t = useTranslations("parentGate");
   const router = useRouter();
   const titleId = useId();
@@ -105,7 +106,8 @@ export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
 
   function finishToHub() {
     onClose();
-    router.push("/children");
+    if (onUnlocked) onUnlocked();
+    else router.push("/children");
   }
 
   async function handleSubmitAuth(event: React.FormEvent) {
@@ -120,7 +122,7 @@ export function ParentGateModal({ open, onClose, returnFocusRef }: Props) {
         return;
       }
       const result = await verifyGuardianPassword(password);
-      if (result.suggestPinSetup) {
+      if (result.suggestPinSetup && !onUnlocked) {
         setStep("suggestPin");
       } else {
         finishToHub();

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { FieldInput, UserIcon, WarningIcon } from "@/components/ui/FieldInput";
 import { GenderSelector } from "@/components/ui/GenderSelector";
 import { BirthDatePicker } from "@/components/forms/BirthDatePicker";
+import { ParentGateModal } from "@/components/family/ParentGateModal";
+import { getGuardianStatus, GuardianApiError } from "@/lib/api/guardian";
 import { GRADE_IDS } from "@/lib/config/grades";
 import { ChildrenApiError, createChild, type ChildGender } from "@/lib/api/children";
 import { NAME_PATTERN } from "@/lib/validation/registerSchema";
@@ -52,6 +54,7 @@ export function AddChildForm({ onSaved }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
+  const [guardianLocked, setGuardianLocked] = useState(false);
   const firstName = firstNameOf(fullName);
 
   const parsedPreview = schema.safeParse({
@@ -111,6 +114,11 @@ export function AddChildForm({ onSaved }: Props) {
 
     setSubmitting(true);
     try {
+      const guardian = await getGuardianStatus();
+      if (!guardian.unlocked) {
+        setGuardianLocked(true);
+        return;
+      }
       await createChild({
         fullName: parsed.data.fullName,
         birthDate: parsed.data.birthDate,
@@ -119,7 +127,12 @@ export function AddChildForm({ onSaved }: Props) {
       });
       onSaved(firstNameOf(parsed.data.fullName));
     } catch (error) {
-      if (error instanceof ChildrenApiError && error.code === "UNAUTHENTICATED") {
+      if (error instanceof ChildrenApiError && error.code === "GUARDIAN_LOCKED") {
+        setGuardianLocked(true);
+        return;
+      }
+      if ((error instanceof ChildrenApiError && error.code === "UNAUTHENTICATED") ||
+          (error instanceof GuardianApiError && error.status === 401)) {
         setFormError(t("errors.unauthenticated"));
         return;
       }
@@ -135,6 +148,7 @@ export function AddChildForm({ onSaved }: Props) {
   const selectedGradeLabel = gradeId ? t(`grades.${gradeId}` as "grades.1") : null;
 
   return (
+    <>
     <form className="mt-5 flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
       <div className="child-stagger child-delay-0">
         <label htmlFor={nameId} className="mb-1.5 block text-sm font-medium text-text-gray">
@@ -282,6 +296,13 @@ export function AddChildForm({ onSaved }: Props) {
         </Button>
       </div>
     </form>
+    <ParentGateModal
+      open={guardianLocked}
+      onClose={() => setGuardianLocked(false)}
+      onUnlocked={() => setFormError("")}
+      returnFocusRef={nameRef}
+    />
+    </>
   );
 }
 

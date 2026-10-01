@@ -147,7 +147,8 @@ export async function POST(request: Request) {
     if (!response.ok) {
       const message =
         payload && typeof payload.message === "string" ? payload.message : "NETWORK";
-      return NextResponse.json({ message }, { status: response.status });
+      const code = payload?.code === "GUARDIAN_LOCKED" ? "GUARDIAN_LOCKED" : undefined;
+      return NextResponse.json({ message, code }, { status: response.status });
     }
 
     const id = typeof payload?.id === "number" ? payload.id : Number(payload?.id);
