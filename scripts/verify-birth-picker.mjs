@@ -35,6 +35,28 @@ try {
   const phase = () => page.$eval("[role=listbox]", el => el.getAttribute("aria-label"));
   const saved = () => page.$eval("#saved", el => el.textContent);
   const confirm = () => page.click("#birth > button");
+  const verifyArrows = async () => {
+    const current = await page.$eval('[role=option][aria-selected=true]', el => el.textContent);
+    for (const side of ["left", "right"]) {
+      const target = await page.evaluate(side => {
+        const selected = document.querySelector('[role=option][aria-selected=true]');
+        const center = selected.getBoundingClientRect().x;
+        const candidates = [...document.querySelectorAll('[role=option]:not(:disabled)')]
+          .map(el => ({text:el.textContent,x:el.getBoundingClientRect().x}))
+          .filter(item => side === "left" ? item.x < center - 1 : item.x > center + 1)
+          .sort((a,b) => Math.abs(a.x-center)-Math.abs(b.x-center));
+        const arrows = [...document.querySelector('[role=listbox]').parentElement.children].filter(el => el.tagName === "BUTTON")
+          .sort((a,b) => a.getBoundingClientRect().x-b.getBoundingClientRect().x);
+        const arrow = arrows[side === "left" ? 0 : 1];
+        if (!candidates.length) throw new Error("Test needs a neighbour on each side");
+        arrow.click();
+        return candidates[0].text;
+      }, side);
+      await pause();
+      assert.equal(await page.$eval('[role=option][aria-selected=true]', el => el.textContent),target,`${side} arrow must select the neighbouring option on its side`);
+      await pick(current);
+    }
+  };
   for (const [locale, width, reduced] of [["ar",390,false],["en",1280,false],["ar",390,true]]) {
     await page.setViewport({width,height:844});
     await page.emulateMediaFeatures([{name:"prefers-reduced-motion",value:reduced ? "reduce" : "no-preference"}]);
@@ -44,6 +66,7 @@ try {
     assert(await page.$eval("#birth > button", el => el.disabled), "Initial year must require selection");
     const yearLabel = await phase();
     await pick("2015");
+    await verifyArrows();
     await page.keyboard.press("ArrowLeft");
     await pause();
     assert.equal(await phase(),yearLabel,"Browsing must not advance the year step");
@@ -67,16 +90,23 @@ try {
     await pause();
     const monthLabel = await phase();
     assert.notEqual(monthLabel,yearLabel);
-    await pick(locale === "ar" ? "فبراير" : "February");
+    const monthOptions = await page.$$eval('[role=option]', els => els.map(el => el.textContent));
+    assert.equal(monthOptions.length,12);
+    monthOptions.forEach((label,index) => assert(label.endsWith(`(${index+1})`),`Month ${index+1} must include its number`));
+    await pick(locale === "ar" ? "فبراير (2)" : "February (2)");
+    await verifyArrows();
     assert.equal(await phase(),monthLabel,"Month requires confirmation");
     await confirm();
     await pause();
     const dayLabel = await phase();
+    await pick("15");
+    await verifyArrows();
     await pick("29");
     assert.equal(await phase(),dayLabel,"Day requires confirmation");
     assert.equal(await saved(),"","Unconfirmed date must not update the form");
     await confirm();
     assert.equal(await saved(),"2016-02-29");
+    assert((await page.$eval('#birth', el => el.textContent)).includes('(2)'),"Confirmed date must include the month number");
     assert.equal(await page.$("[role=listbox]"),null);
     await page.click("#birth");
     await pause();

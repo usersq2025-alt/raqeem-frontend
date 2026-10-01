@@ -62,7 +62,7 @@ export function BirthDatePicker({ id, value, invalid, onChange }: Props) {
     for (let m = 1; m <= 12; m++) {
       items.push({
         value: m,
-        label: monthNames[m - 1] ?? String(m),
+        label: `${monthNames[m - 1] ?? m} (${m})`,
         disabled: !isBirthComponentsAllowed(year, m),
       });
     }
@@ -136,7 +136,7 @@ export function BirthDatePicker({ id, value, invalid, onChange }: Props) {
         >
           <span className="flex items-center gap-2 font-bold text-text-navy">
             <CalendarCheckIcon />
-            {t("summary", { day, month: monthNames[month - 1] ?? month, year })}
+            {t("summary", { day, month: `${monthNames[month - 1] ?? month} (${month})`, year })}
           </span>
           <span className="flex items-center gap-1 text-xs font-extrabold text-primary-orange">
             <PencilIcon />
@@ -154,7 +154,7 @@ export function BirthDatePicker({ id, value, invalid, onChange }: Props) {
         : t("dragYear")
       : phase === "month"
         ? month != null
-          ? monthNames[month - 1]
+          ? `${monthNames[month - 1] ?? month} (${month})`
           : t("dragMonth")
         : day != null
           ? t("daySelected", { day })
@@ -478,12 +478,14 @@ function WheelStrip({
     }
   }
 
-  const hasPrevVisual = nextEnabledIndex(focusIndex, (isRtl ? 1 : -1) as 1 | -1) != null;
-  const hasNextVisual = nextEnabledIndex(focusIndex, (isRtl ? -1 : 1) as 1 | -1) != null;
+  // Flex places the first arrow on the right in RTL, alongside the earlier
+  // items. Match its movement and disabled state to that physical position.
+  const hasPrevious = nextEnabledIndex(focusIndex, -1) != null;
+  const hasNext = nextEnabledIndex(focusIndex, 1) != null;
 
   return (
     <div className="mt-1.5 flex items-center gap-1">
-      <WheelArrow direction="previous" disabled={!hasPrevVisual} onClick={() => moveByVisualDirection(-1)} />
+      <WheelArrow direction="previous" disabled={!hasPrevious} onClick={() => moveByVisualDirection(isRtl ? 1 : -1)} />
       <div
         ref={scrollerRef}
         role="listbox"
@@ -520,7 +522,7 @@ function WheelStrip({
               }}
               onKeyDown={(event) => onKeyDown(event, idx)}
               className={`date-wheel-item flex shrink-0 snap-center items-center justify-center rounded-[18px] border-2 font-extrabold outline-none transition-colors duration-200 ${
-                wide ? "h-14 w-20 text-sm" : "h-14 w-14 text-base"
+                wide ? "h-14 w-28 text-sm" : "h-14 w-14 text-base"
               } ${
                 item.disabled
                   ? "border-transparent bg-neutral-100 text-neutral-300"
@@ -534,7 +536,7 @@ function WheelStrip({
           );
         })}
       </div>
-      <WheelArrow direction="next" disabled={!hasNextVisual} onClick={() => moveByVisualDirection(1)} />
+      <WheelArrow direction="next" disabled={!hasNext} onClick={() => moveByVisualDirection(isRtl ? -1 : 1)} />
     </div>
   );
 }
