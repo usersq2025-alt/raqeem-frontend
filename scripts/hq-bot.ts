@@ -433,7 +433,9 @@ function startUiServer() {
     const href = `http://127.0.0.1:${UI_PORT}`;
     console.log(`بوت المقر يعمل: ${href}`);
     console.log("اترك هذه النافذة مفتوحة أثناء الاستخدام.");
-    spawnSync("cmd", ["/c", "start", "", href], { shell: true });
+    if (process.env.RAQEEM_BOT_NO_BROWSER !== "1") {
+      spawnSync("cmd", ["/c", "start", "", href], { shell: true });
+    }
   });
 }
 

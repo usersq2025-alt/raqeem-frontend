@@ -59,3 +59,9 @@ __pycache__/
 # source masters for knockout (ship WebP only)
 **/*.source.*
 **/*.source
+# Local tool backups are not production source
+/tools/*_backup_*/
+
+# Never commit nested dependency folders or local social-bot data
+**/node_modules/
+/tools/social-post-bot/data/

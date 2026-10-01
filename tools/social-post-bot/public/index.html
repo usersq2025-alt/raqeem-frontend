@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>مُعدّ منشورات رقيم</title>
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <style>
+    :root { font-family: Tahoma, Arial, sans-serif; color: #112b60; background: #f5f8fd; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { background: #092d75; color: white; padding: 25px max(24px, calc((100vw - 1180px)/2)) 0; }
+    header h1 { margin: 0 0 7px; font-size: 27px; }
+    header p { margin: 0 0 18px; color: #dce9ff; line-height: 1.8; }
+    .tabs { display: flex; gap: 8px; }
+    .tab { width: auto; margin: 0; border-radius: 12px 12px 0 0; background: #1b4394; color: #dce9ff; padding: 12px 22px; font-weight: 700; }
+    .tab[aria-selected=true] { background: #f5f8fd; color: #092d75; }
+    main { max-width: 1180px; margin: 28px auto; padding: 0 24px; display: grid; grid-template-columns: minmax(310px, .9fr) minmax(400px, 1.1fr); gap: 26px; }
+    main[hidden] { display: none; }
+    .card { background: white; border: 1px solid #dae3f1; border-radius: 20px; padding: 24px; box-shadow: 0 12px 35px #092d7510; }
+    h2 { font-size: 20px; margin: 0 0 18px; }
+    .drop { display: block; border: 2px dashed #a7bee4; border-radius: 17px; background: #f8fbff; padding: 27px; text-align: center; cursor: pointer; line-height: 1.9; }
+    .drop.dragging { background: #e8f1ff; border-color: #1d63bc; }
+    .drop strong { display: block; font-size: 20px; }
+    .drop small { display: block; color: #5a6c89; }
+    input[type=file] { display: none; }
+    fieldset { border: 0; margin: 23px 0 0; padding: 0; }
+    legend { font-weight: bold; margin-bottom: 10px; }
+    label.option { display: block; border: 1px solid #dae3f1; padding: 12px 14px; border-radius: 12px; margin-bottom: 9px; cursor: pointer; line-height: 1.6; }
+    label.option:has(input:checked) { border-color: #1d63bc; background: #f0f6ff; }
+    label.option input { vertical-align: middle; margin-left: 9px; accent-color: #0b3a86; }
+    label.option small { color: #5a6c89; display: block; margin-right: 25px; }
+    .crop-controls { margin-top: 12px; border-radius: 12px; background: #f7f9fd; padding: 12px 14px; }
+    .crop-controls[hidden] { display: none; }
+    .crop-controls label { display: block; font-size: 13px; margin: 0 0 10px; }
+    .crop-controls input { display: block; width: 100%; accent-color: #0b3a86; }
+    .key-field { margin-top: 15px; }
+    .key-field[hidden] { display: none; }
+    .key-field label, .field label { display: block; font-weight: bold; margin-bottom: 8px; }
+    .key-field input { width: 100%; padding: 13px; border: 1px solid #b5c5df; border-radius: 10px; font: inherit; direction: ltr; }
+    .field { margin-bottom: 16px; }
+    .field input[type=text], .field textarea { width: 100%; padding: 12px 13px; border: 1px solid #b5c5df; border-radius: 10px; font: inherit; font-family: 'Cairo', Tahoma, sans-serif; line-height: 1.7; }
+    .field textarea { min-height: 170px; resize: vertical; }
+    .field small { color: #5a6c89; }
+    .segmented { display: flex; gap: 8px; }
+    .segmented label { flex: 1; margin: 0; }
+    button, a.download { background: #ffb524; color: #092d75; border: 0; border-radius: 12px; padding: 13px 22px; font: inherit; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-block; }
+    button { width: 100%; margin-top: 20px; }
+    button:disabled { opacity: .55; cursor: wait; }
+    a.download { margin-top: 15px; }
+    .note { font-size: 13px; color: #52637e; line-height: 1.8; margin: 16px 0 0; }
+    .status { min-height: 23px; margin-top: 14px; color: #a33f22; font-size: 14px; }
+    .status.ok { color: #1c6b3a; }
+    .preview { background: #e8edf5; border-radius: 15px; min-height: 480px; display: grid; place-items: center; overflow: hidden; }
+    .preview img, .preview canvas { width: min(100%, 500px); height: auto; max-height: 73vh; object-fit: contain; display: block; }
+    .preview .empty { text-align: center; color: #64758f; padding: 25px; line-height: 1.8; }
+    .compare { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+    .compare button { width: auto; margin: 0; background: #eaf1fb; font-size: 13px; padding: 8px 13px; }
+    .keybar { max-width: 1180px; margin: 20px auto -8px; padding: 0 24px; }
+    .keybar[hidden] { display: none; }
+    .keybar .card { padding: 16px 24px; }
+    .keybar label { display: block; font-weight: bold; margin-bottom: 8px; }
+    .keybar input { width: 100%; padding: 12px; border: 1px solid #b5c5df; border-radius: 10px; font: inherit; direction: ltr; }
+    .keybar .note { margin: 8px 0 0; }
+    .ai-box { background: #f3f7ff; border: 1px solid #cfdcf3; border-radius: 16px; padding: 16px; margin-bottom: 20px; }
+    .ai-box h3 { margin: 0 0 10px; font-size: 16px; }
+    .ai-box textarea { min-height: 96px; }
+    .ai-box .row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 14px; }
+    .ai-box .row label { display: inline-flex; align-items: center; gap: 6px; font-weight: normal; margin: 0; cursor: pointer; }
+    .ai-box .small { width: auto; margin: 0; padding: 8px 14px; background: #e3ecfb; font-size: 13px; }
+    .ai-box .small:disabled { opacity: .55; }
+    @media (max-width: 840px) { main { grid-template-columns: 1fr; } .preview { min-height: 300px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>مُعدّ منشورات رقيم</h1>
+    <p>منشور من صورة (تصوير استوديو بالذكاء الاصطناعي) أو منشور من نص، بهوية رقيم الثابتة وبمقاس 1080 × 1350.</p>
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tabPhoto" type="button" role="tab" aria-selected="true">منشور من صورة</button>
+      <button class="tab" id="tabText" type="button" role="tab" aria-selected="false">منشور من نص</button>
+    </div>
+  </header>
+
+  <div class="keybar" id="keyField" hidden>
+    <div class="card">
+      <label for="apiKey">مفتاح OpenAI API</label>
+      <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="الصق المفتاح هنا، أو ضعه مرة واحدة في ملف .env">
+      <p class="note">يُستخدم المفتاح في الطلب فقط ولا يُحفظ في المتصفح. للتشغيل الدائم ضعه في ملف <code>.env</code> داخل مجلد البوت.</p>
+    </div>
+  </div>
+
+  <!-- ========== منشور من صورة ========== -->
+  <main id="photoView">
+    <section class="card">
+      <h2>الصورة والإعدادات</h2>
+      <label class="drop" id="drop" for="file">
+        <strong>اختر صورة أو أسقطها هنا</strong>
+        <span id="fileName">JPG أو PNG أو WebP، حتى 20 ميغابايت</span>
+        <small>المقاس النهائي: 1080 × 1350 بكسل</small>
+      </label>
+      <input id="file" type="file" accept="image/jpeg,image/png,image/webp,image/avif">
+      <fieldset>
+        <legend>طريقة عرض الصورة</legend>
+        <label class="option"><input type="radio" name="fit" value="cover" checked>املأ مساحة المنشور<small>قد تُقص أطراف الصور الأفقية.</small></label>
+        <label class="option"><input type="radio" name="fit" value="contain">أظهر الصورة كاملة<small>تُملأ المساحة الزائدة بنسخة ناعمة من الصورة.</small></label>
+        <div class="crop-controls" id="cropControls">
+          <label>موضع الصورة أفقيًا<input id="cropX" type="range" min="0" max="100" value="70"></label>
+          <label>موضع الصورة عموديًا<input id="cropY" type="range" min="0" max="100" value="50"></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>تحسين الصورة</legend>
+        <label class="option"><input type="radio" name="mode" value="ai" checked>تصوير استوديو بالذكاء الاصطناعي<small>معالجة احترافية للضوء والتكوين، ثم تُضاف هوية رقيم الثابتة.</small></label>
+        <label class="option"><input type="radio" name="mode" value="safe">تحسين محافظ<small>ضوء وألوان وحدّة دون إعادة رسم تفاصيل الصورة، ويعمل دون مفتاح.</small></label>
+      </fieldset>
+      <fieldset id="qualityBox">
+        <legend>جودة الذكاء الاصطناعي</legend>
+        <label class="option"><input type="radio" name="quality" value="high" checked>عالية<small>للنشر النهائي. أبطأ وأغلى.</small></label>
+        <label class="option"><input type="radio" name="quality" value="medium">متوسطة<small>للتجربة والمسودات. أسرع وأرخص.</small></label>
+      </fieldset>
+      <button id="create" type="button">صمّم المنشور</button>
+      <p class="status" id="status" role="status"></p>
+      <p class="note">القالب ثابت: إطار رقيم الكحلي، الشعار في أعلى المنتصف، وإضاءة برتقالية خفيفة يسارًا وزرقاء يمينًا. راجع الوجوه والنصوص داخل الصورة المولّدة قبل النشر.</p>
+    </section>
+    <section class="card">
+      <h2>المعاينة</h2>
+      <div class="preview" id="preview"><div class="empty">ارفع صورة واضغط «صمّم المنشور» لمشاهدة النتيجة هنا.</div></div>
+      <div class="compare">
+        <span id="outputInfo">القالب المعتمد محفوظ وجاهز للاستخدام.</span>
+        <div>
+          <button id="showResult" type="button">عرض النتيجة</button>
+          <button id="showOriginal" type="button">عرض صورتي الأصلية</button>
+          <button id="showTemplate" type="button">عرض القالب الأصلي</button>
+        </div>
+      </div>
+      <a class="download" id="download" style="display:none" download="raqeem-post-1080x1350.png">تحميل المنشور PNG</a>
+    </section>
+  </main>
+
+  <!-- ========== منشور من نص ========== -->
+  <main id="textView" hidden>
+    <section class="card">
+      <h2>نص المنشور</h2>
+      <div class="ai-box">
+        <h3>اصنعه بالذكاء الاصطناعي</h3>
+        <div class="field" style="margin:0">
+          <label for="tIdea">فكرة المنشور</label>
+          <textarea id="tIdea" maxlength="1500" placeholder="مثال: نريد الإعلان عن أن التسجيل مفتوح في مسار القراءة للأطفال، ونشجّع الأهل على تشجيع أبنائهم على القراءة يوميًا."></textarea>
+        </div>
+        <div class="row">
+          <label><input type="checkbox" id="tWithIll" checked>مع رسمة توضيحية بأسلوب رقيم</label>
+          <label><input type="checkbox" id="tHQ">جودة عالية للرسمة (أبطأ وأغلى)</label>
+        </div>
+        <button id="tMake" type="button" style="margin-top:14px">اصنع المنشور بالذكاء الاصطناعي</button>
+        <div class="field" style="margin:16px 0 0">
+          <label for="tScene">وصف الرسمة (يمكن تعديله)</label>
+          <input id="tScene" type="text" maxlength="400" placeholder="يُملأ تلقائيًا، أو اكتب وصفك الخاص">
+        </div>
+        <div class="row">
+          <button class="small" id="tIllustrate" type="button">ولّد الرسمة / أعد توليدها</button>
+          <button class="small" id="tRemoveIll" type="button">إزالة الرسمة</button>
+        </div>
+        <p class="note">الذكاء الاصطناعي يكتب النص ويرسم الصورة فقط؛ أما الحروف العربية فتُرسم بالكود فلا تتشوّه. راجع النص قبل النشر، فقد يحتاج تعديلًا.</p>
+      </div>
+      <div class="field">
+        <label for="tTitle">العنوان</label>
+        <input id="tTitle" type="text" maxlength="120" placeholder="مثال: التعلّم رحلة ممتعة">
+      </div>
+      <div class="field">
+        <label for="tBody">النص</label>
+        <textarea id="tBody" maxlength="900" placeholder="اكتب نص المنشور هنا. كل سطر جديد يبدأ فقرة جديدة."></textarea>
+        <small>يصغّر البوت الخط تلقائيًا ليناسب النص داخل القالب.</small>
+      </div>
+      <div class="field">
+        <label for="tFooter">سطر ختامي (اختياري)</label>
+        <input id="tFooter" type="text" maxlength="60" placeholder="مثال: ابدأ رحلتك التعليمية الآن">
+      </div>
+      <div class="field">
+        <label>محاذاة النص</label>
+        <div class="segmented">
+          <label class="option"><input type="radio" name="align" value="center" checked>توسيط</label>
+          <label class="option"><input type="radio" name="align" value="right">يمين</label>
+        </div>
+      </div>
+      <button id="tDownload" type="button">تحميل المنشور PNG</button>
+      <p class="status" id="tStatus" role="status"></p>
+      <p class="note">يُرسم النص بخط Cairo فوق قالب رقيم الذي صممته داخل متصفحك. الكتابة اليدوية لا تحتاج مفتاحًا ولا إنترنت؛ الذكاء الاصطناعي اختياري.</p>
+    </section>
+    <section class="card">
+      <h2>المعاينة</h2>
+      <div class="preview"><canvas id="tCanvas" width="1080" height="1350" aria-label="معاينة المنشور النصي"></canvas></div>
+    </section>
+  </main>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const API_HEADER = { 'X-Raqeem-Bot': '1' };
+    let activeTab = 'photo', envKey = false;
+
+    /* ---------- التبويبات ---------- */
+    function showTab(name) {
+      const isText = name === 'text';
+      activeTab = name;
+      $('photoView').hidden = isText;
+      $('textView').hidden = !isText;
+      $('tabPhoto').setAttribute('aria-selected', String(!isText));
+      $('tabText').setAttribute('aria-selected', String(isText));
+      syncAiControls();
+      if (isText) drawText();
+    }
+    $('tabPhoto').addEventListener('click', () => showTab('photo'));
+    $('tabText').addEventListener('click', () => showTab('text'));
+
+    /* ---------- منشور من صورة ---------- */
+    const fileInput = $('file');
+    const drop = $('drop');
+    const preview = $('preview');
+    const status = $('status');
+    const create = $('create');
+    const download = $('download');
+    let selectedFile, objectUrl, originalUrl;
+
+    function setFile(file) {
+      if (!file) return;
+      if (originalUrl) URL.revokeObjectURL(originalUrl);
+      selectedFile = file;
+      originalUrl = URL.createObjectURL(file);
+      $('fileName').textContent = file.name;
+      status.textContent = '';
+    }
+    function showImage(url) {
+      preview.replaceChildren();
+      const image = document.createElement('img');
+      image.src = url;
+      image.alt = 'معاينة منشور رقيم';
+      preview.append(image);
+    }
+    function currentMode() { return document.querySelector('input[name=mode]:checked').value; }
+    function syncAiControls() {
+      const ai = currentMode() === 'ai';
+      $('qualityBox').hidden = !ai;
+      $('keyField').hidden = envKey || !(activeTab === 'text' || ai);
+    }
+    fileInput.addEventListener('change', () => setFile(fileInput.files[0]));
+    document.querySelectorAll('input[name=fit]').forEach(input => input.addEventListener('change', () => {
+      $('cropControls').hidden = document.querySelector('input[name=fit]:checked').value === 'contain';
+    }));
+    document.querySelectorAll('input[name=mode]').forEach(input => input.addEventListener('change', syncAiControls));
+    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragging'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('dragging'));
+    drop.addEventListener('drop', e => {
+      e.preventDefault(); drop.classList.remove('dragging');
+      const file = e.dataTransfer.files[0];
+      if (file && !file.type.startsWith('image/')) { status.textContent = 'اختر ملف صورة فقط.'; return; }
+      setFile(file);
+    });
+    $('showTemplate').addEventListener('click', () => showImage('/template'));
+    $('showOriginal').addEventListener('click', () => { if (originalUrl) showImage(originalUrl); });
+    $('showResult').addEventListener('click', () => { if (objectUrl) showImage(objectUrl); });
+    fetch('/status').then(r => r.json()).then(data => { envKey = Boolean(data.aiAvailable); syncAiControls(); }).catch(() => {});
+    syncAiControls();
+
+    create.addEventListener('click', async () => {
+      if (!selectedFile) { status.className = 'status'; status.textContent = 'اختر صورة أولًا.'; return; }
+      const mode = currentMode();
+      const fit = document.querySelector('input[name=fit]:checked').value;
+      const quality = document.querySelector('input[name=quality]:checked').value;
+      const apiKey = $('apiKey').value.trim();
+      if (mode === 'ai' && !apiKey && !envKey) {
+        status.className = 'status'; status.textContent = 'أدخل مفتاح OpenAI API أو ضعه في ملف .env.'; return;
+      }
+      create.disabled = true; status.className = 'status';
+      const started = Date.now();
+      const timer = setInterval(() => {
+        const seconds = Math.round((Date.now() - started) / 1000);
+        status.textContent = mode === 'ai'
+          ? `جاري التصوير بالذكاء الاصطناعي… ${seconds} ث (قد يستغرق حتى دقيقتين)`
+          : `جاري تجهيز المنشور… ${seconds} ث`;
+      }, 500);
+      status.textContent = 'جاري تجهيز المنشور…';
+      const controller = new AbortController();
+      const abortTimer = setTimeout(() => controller.abort(), 200_000);
+      try {
+        const response = await fetch('/render', {
+          method: 'POST', body: selectedFile, signal: controller.signal,
+          headers: {
+            ...API_HEADER,
+            'Content-Type': selectedFile.type || 'application/octet-stream',
+            'X-Enhancement': mode, 'X-Fit': fit, 'X-Quality': quality,
+            'X-Crop-X': String(Number($('cropX').value) / 100),
+            'X-Crop-Y': String(Number($('cropY').value) / 100),
+            ...(mode === 'ai' && apiKey ? { 'X-OpenAI-Key': apiKey } : {}),
+          },
+        });
+        if (!response.ok) {
+          const problem = await response.json().catch(() => ({}));
+          throw new Error(problem.error || 'تعذر إنشاء المنشور.');
+        }
+        const image = await response.blob();
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        objectUrl = URL.createObjectURL(image);
+        showImage(objectUrl);
+        download.href = objectUrl;
+        download.style.display = 'inline-block';
+        $('outputInfo').textContent = 'منشور جاهز للتحميل — 1080 × 1350';
+        status.className = 'status ok';
+        status.textContent = 'تم تجهيز المنشور.';
+      } catch (error) {
+        status.className = 'status';
+        status.textContent = error.name === 'AbortError' ? 'انتهت مهلة الانتظار. حاول مرة أخرى.' : error.message;
+      } finally {
+        clearInterval(timer); clearTimeout(abortTimer); create.disabled = false;
+      }
+    });
+
+    /* ---------- منشور من نص ---------- */
+    const W = 1080, H = 1350;
+    const BOX_FULL = { x: 130, y: 250, w: 820, h: 800 };
+    const BOX_ILL = { x: 130, y: 650, w: 820, h: 400 };
+    let BOX = BOX_FULL;
+    let illustration = null;
+    const COLORS = { navy: '#253754', body: '#34445f', orange: '#f5a016', footer: '#d9870f' };
+    const canvas = $('tCanvas');
+    const ctx = canvas.getContext('2d');
+    const templateImage = new Image();
+    let templateReady = false, fontsReady = false, framePending = false;
+    templateImage.onload = () => { templateReady = true; drawText(); };
+    templateImage.src = '/text-template.png';
+    Promise.all(['500', '700', '900'].map(w => document.fonts.load(`${w} 40px Cairo`, 'أبجد abc 123')))
+      .then(() => { fontsReady = true; drawText(); })
+      .catch(() => { fontsReady = true; drawText(); });
+
+    function wrap(text, maxWidth) {
+      const lines = [];
+      for (const paragraph of text.split('\n')) {
+        if (!paragraph.trim()) { lines.push(''); continue; }
+        let line = '';
+        for (const word of paragraph.trim().split(/\s+/)) {
+          const test = line ? `${line} ${word}` : word;
+          if (!line || ctx.measureText(test).width <= maxWidth) line = test;
+          else { lines.push(line); line = word; }
+        }
+        lines.push(line);
+      }
+      return lines;
+    }
+
+    function layout(title, body, scale) {
+      const hasTitle = Boolean(title), hasBody = Boolean(body);
+      const titleSize = (hasBody ? 92 : 118) * scale;
+      const bodySize = (hasTitle ? 52 : 64) * scale;
+      let titleLines = [], bodyLines = [];
+      if (hasTitle) { ctx.font = `900 ${titleSize}px Cairo`; titleLines = wrap(title, BOX.w); }
+      if (hasBody) { ctx.font = `500 ${bodySize}px Cairo`; bodyLines = wrap(body, BOX.w); }
+      const titleLH = titleSize * 1.4, bodyLH = bodySize * 1.75;
+      const gap = hasTitle && hasBody ? 70 * scale : 0;
+      const height = titleLines.length * titleLH + gap + bodyLines.length * bodyLH;
+      return { titleSize, bodySize, titleLines, bodyLines, titleLH, bodyLH, gap, height };
+    }
+
+    function drawText() {
+      if (!templateReady || !fontsReady || $('textView').hidden) return;
+      const title = $('tTitle').value.trim();
+      const body = $('tBody').value.replace(/\r/g, '').trim();
+      const footer = $('tFooter').value.trim();
+      const center = document.querySelector('input[name=align]:checked').value === 'center';
+      ctx.clearRect(0, 0, W, H);
+      BOX = illustration ? BOX_ILL : BOX_FULL;
+      ctx.drawImage(templateImage, 0, 0, W, H);
+      if (illustration) ctx.drawImage(illustration, (W - 410) / 2, 205, 410, 410);
+      ctx.direction = 'rtl';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = center ? 'center' : 'right';
+      const x = center ? BOX.x + BOX.w / 2 : BOX.x + BOX.w;
+
+      if (title || body) {
+        let scale = illustration ? 0.78 : 1, plan = layout(title, body, scale);
+        while (plan.height > BOX.h && scale > 0.4) { scale -= 0.02; plan = layout(title, body, scale); }
+        let y = BOX.y + (BOX.h - plan.height) / 2;
+        ctx.fillStyle = COLORS.navy;
+        ctx.font = `900 ${plan.titleSize}px Cairo`;
+        for (const line of plan.titleLines) { ctx.fillText(line, x, y + plan.titleLH / 2); y += plan.titleLH; }
+        if (plan.gap) {
+          const barY = y + plan.gap / 2 - 5;
+          const barX = center ? x - 60 : x - 120;
+          ctx.fillStyle = COLORS.orange;
+          ctx.beginPath(); ctx.roundRect(barX, barY, 120, 10, 5); ctx.fill();
+          y += plan.gap;
+        }
+        ctx.fillStyle = COLORS.body;
+        ctx.font = `500 ${plan.bodySize}px Cairo`;
+        for (const line of plan.bodyLines) { if (line) ctx.fillText(line, x, y + plan.bodyLH / 2); y += plan.bodyLH; }
+      }
+      if (footer) {
+        ctx.textAlign = 'center';
+        ctx.fillStyle = COLORS.footer;
+        let size = 40;
+        ctx.font = `700 ${size}px Cairo`;
+        while (ctx.measureText(footer).width > 760 && size > 24) { size -= 2; ctx.font = `700 ${size}px Cairo`; }
+        ctx.fillText(footer, W / 2, 1120);
+      }
+    }
+    function scheduleDraw() {
+      if (framePending) return;
+      framePending = true;
+      requestAnimationFrame(() => { framePending = false; drawText(); });
+    }
+    ['tTitle', 'tBody', 'tFooter'].forEach(id => $(id).addEventListener('input', scheduleDraw));
+    document.querySelectorAll('input[name=align]').forEach(input => input.addEventListener('change', scheduleDraw));
+
+    $('tDownload').addEventListener('click', () => {
+      const tStatus = $('tStatus');
+      if (!$('tTitle').value.trim() && !$('tBody').value.trim()) {
+        tStatus.className = 'status'; tStatus.textContent = 'اكتب عنوانًا أو نصًا أولًا.'; return;
+      }
+      drawText();
+      canvas.toBlob(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'raqeem-text-post-1080x1350.png';
+        document.body.append(link); link.click(); link.remove();
+        setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
+        tStatus.className = 'status ok'; tStatus.textContent = 'تم تحميل المنشور.';
+      }, 'image/png');
+    });
+
+    /* ---------- الذكاء الاصطناعي للمنشور النصي ---------- */
+    async function aiCall(path, payload, asBlob) {
+      const key = $('apiKey').value.trim();
+      if (!key && !envKey) throw new Error('أدخل مفتاح OpenAI API أو ضعه في ملف .env.');
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 200_000);
+      try {
+        const response = await fetch(path, {
+          method: 'POST', signal: controller.signal,
+          headers: { ...API_HEADER, 'Content-Type': 'application/json', ...(key ? { 'X-OpenAI-Key': key } : {}) },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          const problem = await response.json().catch(() => ({}));
+          throw new Error(problem.error || 'تعذر تنفيذ الطلب.');
+        }
+        return asBlob ? response.blob() : response.json();
+      } catch (error) {
+        if (error.name === 'AbortError') throw new Error('انتهت مهلة الانتظار. حاول مرة أخرى.');
+        throw error;
+      } finally { clearTimeout(timer); }
+    }
+
+    const aiButtons = ['tMake', 'tIllustrate', 'tRemoveIll'];
+    async function withProgress(label, task) {
+      const tStatus = $('tStatus');
+      let current = label;
+      const started = Date.now();
+      aiButtons.forEach(id => { $(id).disabled = true; });
+      tStatus.className = 'status';
+      const tick = () => { tStatus.textContent = `${current} ${Math.round((Date.now() - started) / 1000)} ث`; };
+      tick();
+      const timer = setInterval(tick, 500);
+      try {
+        await task(text => { current = text; });
+        tStatus.className = 'status ok';
+        tStatus.textContent = 'تم. راجع النص والرسمة ثم حمّل المنشور.';
+      } catch (error) {
+        tStatus.className = 'status';
+        tStatus.textContent = error.message;
+      } finally {
+        clearInterval(timer);
+        aiButtons.forEach(id => { $(id).disabled = false; });
+      }
+    }
+
+    async function makeIllustration() {
+      const scene = $('tScene').value.trim();
+      if (!scene) throw new Error('اكتب وصف الرسمة أولًا.');
+      const blob = await aiCall('/ai/illustration', { scene, quality: $('tHQ').checked ? 'high' : 'medium' }, true);
+      const url = URL.createObjectURL(blob);
+      const image = new Image();
+      image.src = url;
+      await image.decode();
+      illustration = image;
+      scheduleDraw();
+    }
+
+    $('tMake').addEventListener('click', () => {
+      const idea = $('tIdea').value.trim();
+      if (!idea) { $('tStatus').className = 'status'; $('tStatus').textContent = 'اكتب فكرة المنشور أولًا.'; return; }
+      withProgress('جاري كتابة النص…', async setLabel => {
+        const data = await aiCall('/ai/text', { idea });
+        $('tTitle').value = data.title || '';
+        $('tBody').value = data.body || '';
+        $('tFooter').value = data.footer || '';
+        if (data.illustration) $('tScene').value = data.illustration;
+        scheduleDraw();
+        if ($('tWithIll').checked && data.illustration) {
+          setLabel('تم النص. جاري رسم الرسمة…');
+          await makeIllustration();
+        }
+      });
+    });
+    $('tIllustrate').addEventListener('click', () => withProgress('جاري رسم الرسمة…', makeIllustration));
+    $('tRemoveIll').addEventListener('click', () => { illustration = null; scheduleDraw(); });
+  </script>
+</body>
+</html>

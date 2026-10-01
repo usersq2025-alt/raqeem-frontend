@@ -314,82 +314,18 @@ export function runSyncHq(): void {
   }
 }
 
-function resolveGitExe(): string {
-  const candidates = [
-    "C:\\laragon\\bin\\git\\cmd\\git.exe",
-    "C:\\laragon\\bin\\git\\bin\\git.exe",
-  ];
-  for (const c of candidates) {
-    if (existsSync(c)) return c;
-  }
-  return "git";
-}
-
 export function startFrontendDeploy(commitMessage: string): void {
-  const relPaths = [
-    "public/images/headquarters",
-    "src/lib/config/generated/hqAssets.generated.ts",
-  ];
-
-  const gitExe = resolveGitExe();
-  const gitEnv = {
-    ...process.env,
-    PATH: `C:\\laragon\\bin\\git\\cmd;C:\\laragon\\bin\\git\\bin;${process.env.PATH ?? ""}`,
-  };
-
-  const run = (args: string[], allowFail = false) => {
-    const r = spawnSync(gitExe, args, {
-      cwd: ROOT,
-      encoding: "utf8",
-      env: gitEnv,
-      shell: false,
-      windowsHide: true,
-    });
-    if (r.stdout) process.stdout.write(r.stdout);
-    if (r.stderr) process.stderr.write(r.stderr);
-    if (!allowFail && r.status !== 0) {
-      const detail = [r.stderr, r.stdout].filter(Boolean).join("\n").trim();
-      throw new Error(
-        `git ${args[0] ?? ""} فشل (exit ${r.status})${detail ? `\n${detail}` : ""}`
-      );
-    }
-    return r;
-  };
-
-  run(["add", "--", ...relPaths], true);
-  const staged = spawnSync(gitExe, ["diff", "--cached", "--quiet"], {
-    cwd: ROOT,
-    env: gitEnv,
-    shell: false,
+  const botHome = process.env.RAQEEM_BOTS || "C:\\Raqeem\\Bots";
+  const launcher = path.join(botHome, "02-Deploy-Raqeem.bat");
+  if (!existsSync(launcher)) throw new Error(`بوت النشر غير موجود: ${launcher}`);
+  console.log(commitMessage);
+  const result = spawnSync("cmd.exe", ["/d", "/c", launcher], {
+    cwd: botHome,
+    env: { ...process.env, RAQEEM_BOT_NO_PAUSE: "1" },
+    stdio: "inherit",
     windowsHide: true,
   });
-  if (staged.status !== 0) {
-    run([
-      "-c",
-      "user.name=User",
-      "-c",
-      "user.email=usersq2025@gmail.com",
-      "commit",
-      "-m",
-      commitMessage,
-    ]);
-  } else {
-    console.log("لا توجد ملفات جديدة للـ commit — سيتم دفع النسخة الحالية إن لزم.");
-  }
-
-  run(["push", "origin", "main"]);
-
-  const key = path.join(process.env.USERPROFILE ?? "", ".ssh", "raqeem_deploy");
-  if (!existsSync(key)) {
-    throw new Error(`مفتاح SSH غير موجود: ${key}`);
-  }
-
-  const ssh = spawnSync(
-    "ssh",
-    ["-i", key, "raqeem@vps.molhamyic.cloud", "~/deploy-frontend.sh"],
-    { cwd: ROOT, encoding: "utf8", shell: false, stdio: "inherit", windowsHide: true }
-  );
-  if (ssh.status !== 0) {
-    throw new Error(`فشل نشر الفرونت (exit ${ssh.status})`);
+  if (result.status !== 0) {
+    throw new Error(`فشل النشر (exit ${result.status}) — راجع سجل بوت النشر في ${botHome}`);
   }
 }
