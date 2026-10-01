@@ -141,13 +141,19 @@ async function preparePhoto(input, fit, cropX, cropY) {
     .toBuffer();
 }
 
+let logoPromise;
+function getLogo() {
+  if (!logoPromise) {
+    logoPromise = fs.readFile(logoPath).then(bytes => sharp(bytes).resize(198, 109, { fit: 'contain' }).png().toBuffer());
+    logoPromise.catch(() => { logoPromise = undefined; });
+  }
+  return logoPromise;
+}
+
 async function renderPost(input, { fit = 'cover', cropX = 0.7, cropY = 0.5 } = {}) {
   const photo = await preparePhoto(input, fit, cropX, cropY);
   const overlay = await getOverlay();
-  const logo = await sharp(await fs.readFile(logoPath))
-    .resize(198, 109, { fit: 'contain' })
-    .png()
-    .toBuffer();
+  const logo = await getLogo();
   const composed = await sharp(photo).composite([
     { input: overlay, left: 0, top: 0 },
     { input: logo, left: Math.round((WIDTH - 198) / 2), top: 0 },

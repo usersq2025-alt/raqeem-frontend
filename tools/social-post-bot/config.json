@@ -1,0 +1,40 @@
+{
+  "port": 4567,
+  "models": {
+    "text": ["gpt-6-luna", "gpt-4.1"],
+    "imageEdit": ["gpt-image-2.5-sunburst", "gpt-image-1"],
+    "illustration": ["gpt-image-2.5-flare", "gpt-image-1"]
+  },
+  "imageEdit": {
+    "size": "1088x1360",
+    "timeoutMs": 180000,
+    "prompt": "Create a premium 4:5 vertical editorial photograph from this exact real input photo, as though it were carefully shot with professional studio lighting and a high-end camera. Improve exposure, natural soft key lighting, white balance, realistic detail, noise, lens perspective, and composition. Outpaint only where needed to achieve the vertical frame. Make the main subject clearly prominent while preserving its real identity, geometry, and context. Preserve the number and identity of people, the actual location, all products, screens, lettering, logos, and Arabic text. Do not invent or replace any factual content. Photorealistic, refined and natural. No branding overlays, no borders, no captions."
+  },
+  "limits": {
+    "dailyAiCalls": 40,
+    "monthlyBudgetUsd": 30,
+    "maxUploadMb": 20,
+    "historyMax": 500
+  },
+  "costsUsd": {
+    "imageEditMedium": 0.05,
+    "imageEditHigh": 0.2,
+    "illustrationMedium": 0.05,
+    "illustrationHigh": 0.2,
+    "text": 0.01,
+    "caption": 0.01
+  },
+  "brand": {
+    "hashtags": ["#رقيم", "#تعليم_الأطفال", "#تعلم_ممتع"],
+    "cta": ""
+  },
+  "schedule": {
+    "graceHours": 6,
+    "maxAttempts": 3,
+    "retryMinutes": [2, 10, 30],
+    "tickSeconds": 30
+  },
+  "meta": {
+    "graphVersion": "v21.0"
+  }
+}
