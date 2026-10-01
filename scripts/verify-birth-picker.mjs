@@ -52,6 +52,14 @@ try {
     await page.mouse.wheel({deltaY:80});
     await pause();
     assert.equal(await phase(),yearLabel,"Scrolling must not advance the year step");
+    const box = await wheel.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 + 65, box.y + box.height / 2, {steps:8});
+    await page.mouse.up();
+    await pause();
+    assert.equal(await phase(),yearLabel,"Dragging must not advance the year step");
+    assert.equal(await page.$eval("#birth > button", el => el.disabled),false,"Confirmation must recover after dragging");
     await pick("2016");
     assert.equal(await phase(),yearLabel);
     assert.equal(await saved(),"");

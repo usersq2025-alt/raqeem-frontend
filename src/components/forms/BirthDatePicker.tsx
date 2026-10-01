@@ -446,6 +446,7 @@ function WheelStrip({
     // momentum/settle (that only kicks in for real touch/wheel gestures), so
     // explicitly snap to whichever card ended up nearest the center.
     if (settleTimer.current) window.clearTimeout(settleTimer.current);
+    onMovingChange(false);
     const { nearestIndex } = applyScales();
     selectIndex(nearestIndex);
   }
