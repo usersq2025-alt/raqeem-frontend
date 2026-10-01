@@ -6,6 +6,7 @@ import { useRouter } from "@/i18n/navigation";
 import { BrandLogo } from "@/components/BrandLogo";
 import { BrandPageDecor } from "@/components/BrandPageDecor";
 import { FieldInput, LockIcon } from "@/components/ui/FieldInput";
+import { logout } from "@/lib/api/auth";
 import {
   getGuardianStatus,
   verifyGuardianPassword,
@@ -23,6 +24,7 @@ type Props = {
 export function FamilyGuardianUnlockPanel({ seed, pinSet, pinLocked, redirectTo = "/family/settings", onUnlocked }: Props) {
   const t = useTranslations("familySettings.guardian");
   const tSettings = useTranslations("familySettings");
+  const tSession = useTranslations("hub.settings");
   const router = useRouter();
   const titleId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,10 +34,26 @@ export function FamilyGuardianUnlockPanel({ seed, pinSet, pinLocked, redirectTo 
   const [error, setError] = useState("");
   const [locked, setLocked] = useState(pinLocked);
   const [usePin] = useState(pinSet);
+  const [leaving, setLeaving] = useState(false);
+  const [logoutError, setLogoutError] = useState(false);
+
+  async function handleLogout() {
+    if (busy || leaving) return;
+    setLeaving(true);
+    setLogoutError(false);
+    try {
+      await logout();
+      router.replace("/login");
+      router.refresh();
+    } catch {
+      setLogoutError(true);
+      setLeaving(false);
+    }
+  }
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (busy || locked) return;
+    if (busy || leaving || locked) return;
     setBusy(true);
     setError("");
     try {
@@ -136,12 +154,21 @@ export function FamilyGuardianUnlockPanel({ seed, pinSet, pinLocked, redirectTo 
             {error ? <p className="text-sm font-semibold text-red-600">{error}</p> : null}
             <button
               type="submit"
-              disabled={busy || locked || (usePin ? pin.length < 4 : password.length < 1)}
+              disabled={busy || leaving || locked || (usePin ? pin.length < 4 : password.length < 1)}
               className="min-h-12 w-full rounded-full bg-primary-orange text-sm font-extrabold text-white disabled:opacity-45"
             >
               {busy ? t("unlocking") : t("unlock")}
             </button>
           </form>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={busy || leaving}
+            className="mt-4 min-h-12 w-full rounded-full border border-neutral-200 bg-white text-sm font-extrabold text-text-navy transition-colors hover:bg-neutral-50 disabled:opacity-45"
+          >
+            {leaving ? tSession("loggingOut") : tSession("logout")}
+          </button>
+          {logoutError ? <p role="alert" className="mt-2 text-sm font-semibold text-red-600">{t("errors.logoutFailed")}</p> : null}
         </div>
       </div>
     </div>
