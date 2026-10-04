@@ -926,6 +926,7 @@
     "transitionDoneTitle": "Great! Lesson complete",
     "transitionDoneBody": "Taking you to celebrate your win…",
     "correct": "Great! That's correct",
+    "explanation": "Answer explanation",
     "incorrect": "Not this time",
     "true": "True",
     "false": "False",

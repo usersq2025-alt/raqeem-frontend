@@ -926,6 +926,7 @@
     "transitionDoneTitle": "أحسنت! أنهيت الدرس",
     "transitionDoneBody": "ننتقل الآن لتكريم إنجازك…",
     "correct": "أحسنت! إجابة صحيحة",
+    "explanation": "شرح الإجابة",
     "incorrect": "ليست هذه المرة",
     "true": "صح",
     "false": "خطأ",
