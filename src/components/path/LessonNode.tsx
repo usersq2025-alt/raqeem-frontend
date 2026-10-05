@@ -21,6 +21,8 @@ type Props = {
   selected?: boolean;
   ariaLabel: string;
   onSelect: () => void;
+  /** Tap on the lesson name card; defaults to onSelect. */
+  onSelectLabel?: () => void;
   anchorRef?: Ref<HTMLDivElement>;
 };
 
@@ -37,6 +39,7 @@ export function LessonNode({
   selected = false,
   ariaLabel,
   onSelect,
+  onSelectLabel,
   anchorRef,
 }: Props) {
   const tPath = useTranslations("student.path");
@@ -130,6 +133,7 @@ export function LessonNode({
         showStars={showStars}
         earnedStars={earned}
         starsAriaLabel={tPath("stars", { count: earned })}
+        onSelect={onSelectLabel ?? onSelect}
       />
     </div>
   );

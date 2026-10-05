@@ -74,6 +74,8 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
   const liveDraftRef = useRef<LiveDraft | null>(null);
   const browsingPast = browseIndex != null;
   const rewardedQuestions = useRef(new Set<number>());
+  const submitBarRef = useRef<HTMLDivElement>(null);
+  const [runId, setRunId] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,7 +123,54 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
     return () => {
       cancelled = true;
     };
-  }, [lessonId, childId, t]);
+  }, [lessonId, childId, t, runId]);
+
+  function restartLesson() {
+    liveDraftRef.current = null;
+    advancingRef.current = false;
+    rewardedQuestions.current.clear();
+    setAttempt(null);
+    setQuestion(null);
+    setSelected(null);
+    setCanSubmit(false);
+    setIsCorrect(null);
+    setFeedback({});
+    setHistory([]);
+    setBrowseIndex(null);
+    setTransitioning(false);
+    setError(null);
+    setBusy(false);
+    setPhase("playing");
+    window.scrollTo({ top: 0 });
+    setRunId((n) => n + 1);
+  }
+
+  // As soon as the answer is complete (one tap for MCQ, last pair/card for matching/classify),
+  // make sure the "check" bar is on screen and draw attention to it.
+  useEffect(() => {
+    if (!canSubmit || phase !== "playing" || browsingPast) return;
+    const bar = submitBarRef.current;
+    if (!bar) return;
+    const timer = window.setTimeout(() => {
+      const rect = bar.getBoundingClientRect();
+      if (rect.bottom > window.innerHeight || rect.top < 0) {
+        bar.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+          block: "end",
+        });
+      }
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, [canSubmit, phase, browsingPast, question?.id]);
+
+  useEffect(() => {
+    if (phase !== "feedback" || isCorrect == null || browsingPast || isCorrect !== false) return;
+    // Wrong answers show an explanation under the question: bring it into view.
+    const timer = window.setTimeout(() => {
+      document.querySelector("[data-play-feedback]")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 200);
+    return () => window.clearTimeout(timer);
+  }, [phase, isCorrect, browsingPast, question?.id]);
 
   useEffect(() => {
     if (phase !== "feedback" || isCorrect == null || browsingPast || !question || rewardedQuestions.current.has(question.id)) return;
@@ -319,7 +368,7 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
   }
 
   if (phase === "done") {
-    return <LessonCompleteCelebration attempt={attempt} childId={childId} />;
+    return <LessonCompleteCelebration attempt={attempt} childId={childId} onReplay={restartLesson} />;
   }
 
   const progressPct =
@@ -398,7 +447,10 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
         />
       ) : null}
 
-      <div className="sticky bottom-0 z-10 mt-4 bg-gradient-to-t from-[#F7FBFF] via-[#F7FBFF]/95 to-transparent pt-3">
+      <div
+        ref={submitBarRef}
+        className="sticky bottom-0 z-10 mt-4 bg-gradient-to-t from-[#F7FBFF] via-[#F7FBFF]/95 to-transparent pb-[env(safe-area-inset-bottom)] pt-3"
+      >
         {browsingPast ? (
           <Button onClick={goToNextQuestionView} fullWidth>
             {browseIndex != null && browseIndex >= history.length - 1
@@ -406,7 +458,12 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
               : t("nextQuestion")}
           </Button>
         ) : phase === "playing" ? (
-          <Button onClick={onSubmit} disabled={!canSubmit || busy} fullWidth>
+          <Button
+            onClick={onSubmit}
+            disabled={!canSubmit || busy}
+            fullWidth
+            className={canSubmit && !busy ? "play-check-ready" : undefined}
+          >
             {t("check")}
           </Button>
         ) : phase === "feedback" ? (
@@ -609,6 +666,7 @@ export function PlayFeedbackBanner({
   const t = useTranslations("lesson");
   return (
     <div
+      data-play-feedback
       className={`play-feedback-banner mt-4 flex items-center gap-3 rounded-[22px] border-4 px-4 py-3 ${
         isCorrect
           ? "play-feedback-correct border-emerald-300 bg-emerald-50 text-emerald-700"

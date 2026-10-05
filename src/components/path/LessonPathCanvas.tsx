@@ -162,6 +162,15 @@ export function LessonPathCanvas({ data, childId, focusLessonId = null }: Props)
     setModal({ station, state, number });
   }
 
+  /** Students often tap the lesson name instead of the node: open the current lesson straight away. */
+  function onSelectLabel(station: PathStation, number: number) {
+    if (visualState(station) === "current") {
+      openLesson(station);
+      return;
+    }
+    onSelect(station, number);
+  }
+
   function openLesson(station: PathStation) {
     router.push(lessonPlayPath(station.lessonId, childId));
   }
@@ -274,6 +283,7 @@ export function LessonPathCanvas({ data, childId, focusLessonId = null }: Props)
                           }`
                     }
                     onSelect={() => onSelect(row.station, row.number)}
+                    onSelectLabel={() => onSelectLabel(row.station, row.number)}
                   />
                 );
               })

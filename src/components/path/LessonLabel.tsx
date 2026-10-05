@@ -10,6 +10,8 @@ type Props = {
   /** 0-3, only meaningful when showStars is true. */
   earnedStars?: number;
   starsAriaLabel?: string;
+  /** Tapping the name does the same as tapping the node. */
+  onSelect?: () => void;
 };
 
 const BORDER: Record<StationVisualState, string> = {
@@ -31,6 +33,7 @@ export function LessonLabel({
   showStars = false,
   earnedStars = 0,
   starsAriaLabel,
+  onSelect,
 }: Props) {
   const tone =
     state === "locked"
@@ -40,8 +43,10 @@ export function LessonLabel({
   return (
     <div
       title={title}
+      onClick={onSelect}
       className={[
-        "path-lesson-label pointer-events-none absolute top-1/2 z-[5] -translate-y-1/2",
+        "path-lesson-label absolute top-1/2 z-[5] -translate-y-1/2",
+        onSelect ? "pointer-events-auto cursor-pointer" : "pointer-events-none",
         "flex w-[132px] flex-col items-center justify-center gap-1 rounded-[16px] border px-3 py-2",
         showStars ? "min-h-[62px] md:min-h-[68px]" : "min-h-[48px] md:min-h-[52px]",
         "shadow-[0_2px_8px_rgba(15,50,80,0.08)]",

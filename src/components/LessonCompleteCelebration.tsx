@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import type { LessonAttempt } from "@/lib/api/lessonPlay";
 import { isExperienceCelebrationEnabled, prefersReducedMotion } from "@/lib/experience/experiencePrefs";
-import { lessonPlayPath, unitLessonPath, unitPathFocus, withChildQuery } from "@/lib/config/subjects";
+import { unitLessonPath, unitPathFocus, withChildQuery } from "@/lib/config/subjects";
 import { playUiTone } from "@/lib/play/uiSounds";
 
 const CONFETTI_COLORS = ["#F48232", "#F9A8D4", "#7DD3FC", "#FDE68A", "#C4B5FD", "#6EE7B7"];
@@ -15,9 +15,11 @@ const CONFETTI_COLORS = ["#F48232", "#F9A8D4", "#7DD3FC", "#FDE68A", "#C4B5FD", 
 type Props = {
   attempt: LessonAttempt;
   childId: number;
+  /** Restart the lesson in place: the play URL is the same, so a plain link would do nothing. */
+  onReplay: () => void;
 };
 
-export function LessonCompleteCelebration({ attempt, childId }: Props) {
+export function LessonCompleteCelebration({ attempt, childId, onReplay }: Props) {
   const t = useTranslations("lesson");
   const tUnits = useTranslations("student.units");
   const replay = attempt.attemptNumber > 1;
@@ -34,11 +36,6 @@ export function LessonCompleteCelebration({ attempt, childId }: Props) {
     if (attempt.nextLessonId) return unitPathFocus(attempt.unitId, childId, attempt.nextLessonId);
     return unitLessonPath(attempt.unitId, childId);
   }, [attempt.nextLessonId, attempt.unitId, childId]);
-
-  const replayHref = useMemo(
-    () => lessonPlayPath(attempt.lessonId, childId),
-    [attempt.lessonId, childId]
-  );
 
   useEffect(() => {
     if (!isExperienceCelebrationEnabled()) return;
@@ -109,7 +106,7 @@ export function LessonCompleteCelebration({ attempt, childId }: Props) {
         <Button href={pathHref} className="w-full">
           {t("backToPath")}
         </Button>
-        <Button href={replayHref} variant="secondary" className="w-full">
+        <Button type="button" onClick={onReplay} variant="secondary" className="w-full">
           {t("replayLesson")}
         </Button>
       </div>

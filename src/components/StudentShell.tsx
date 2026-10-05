@@ -77,7 +77,10 @@ export function StudentShell({ children }: Props) {
         className={`relative ${
           isPathScreen
             ? "h-[100dvh] overflow-hidden"
-            : "min-h-screen overflow-x-hidden"
+            : hideNav
+              ? // clip (not hidden): hidden turns this div into a scroll container and breaks the sticky "check" bar
+                "min-h-screen overflow-x-clip"
+              : "min-h-screen overflow-x-hidden"
         } ${
           hideNav ? "bg-[#F7FBFF]" : isPathScreen ? "bg-[#F4F7FB]" : "student-sky bg-[#F7FBFF]"
         }`}

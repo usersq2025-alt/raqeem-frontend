@@ -44,7 +44,8 @@
       "parent": {
         "title": "Parent follow-up",
         "body": "Follow your children's progress and see which lessons they have mastered and where they need more review."
-      }
+      },
+      "heading": "Why Raqeem?"
     },
     "how": {
       "title": "How does your child's journey begin on Raqeem?",
@@ -148,16 +149,19 @@
       "learnMore": "See how it works",
       "showLess": "Show less",
       "reports": {
+        "badge": "Parent reports",
         "title": "Reports that help you support them",
         "body": "The system analyzes your child's performance on questions and activities, highlights strengths and areas that need more review, then provides the parent with a clear report and practical recommendations.",
         "bullets": {
           "patterns": "Notice patterns in the child's performance",
+          "personal": "Notice patterns in the child's performance",
           "strengths": "Identify strengths",
           "gaps": "Identify areas that need review",
           "tips": "Offer practical recommendations for the parent"
         }
       },
       "review": {
+        "badge": "Smart review",
         "title": "A review station that adapts to mistakes",
         "body": "At the end of each unit, Raqeem revisits the questions the child missed and presents them in a new wording, while keeping the curriculum concepts and terminology from their textbook.",
         "bullets": {
@@ -550,7 +554,20 @@
       "close": "Close"
     },
     "birthPicker": {
-      "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+      "months": [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+      ],
       "dragYear": "Drag to pick the birth year",
       "yearSelected": "Birth year: {year}",
       "dragMonth": "Pick the birth month",
@@ -589,7 +606,8 @@
       "edit": "Edit parent profile",
       "logout": "Log out",
       "loggingOut": "Signing out..."
-    }
+    },
+    "entryLockFailed": "Could not secure parent mode. Please try again."
   },
   "career": {
     "back": "Back",
@@ -753,12 +771,30 @@
       "adventureEyebrow": "My adventure today",
       "futureProfession": "Future {profession}",
       "professionLabels": {
-        "doctor": { "male": "Future doctor", "female": "Future doctor" },
-        "engineer": { "male": "Future engineer", "female": "Future engineer" },
-        "teacher": { "male": "Future teacher", "female": "Future teacher" },
-        "chef": { "male": "Future chef", "female": "Future chef" },
-        "astronaut": { "male": "Future astronaut", "female": "Future astronaut" },
-        "soldier": { "male": "Future protector", "female": "Future protector" }
+        "doctor": {
+          "male": "Future doctor",
+          "female": "Future doctor"
+        },
+        "engineer": {
+          "male": "Future engineer",
+          "female": "Future engineer"
+        },
+        "teacher": {
+          "male": "Future teacher",
+          "female": "Future teacher"
+        },
+        "chef": {
+          "male": "Future chef",
+          "female": "Future chef"
+        },
+        "astronaut": {
+          "male": "Future astronaut",
+          "female": "Future astronaut"
+        },
+        "soldier": {
+          "male": "Future protector",
+          "female": "Future protector"
+        }
       },
       "todayTitle": "Today's mission",
       "missionEyebrow": "Choose it. Complete it.",
@@ -855,7 +891,8 @@
       "ownedCount": "{count} items in HQ",
       "comingSoonLead": "This screen is still being prepared. Use the shortcuts to jump to learning, the store, or headquarters.",
       "comingSoonHint": "Existing subjects and store interactions still work from the sidebar.",
-      "shortcuts": "Shortcuts"
+      "shortcuts": "Shortcuts",
+      "lessonsComingSoon": "Lessons will appear here when they are published."
     },
     "subjects": {
       "arabic": "Arabic",
@@ -909,7 +946,11 @@
         "trophy_shelf": "Trophy shelf",
         "anatomy_poster": "Anatomy poster"
       }
-    }
+    },
+    "untitledLesson": "Lesson {number}",
+    "subjectOutline": "{units} units · {lessons} lessons",
+    "catalogUnits": "{count} units",
+    "catalogLessons": "{count} lessons · coming soon"
   },
   "lesson": {
     "loading": "Let's go!",
@@ -965,7 +1006,7 @@
     "game": "Game {current} of {total}",
     "questionProgress": "Question {current} of {total}",
     "hintChoose": "Pick an answer, then tap Check",
-    "hintMatch": "",
+    "hintMatch": "Tap one item in each column to link a pair, then finish the others",
     "hintClassify": "Drag each card into a box — you can move it again anytime",
     "hintOrder": "Tap a card to place it in the first empty slot",
     "hintCrossword": "Read the clue and type the word",
@@ -981,7 +1022,17 @@
     "reset": "Reset",
     "expected": "Correct",
     "classifyTray": "Cards",
-    "classifyTrayEmpty": "All cards are in boxes"
+    "classifyTrayEmpty": "All cards are in boxes",
+    "finishLesson": "See your results",
+    "goToBreak": "Got it, take a break",
+    "resumeAfterBreak": "Break over, continue lesson",
+    "matchManyHint": "Choose an answer, then tap each matching item. More than one item can share the same answer.",
+    "matchLinkedCount": "Linked to {count} items",
+    "hintOrderClear": "Tap a placed card to send it and everything after it back",
+    "belongsIn": "Belongs in: {category}",
+    "batteryLabel": "Battery {remaining} of {total}",
+    "questionsRemaining": "{count} left",
+    "allDone": "You finished every question"
   },
   "review": {
     "title": "Review station",
@@ -1093,7 +1144,19 @@
       "gradeUnknown": "Grade not set",
       "avatarFollowsProfession": "The avatar currently follows the chosen profession.",
       "professionLocked": "Profession cannot be changed after HQ building has started yet.",
-      "gradeConfirmed": "Grade-change impact confirmed."
+      "gradeConfirmed": "Grade-change impact confirmed.",
+      "enterFailed": "Could not secure parent mode. Please try again.",
+      "deleteAccount": "Delete student account",
+      "deleteTitle": "Delete {name}'s account",
+      "deleteWarning": "This permanently deletes the student profile, answers, points, purchases, and reports. It cannot be undone.",
+      "deleteConfirmName": "To confirm, type the student's name exactly: {name}",
+      "deleteFailed": "Could not delete the student account. Please try again.",
+      "deleted": "Student account deleted.",
+      "resetPurchases": "Reset exhibition purchases",
+      "resetPurchasesTitle": "Restart {name}'s store",
+      "resetPurchasesWarning": "Purchased items will return to the store and their spent points will be refunded. Lesson answers and progress stay saved.",
+      "resetPurchasesFailed": "Could not reset purchases. Please try again.",
+      "purchasesReset": "{count} items are available to buy again, and {points} points were refunded."
     },
     "learning": {
       "pickChild": "Select a child",
@@ -1126,7 +1189,8 @@
       "subjectAvailable": "Available",
       "subjectEmpty": "No content yet",
       "smartReviewTitle": "Smart review stations",
-      "smartReviewBody": "Raqeem will reuse past mistakes to present new questions with the same curriculum terms."
+      "smartReviewBody": "Raqeem will reuse past mistakes to present new questions with the same curriculum terms.",
+      "dayProgress": "Today: {done} of {goal}"
     },
     "appearance": {
       "locale": "App language",
@@ -1253,13 +1317,104 @@
       "lastActivity": "Last activity: {date}",
       "detailedCta": "View detailed report",
       "aiTitle": "Smart analysis of your child’s performance",
-      "aiBody": "We are building a report that highlights strengths and support areas with practical parent recommendations."
+      "aiBody": "We are building a report that highlights strengths and support areas with practical parent recommendations.",
+      "weeklyGoal": "Weekly goal",
+      "weekRange": "{start} to {end}",
+      "goalReached": "Great! The weekly goal is complete.",
+      "goalRemaining": "{count} more lessons to reach the goal.",
+      "completedLabel": "Lessons completed",
+      "completedHint": "Since learning began",
+      "accuracyLabel": "Correct answers",
+      "noAnswers": "No answers yet",
+      "answersCount": "Out of {count} answers",
+      "streakLabel": "Learning days in a row",
+      "streakHint": "Current streak",
+      "subjectsTitle": "Progress by subject",
+      "subjectsHint": "Completed lessons out of available lessons in each subject.",
+      "noSubjects": "No subject lessons are available yet.",
+      "nextStepTitle": "A simple next step",
+      "startGuidance": "Encourage your child to finish a first lesson, then follow their progress here.",
+      "nextSubject": "Continue the remaining lessons in {name}. This shows completion, not your child's ability.",
+      "keepGoing": "Keep a short, regular learning routine.",
+      "insights": {
+        "title": "Learning report by email",
+        "loadingQuota": "Checking available report emails...",
+        "quotaError": "Could not check available emails. Please reopen this page.",
+        "loading": "Preparing the report...",
+        "error": "The report could not be loaded right now.",
+        "period": "{start} to {end}",
+        "noActivity": "There are not enough answers or completed lessons for a report this period. Let your child complete a lesson, then try again.",
+        "activity": "{lessons} lessons completed · {answers} answers",
+        "limited": "The evidence is limited; it cannot establish your child's ability on its own.",
+        "strengths": "Topics with strong performance",
+        "practice": "Topics worth more practice",
+        "evidence": "{correct} correct out of {answers} answers",
+        "recommendations": "Short activities to try",
+        "question": "Question to revisit: {question}",
+        "answerComparison": "Chose: {selected} · Correct answer: {correct}",
+        "homeActivity": "At-home activity: {activity}",
+        "checkLabel": "How can you tell they improved?",
+        "sendEmailTitle": "Email me this report",
+        "sendEmailHint": "We'll prepare a report on your child's answers, strengths, and practice needs, then email it to your account address. The report is not shown in the platform.",
+        "sendNow": "Send report now",
+        "sendAgain": "Send another report",
+        "limitButton": "Weekly limit reached",
+        "quota": "{used} of {limit} report emails sent this week. Your allowance resets on {reset}.",
+        "unlimited": "Raqeem trial account: report emails have no weekly limit.",
+        "sending": "Preparing email...",
+        "sent": "Your report is queued for your account email. It may take a few minutes to arrive.",
+        "emailNotVerified": "Verify your account email first to receive the report.",
+        "weeklyLimitReached": "You've reached the weekly report email limit. Try again when it resets.",
+        "guardianLocked": "Unlock parent mode, then try again.",
+        "sendFailed": "We couldn't send the report right now. Please try again shortly.",
+        "steady": "Keep learning in short, regular sessions. More specific suggestions will appear when there are enough answers.",
+        "disclaimer": "These are learning indicators for support, not a diagnosis or a judgment of ability."
+      }
     },
     "alerts": {
       "panelTitle": "Alerts and follow-up",
       "panelLead": "Choose the events you want Raqeem to notify you about.",
       "soonTitle": "Follow-up alerts",
-      "soonBody": "We are preparing alerts that help you follow progress without noise."
+      "soonBody": "We are preparing alerts that help you follow progress without noise.",
+      "deliveryTitle": "How should alerts reach you?",
+      "deliveryLead": "Choose the channels and events that matter. Saved choices apply to new activity.",
+      "inApp": "In the platform",
+      "inAppHint": "Show new events here in your alert inbox.",
+      "email": "Email",
+      "emailHint": "Email for daily goals, purchases, and learning reports. A verified email address is required.",
+      "emailNotReady": "Email alerts will start after you verify your email address in account settings.",
+      "eventsTitle": "Events to follow",
+      "events": {
+        "lesson_completed": "Lesson completed",
+        "weekly_goal_reached": "Daily goal reached",
+        "purchase_made": "Student store purchase",
+        "weekly_report": "Weekly learning report"
+      },
+      "eventHints": {
+        "lesson_completed": "In-app only to keep email quiet.",
+        "weekly_goal_reached": "In-app and email when enabled.",
+        "purchase_made": "In-app and email when enabled.",
+        "weekly_report": "Sent when there is activity, subject to the account's report email allowance."
+      },
+      "reportLimitTitle": "Weekly report email allowance",
+      "reportLimitHint": "Shared across all children and includes scheduled and requested reports.",
+      "reportLimitOne": "One email per week",
+      "reportLimitThree": "3 emails per week",
+      "reportLimitUnlimited": "Raqeem trial account: report emails have no weekly limit.",
+      "inboxTitle": "Alert inbox",
+      "unread": "Unread: {count}",
+      "readAll": "Mark all as read",
+      "markRead": "Mark read",
+      "emptyTitle": "No alerts yet",
+      "emptyBody": "New events will appear here as your child learns.",
+      "childFallback": "Your child",
+      "lessonFallback": "a lesson",
+      "itemFallback": "an item",
+      "messages": {
+        "lesson_completed": "{name} completed {lesson}",
+        "weekly_goal_reached": "{name} reached the daily goal: {count} lessons",
+        "purchase_made": "{name} bought {item} for {points} points"
+      }
     }
   },
   "familyHelp": {
@@ -1351,5 +1506,12 @@
     "usePassword": "Use password instead",
     "skipPin": "Skip for now",
     "passwordHint": "You have not set a parent PIN yet, so we ask for the same login password you use for Raqeem."
+  },
+  "questionImage": {
+    "description": "Illustration for the question",
+    "enlarge": "Enlarge image",
+    "close": "Close image",
+    "failed": "The question image could not load. Please retry before answering.",
+    "retry": "Reload image"
   }
 }
