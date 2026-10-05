@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
-import { SESSION_COOKIE_NAME, type SessionPayload } from "@/lib/auth/sessionCookie";
+import { cookies } from "next/headers";
+import { parseSessionCookie, SESSION_COOKIE_NAME, type SessionPayload } from "@/lib/auth/sessionCookie";
 
 const MAX_AGE = 60 * 60 * 24 * 365;
+
+export async function GET() {
+  const session = parseSessionCookie((await cookies()).get(SESSION_COOKIE_NAME)?.value);
+  return NextResponse.json({ parentId: session?.parent.id ?? null }, { headers: { "Cache-Control": "no-store" } });
+}
 
 export async function POST(request: Request) {
   const body = (await request.json()) as Partial<SessionPayload>;

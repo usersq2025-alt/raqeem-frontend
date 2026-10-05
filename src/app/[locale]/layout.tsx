@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { LastVisitTracker } from "@/components/LastVisitTracker";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -82,6 +84,7 @@ export default async function LocaleLayout({ children, params }: Props) {
     >
       <body className={`min-h-full bg-background-white ${isRtl ? "font-sans" : "font-sans-ltr"}`}>
         <NextIntlClientProvider locale={locale} messages={messages} formats={LATIN_NUMBER_FORMATS}>
+          <Suspense fallback={null}><LastVisitTracker /></Suspense>
           {children}
         </NextIntlClientProvider>
       </body>

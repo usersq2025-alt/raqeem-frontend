@@ -1,4 +1,5 @@
 import { ApiError, apiClient } from "./client";
+import { clearLastVisit } from "@/lib/navigation/lastVisit";
 
 export class AuthApiError extends Error {
   constructor(
@@ -193,4 +194,5 @@ export async function logout(): Promise<void> {
   if (!response.ok) {
     throw new AuthApiError("NETWORK", "NETWORK", response.status);
   }
+  clearLastVisit();
 }
