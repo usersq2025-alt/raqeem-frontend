@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -136,6 +136,28 @@
     .hud { top:50px; inset-inline-end:8px; flex-direction:row; flex-wrap:wrap; justify-content:flex-end; max-width:calc(100% - 16px); } .hud button { padding:5px 11px; font-size:12px; } .hud .stars { font-size:14px; }
     .guide { top:92px; inset-inline-start:8px; max-width:calc(100% - 16px); } .guide img { width:52px; height:52px; } .guide .bub { font-size:14px; padding:8px 11px; }
     .mpanel { top:50px; inset-inline:8px; width:auto; max-height:calc(100% - 64px); } .mbanner div { font-size:16px; padding:10px 16px; }
+  }
+  /* ---- تجربة الجوال: شريط سفلي كبير + درج المتجر + شاشة كاملة للعيادة ---- */
+  .dock, .backdrop, .dclose { display:none; }
+  .placebar .ok { background:#22a867; border-color:#22a867; font-size:18px; padding:12px 26px; } .placebar .ok.off { background:#3b4a5c; border-color:#3b4a5c; opacity:.7; }
+  @media (max-width: 760px) {
+    .app, .app.focus { grid-template-columns:1fr; grid-template-rows:1fr; }
+    .side { position:fixed; inset-inline:0; bottom:0; top:auto; height:64%; z-index:20; transform:translateY(106%); transition:transform .25s ease; border-radius:24px 24px 0 0; box-shadow:0 -12px 30px rgba(0,0,0,.5); border:0; }
+    .app.drawer .side { transform:none; } .app.focus .side { display:none; }
+    .backdrop { position:fixed; inset:0; z-index:19; background:rgba(0,0,0,.4); } .app.drawer .backdrop { display:block; }
+    .dclose { display:grid; place-items:center; position:absolute; top:10px; inset-inline-start:10px; z-index:3; width:36px; height:36px; border-radius:50%; border:0; background:#2a394a; color:#fff; font-size:16px; cursor:pointer; }
+    .side .head { padding-inline-start:56px; } .side-in .foot { padding-bottom:max(10px, env(safe-area-inset-bottom)); }
+    .dock { display:flex; position:fixed; bottom:0; inset-inline:0; z-index:21; background:rgba(15,23,32,.97); border-top:1px solid var(--line); padding:5px 2px calc(5px + env(safe-area-inset-bottom)); }
+    .app.focus .dock { display:none; }
+    .dock button { flex:1; min-height:58px; background:none; border:0; color:#fff; display:grid; align-content:center; justify-items:center; gap:0; font:inherit; font-size:12px; font-weight:700; position:relative; border-radius:14px; cursor:pointer; }
+    .dock button:disabled { opacity:.35; } .dock button.on { background:#2a394a; } .dock i { font-style:normal; font-size:26px; line-height:1.2; }
+    .dock em { position:absolute; top:3px; inset-inline-end:calc(50% - 26px); background:#e5604d; color:#fff; border-radius:99px; min-width:20px; text-align:center; font-style:normal; font-size:12px; padding:1px 5px; }
+    .morebox { position:absolute; bottom:74px; inset-inline-end:8px; display:grid; gap:6px; background:#17212d; border:1px solid var(--line); border-radius:18px; padding:8px; min-width:210px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
+    .dock .morebox button { flex:none; min-height:44px; background:#1d2a39; border-radius:12px; padding:8px 12px; font-size:15px; display:block; text-align:start; font-weight:600; }
+    .desk-only, .hud .chip { display:none !important; }
+    .roombar button { min-width:46px; min-height:44px; font-size:18px; } .roombar .lbl { display:none; }
+    .placebar { bottom:calc(14px + env(safe-area-inset-bottom)); gap:8px; } .placebar button { padding:12px 16px; font-size:16px; } .placebar .ok { padding:12px 20px; font-size:17px; }
+    .sheet { bottom:calc(8px + env(safe-area-inset-bottom)); }
   }
 </style>
 </head>
