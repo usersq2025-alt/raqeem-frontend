@@ -707,6 +707,18 @@
       "open": "Open calendar"
     },
     "hq": {
+      "storeTitle": "Clinic tools store",
+      "storeSubtitle": "Buy tools with your points, then place and try them in your clinic.",
+      "storeGroupFloor": "Clinic furniture and equipment",
+      "storeGroupSmall": "Small tools (placed on a desk)",
+      "storeBuy": "Buy",
+      "storeBought": "Bought ✓",
+      "storeFailed": "Purchase failed",
+      "storeNeedMore": "Need {count} more points",
+      "storeOwned": "You have {count}",
+      "storeError": "Couldn't load the store. Check your connection and try again.",
+      "goToClinic": "Go to my clinic",
+      "pointsUnit": "points",
       "play3dTitle": "Your 3D clinic!",
       "play3dBody": "Buy tools, place them, try them out and learn how doctors use them.",
       "play3dCta": "Enter your clinic",
