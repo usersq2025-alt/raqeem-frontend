@@ -55,6 +55,7 @@ export const PROFESSION_LABELS_AR: Record<ProfessionCode, string> = {
   chef: HQ_PATHS_DATA.labelsAr.chef,
   astronaut: HQ_PATHS_DATA.labelsAr.astronaut,
   soldier: HQ_PATHS_DATA.labelsAr.soldier,
+  pilot: HQ_PATHS_DATA.labelsAr.pilot,
 };
 
 function padStage(stage: number): string {
@@ -139,6 +140,7 @@ export const TEACHER_STAGES = buildStagesForProfession("teacher");
 export const CHEF_STAGES = buildStagesForProfession("chef");
 export const ASTRONAUT_STAGES = buildStagesForProfession("astronaut");
 export const SOLDIER_STAGES = buildStagesForProfession("soldier");
+export const PILOT_STAGES = buildStagesForProfession("pilot");
 
 export const HEADQUARTERS_STAGES_BY_PROFESSION: Record<
   ProfessionCode,
@@ -150,4 +152,5 @@ export const HEADQUARTERS_STAGES_BY_PROFESSION: Record<
   chef: CHEF_STAGES,
   astronaut: ASTRONAUT_STAGES,
   soldier: SOLDIER_STAGES,
+  pilot: PILOT_STAGES,
 };

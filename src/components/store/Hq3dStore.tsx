@@ -5,15 +5,15 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { useStudentChrome } from "@/components/StudentChrome";
 import { withChildQuery } from "@/lib/config/subjects";
+import { HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
 
 // Bump when /public/hq-lab is republished so browsers fetch the new bundle.
-const ASSET_VERSION = "4";
-const BASE = "/hq-lab/";
+const ASSET_VERSION = "5";
 
 type CatalogTool = {
   id: string;
   name: string;
-  class: "floor" | "table";
+  class: "floor" | "table" | "wall";
   thumb: string | null;
   info?: { emoji?: string; why?: string; how?: string[] };
 };
@@ -38,12 +38,12 @@ async function json<T>(url: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-function posterSrc(tool: CatalogTool) {
-  return tool.thumb ? `${BASE}${tool.thumb.replace(/^\.\//, "")}` : null;
+function posterSrc(base: string, tool: CatalogTool) {
+  return tool.thumb ? `${base}${tool.thumb.replace(/^\.\//, "")}` : null;
 }
 
 /** Live, slowly rotating 3D model; the static thumbnail shows until the model is ready (or if WebGL fails). */
-function ToolCanvas({ shelf, tool }: { shelf: Shelf | null; tool: CatalogTool }) {
+function ToolCanvas({ shelf, tool, base }: { shelf: Shelf | null; tool: CatalogTool; base: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
   useEffect(() => {
@@ -51,7 +51,7 @@ function ToolCanvas({ shelf, tool }: { shelf: Shelf | null; tool: CatalogTool })
     if (!shelf || !canvas) return;
     return shelf.card(canvas, tool.id, () => setReady(true));
   }, [shelf, tool.id]);
-  const poster = posterSrc(tool);
+  const poster = posterSrc(base, tool);
   return (
     <>
       {!ready && poster ? (
@@ -242,8 +242,10 @@ function ToolPreview({ shelf, tool, price, owned, balance, busy, onBuy, onClose 
 }
 
 /** Store tab for the 3D clinic: live 3D cards, try-before-you-buy preview, clear prices. */
-export function Hq3dStore({ childId }: { childId: number }) {
+export function Hq3dStore({ childId, profession }: { childId: number; profession: Hq3dProfession }) {
   const t = useTranslations("student.hq");
+  const th = useTranslations("student.hq.hq3d");
+  const BASE = hq3dBase(profession);
   const chrome = useStudentChrome();
   const setChromePoints = chrome?.setPoints;
   const [tools, setTools] = useState<CatalogTool[]>([]);
@@ -280,7 +282,7 @@ export function Hq3dStore({ childId }: { childId: number }) {
     void (async () => {
       try {
         const mod = (await import(
-          /* webpackIgnore: true */ /* turbopackIgnore: true */ `${BASE}app.bundle.js?v=${ASSET_VERSION}`
+          /* webpackIgnore: true */ /* turbopackIgnore: true */ `${HQ3D_BUNDLE}?v=${ASSET_VERSION}`
         )) as { createShelf: (base: string) => Promise<Shelf> };
         const created = await mod.createShelf(BASE);
         if (!cancelled) setShelf(created);
@@ -291,14 +293,15 @@ export function Hq3dStore({ childId }: { childId: number }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [BASE]);
 
   const groups = useMemo(
     () => [
-      { key: "floor", title: t("storeGroupFloor"), items: tools.filter((x) => x.class === "floor") },
-      { key: "table", title: t("storeGroupSmall"), items: tools.filter((x) => x.class === "table") },
-    ],
-    [tools, t]
+      { key: "floor", title: th(`${profession}.groupFloor`), items: tools.filter((x) => x.class === "floor") },
+      { key: "table", title: th(`${profession}.groupSmall`), items: tools.filter((x) => x.class === "table") },
+      { key: "wall", title: th(`${profession}.groupWall`), items: tools.filter((x) => x.class === "wall") },
+    ].filter((g) => g.items.length > 0),
+    [tools, th, profession]
   );
 
   async function buy(tool: CatalogTool) {
@@ -354,8 +357,8 @@ export function Hq3dStore({ childId }: { childId: number }) {
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-center justify-between gap-3 rounded-[28px] bg-white p-4 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.4)] md:p-5">
         <div className="min-w-0">
-          <h1 className="text-xl font-extrabold text-text-navy md:text-2xl">{t("storeTitle")}</h1>
-          <p className="mt-1 text-sm font-bold text-text-gray">{t("storeSubtitle")}</p>
+          <h1 className="text-xl font-extrabold text-text-navy md:text-2xl">{th(`${profession}.storeTitle`)}</h1>
+          <p className="mt-1 text-sm font-bold text-text-gray">{th(`${profession}.storeSubtitle`)}</p>
         </div>
         <div className="flex items-center gap-3">
           <span className="rounded-full bg-[#FFF3E3] px-4 py-2 text-base font-extrabold text-primary-orange" aria-live="polite">
@@ -366,7 +369,7 @@ export function Hq3dStore({ childId }: { childId: number }) {
             fullWidth
             className="!min-h-11 !w-auto !px-5 !py-2 text-sm"
           >
-            {t("goToClinic")}
+            {th(`${profession}.goTo`)}
           </Button>
         </div>
       </header>
@@ -393,7 +396,7 @@ export function Hq3dStore({ childId }: { childId: number }) {
                     aria-label={`${t("storeTryIt")}: ${tool.name}`}
                     className="relative aspect-square w-full overflow-hidden rounded-[18px] bg-gradient-to-b from-[#EAF4FF] to-[#F7FBFF]"
                   >
-                    <ToolCanvas shelf={shelf} tool={tool} />
+                    <ToolCanvas shelf={shelf} tool={tool} base={BASE} />
                     {owned > 0 ? (
                       <span className="absolute start-2 top-2 rounded-full bg-[#2DBEA1] px-2.5 py-0.5 text-xs font-extrabold text-white">
                         {t("storeOwned", { count: owned })}

@@ -26,6 +26,7 @@ const PRESETS: Array<{ id: number; code: ProfessionCode; tint: string }> = [
   { id: 4, code: "chef", tint: "from-yellow-100 to-amber-50" },
   { id: 5, code: "astronaut", tint: "from-violet-100 to-purple-50" },
   { id: 6, code: "soldier", tint: "from-lime-100 to-stone-100" },
+  { id: 7, code: "pilot", tint: "from-blue-100 to-sky-50" },
 ];
 
 type Step = "grid" | "custom" | "generating" | "preview";

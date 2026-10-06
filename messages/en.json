@@ -641,6 +641,10 @@
       "soldier": {
         "male": "Soldier",
         "female": "Soldier"
+      },
+      "pilot": {
+        "male": "Pilot",
+        "female": "Pilot"
       }
     },
     "other": {
@@ -707,7 +711,26 @@
       "open": "Open calendar"
     },
     "hq": {
-      "storeTitle": "Clinic tools store",
+      "hq3d": {
+        "doctor": {
+          "title": "Your 3D clinic!",
+          "storeTitle": "Clinic tools store",
+          "storeSubtitle": "Buy tools with your points, then place and try them in your clinic.",
+          "goTo": "Go to my clinic",
+          "groupFloor": "Clinic furniture and equipment",
+          "groupSmall": "Small tools (placed on a desk)",
+          "groupWall": "Wall tools"
+        },
+        "pilot": {
+          "title": "Your 3D airplane!",
+          "storeTitle": "Airplane tools store",
+          "storeSubtitle": "Buy tools with your points, then place and try them in your airplane.",
+          "goTo": "Go to my airplane",
+          "groupFloor": "Seats and airplane equipment",
+          "groupSmall": "Small tools (placed on a surface)",
+          "groupWall": "Wall tools (mounted on the cabin wall)"
+        }
+      },      "storeTitle": "Clinic tools store",
       "storeSubtitle": "Buy tools with your points, then place and try them in your clinic.",
       "storeGroupFloor": "Clinic furniture and equipment",
       "storeGroupSmall": "Small tools (placed on a desk)",
@@ -821,6 +844,10 @@
         "soldier": {
           "male": "Future protector",
           "female": "Future protector"
+        },
+        "pilot": {
+          "male": "Future pilot",
+          "female": "Future pilot"
         }
       },
       "todayTitle": "Today's mission",

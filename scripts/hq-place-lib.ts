@@ -65,6 +65,7 @@ export const STAGE_PRICES_BY_PROFESSION: Record<ProfessionCode, Record<number, n
   chef: { 1: 6, 2: 12, 3: 24, 4: 36, 5: 48 },
   astronaut: { 1: 6, 2: 12, 3: 24, 4: 36, 5: 48 },
   soldier: { 1: 6, 2: 12, 3: 24, 4: 36, 5: 48 },
+  pilot: {},
 };
 
 /** @deprecated use STAGE_PRICES_BY_PROFESSION.doctor */

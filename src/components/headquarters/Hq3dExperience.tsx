@@ -4,10 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { useStudentChrome } from "@/components/StudentChrome";
+import { HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
 
 // Bump when /public/hq-lab is republished so browsers fetch the new bundle/CSS.
-const ASSET_VERSION = "4";
-const BASE = "/hq-lab/";
+const ASSET_VERSION = "5";
 
 type Hq3dLoad = {
   points_balance: number;
@@ -25,7 +25,7 @@ type Remote = {
 
 type Mount = (
   el: HTMLElement,
-  opts: { base: string; remote: Remote; defaults: { clinic: string } }
+  opts: { base: string; profession: string; remote: Remote; defaults: { clinic: string } }
 ) => Promise<() => void>;
 
 class HttpError extends Error {
@@ -40,11 +40,13 @@ async function http<T>(url: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-type Props = { childId: number; childName: string };
+type Props = { childId: number; childName: string; profession: Hq3dProfession };
 
 /** Hosts the 3D clinic (static bundle in /public/hq-lab) inside the student shell, wired to the student's points. */
-export function Hq3dExperience({ childId }: Props) {
+export function Hq3dExperience({ childId, profession }: Props) {
   const t = useTranslations("student.hq");
+  const th = useTranslations("student.hq.hq3d");
+  const base = hq3dBase(profession);
   const chrome = useStudentChrome();
   const setChromePoints = chrome?.setPoints;
   const host = useRef<HTMLDivElement>(null);
@@ -82,9 +84,9 @@ export function Hq3dExperience({ childId }: Props) {
     void (async () => {
       try {
         const mod = (await import(
-          /* webpackIgnore: true */ /* turbopackIgnore: true */ `${BASE}app.bundle.js?v=${ASSET_VERSION}`
+          /* webpackIgnore: true */ /* turbopackIgnore: true */ `${HQ3D_BUNDLE}?v=${ASSET_VERSION}`
         )) as { mount: Mount };
-        const stop = await mod.mount(el, { base: BASE, remote, defaults: { clinic: "" } });
+        const stop = await mod.mount(el, { base, profession, remote, defaults: { clinic: "" } });
         if (cancelled) stop();
         else {
           unmount = stop;
@@ -100,7 +102,7 @@ export function Hq3dExperience({ childId }: Props) {
     };
     // setChromePoints is stable (state setter); re-running on it would remount the game
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [childId, attempt]);
+  }, [childId, attempt, base, profession]);
 
   const retry = useCallback(() => {
     setState("loading");
@@ -109,9 +111,9 @@ export function Hq3dExperience({ childId }: Props) {
 
   return (
     <div className="flex flex-col gap-3">
-      <link rel="stylesheet" href={`${BASE}hq3d.css?v=${ASSET_VERSION}`} />
+      <link rel="stylesheet" href={`/hq-lab/hq3d.css?v=${ASSET_VERSION}`} />
       <header className="min-w-0">
-        <h1 className="truncate text-xl font-extrabold text-text-navy md:text-2xl">{t("play3dTitle")}</h1>
+        <h1 className="truncate text-xl font-extrabold text-text-navy md:text-2xl">{th(`${profession}.title`)}</h1>
       </header>
 
       <div className="relative h-[calc(100dvh-11rem)] min-h-[480px] md:h-[calc(100dvh-8.5rem)] md:min-h-[560px]">
