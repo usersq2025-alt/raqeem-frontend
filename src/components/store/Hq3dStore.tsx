@@ -8,7 +8,7 @@ import { withChildQuery } from "@/lib/config/subjects";
 import { HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
 
 // Bump when /public/hq-lab is republished so browsers fetch the new bundle.
-const ASSET_VERSION = "5";
+const ASSET_VERSION = "6";
 
 type CatalogTool = {
   id: string;
