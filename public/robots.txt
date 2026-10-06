@@ -1,4 +1,4 @@
-User-agent: *
+﻿User-agent: *
 Allow: /
 
 # Brand icons must remain publicly crawlable for browser tabs and Google.
@@ -10,3 +10,7 @@ Allow: /icon-192x192.png
 Allow: /icon-512x512.png
 Allow: /manifest.webmanifest
 Allow: /images/brand/
+
+# Unlisted 3D clinic HQ preview
+Disallow: /hq-lab/
+
