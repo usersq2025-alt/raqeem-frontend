@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { useStudentChrome } from "@/components/StudentChrome";
 import { withChildQuery } from "@/lib/config/subjects";
 
+// Bump when /public/hq-lab is republished so browsers fetch the new bundle.
+const ASSET_VERSION = "4";
 const BASE = "/hq-lab/";
 
 type CatalogTool = {
@@ -13,12 +15,22 @@ type CatalogTool = {
   name: string;
   class: "floor" | "table";
   thumb: string | null;
-  info?: { emoji?: string; why?: string };
+  info?: { emoji?: string; why?: string; how?: string[] };
 };
 
 type Hq3dLoad = { points_balance: number; prices: Record<string, number>; owned: Record<string, number> };
 
-type Props = { childId: number };
+type PreviewViewer = {
+  groups: { key: string; label: string; icon: string }[];
+  hasColor: boolean;
+  toggle: (key: string) => void;
+  cycleColor: () => void;
+  dispose: () => void;
+};
+type Shelf = {
+  card: (canvas: HTMLCanvasElement, id: string, onReady?: () => void) => () => void;
+  viewer: (canvas: HTMLCanvasElement, id: string) => Promise<PreviewViewer>;
+};
 
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { credentials: "include", cache: "no-store", ...init });
@@ -26,8 +38,211 @@ async function json<T>(url: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-/** Store tab for the 3D clinic: every tool with a clear price, owned count and buy button. */
-export function Hq3dStore({ childId }: Props) {
+function posterSrc(tool: CatalogTool) {
+  return tool.thumb ? `${BASE}${tool.thumb.replace(/^\.\//, "")}` : null;
+}
+
+/** Live, slowly rotating 3D model; the static thumbnail shows until the model is ready (or if WebGL fails). */
+function ToolCanvas({ shelf, tool }: { shelf: Shelf | null; tool: CatalogTool }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!shelf || !canvas) return;
+    return shelf.card(canvas, tool.id, () => setReady(true));
+  }, [shelf, tool.id]);
+  const poster = posterSrc(tool);
+  return (
+    <>
+      {!ready && poster ? (
+        // eslint-disable-next-line @next/next/no-img-element -- static WebP thumbnails served from /public
+        <img src={poster} alt="" loading="lazy" className="absolute inset-0 m-auto h-[88%] w-[88%] object-contain" />
+      ) : null}
+      <canvas
+        ref={ref}
+        aria-hidden="true"
+        className={`absolute inset-0 h-full w-full transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}
+      />
+    </>
+  );
+}
+
+type PreviewProps = {
+  shelf: Shelf;
+  tool: CatalogTool;
+  price: number;
+  owned: number;
+  balance: number;
+  busy: boolean;
+  onBuy: () => void;
+  onClose: () => void;
+};
+
+/** Try-before-you-buy dialog: orbit the tool and press its real controls. */
+function ToolPreview({ shelf, tool, price, owned, balance, busy, onBuy, onClose }: PreviewProps) {
+  const t = useTranslations("student.hq");
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [viewer, setViewer] = useState<PreviewViewer | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [pressed, setPressed] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    let cancelled = false;
+    let current: PreviewViewer | null = null;
+    shelf
+      .viewer(canvas, tool.id)
+      .then((v) => {
+        if (cancelled) v.dispose();
+        else {
+          current = v;
+          setViewer(v);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
+    return () => {
+      cancelled = true;
+      current?.dispose();
+    };
+  }, [shelf, tool.id]);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previous;
+    };
+  }, [onClose]);
+
+  const missing = Math.max(0, price - balance);
+
+  return (
+    <div
+      className="fixed inset-0 z-[70] flex items-end justify-center bg-[#1A2B47]/55 p-0 backdrop-blur-sm md:items-center md:p-6"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={tool.name}
+        onClick={(event) => event.stopPropagation()}
+        className="flex max-h-[96dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-[32px] bg-white shadow-[0_24px_60px_-20px_rgba(26,43,71,0.7)] md:rounded-[32px]"
+      >
+        <div className="flex items-center justify-between gap-3 px-5 pt-4">
+          <h2 className="min-w-0 truncate text-lg font-extrabold text-text-navy md:text-xl">
+            {tool.info?.emoji ? `${tool.info.emoji} ` : ""}
+            {tool.name}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("storeClose")}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F1F5FB] text-lg font-extrabold text-text-navy"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="grid gap-3 overflow-y-auto p-5 md:grid-cols-2 md:gap-5">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[24px] bg-gradient-to-b from-[#EAF4FF] to-[#F7FBFF] md:aspect-square">
+            <canvas ref={canvasRef} className="h-full w-full cursor-grab touch-none" aria-label={tool.name} />
+            {!viewer && !failed ? (
+              <span className="absolute inset-0 flex items-center justify-center text-sm font-extrabold text-text-gray" role="status">
+                {t("play3dLoading")}
+              </span>
+            ) : null}
+            {failed ? (
+              <span className="absolute inset-0 flex items-center justify-center p-4 text-center text-sm font-extrabold text-text-gray">
+                {t("storePreviewFailed")}
+              </span>
+            ) : null}
+            <span className="pointer-events-none absolute bottom-2 start-0 end-0 text-center text-xs font-bold text-text-gray">
+              {t("storeDragHint")}
+            </span>
+          </div>
+
+          <div className="flex min-w-0 flex-col gap-3">
+            {viewer && (viewer.groups.length > 0 || viewer.hasColor) ? (
+              <div>
+                <p className="mb-2 text-sm font-extrabold text-text-navy">{t("storeTryIt")}</p>
+                <div className="flex flex-wrap gap-2">
+                  {viewer.groups.map((group) => (
+                    <button
+                      key={group.key}
+                      type="button"
+                      aria-pressed={Boolean(pressed[group.key])}
+                      onClick={() => {
+                        viewer.toggle(group.key);
+                        setPressed((p) => ({ ...p, [group.key]: !p[group.key] }));
+                      }}
+                      className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-extrabold transition ${
+                        pressed[group.key] ? "bg-primary-orange text-white" : "bg-[#FFF3E3] text-primary-orange"
+                      }`}
+                    >
+                      <span aria-hidden="true">{group.icon}</span>
+                      {group.label}
+                    </button>
+                  ))}
+                  {viewer.hasColor ? (
+                    <button
+                      type="button"
+                      onClick={() => viewer.cycleColor()}
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[#EDE5FA] px-4 py-2 text-sm font-extrabold text-[#6B45AB]"
+                    >
+                      <span aria-hidden="true">🎨</span>
+                      {t("storeColor")}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            {tool.info?.why ? (
+              <div>
+                <p className="text-sm font-extrabold text-text-navy">{t("storeWhy")}</p>
+                <p className="mt-1 text-sm font-bold leading-relaxed text-text-gray">{tool.info.why}</p>
+              </div>
+            ) : null}
+            {tool.info?.how?.length ? (
+              <div>
+                <p className="text-sm font-extrabold text-text-navy">{t("storeHow")}</p>
+                <ol className="mt-1 list-decimal space-y-0.5 ps-5 text-sm font-bold leading-relaxed text-text-gray">
+                  {tool.info.how.map((step, index) => (
+                    <li key={index}>{step}</li>
+                  ))}
+                </ol>
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 border-t border-[#E3EAF3] bg-white px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          <div className="min-w-0">
+            <p className="text-lg font-extrabold text-primary-orange">
+              {price} {t("pointsUnit")}
+            </p>
+            {owned > 0 ? <p className="text-xs font-bold text-[#1C8E78]">{t("storeOwned", { count: owned })}</p> : null}
+          </div>
+          <Button onClick={onBuy} disabled={missing > 0 || busy} fullWidth className="!min-h-12 !w-auto !px-8 text-base">
+            {missing > 0 ? t("storeNeedMore", { count: missing }) : t("storeBuy")}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Store tab for the 3D clinic: live 3D cards, try-before-you-buy preview, clear prices. */
+export function Hq3dStore({ childId }: { childId: number }) {
   const t = useTranslations("student.hq");
   const chrome = useStudentChrome();
   const setChromePoints = chrome?.setPoints;
@@ -36,6 +251,8 @@ export function Hq3dStore({ childId }: Props) {
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [flash, setFlash] = useState<{ id: string; ok: boolean } | null>(null);
+  const [shelf, setShelf] = useState<Shelf | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setFailed(false);
@@ -56,6 +273,25 @@ export function Hq3dStore({ childId }: Props) {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load
     void load();
   }, [load]);
+
+  // 3D previews are an enhancement: if the bundle or WebGL fails the static thumbnails remain.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const mod = (await import(
+          /* webpackIgnore: true */ /* turbopackIgnore: true */ `${BASE}app.bundle.js?v=${ASSET_VERSION}`
+        )) as { createShelf: (base: string) => Promise<Shelf> };
+        const created = await mod.createShelf(BASE);
+        if (!cancelled) setShelf(created);
+      } catch {
+        /* keep thumbnails */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const groups = useMemo(
     () => [
@@ -89,6 +325,8 @@ export function Hq3dStore({ childId }: Props) {
     }
   }
 
+  const closePreview = useCallback(() => setPreviewId(null), []);
+
   if (failed) {
     return (
       <div className="flex flex-col items-center gap-4 rounded-[28px] bg-white p-8 text-center shadow-[0_16px_36px_-24px_rgba(26,43,71,0.4)]">
@@ -109,6 +347,8 @@ export function Hq3dStore({ childId }: Props) {
       </p>
     );
   }
+
+  const previewTool = previewId ? tools.find((x) => x.id === previewId) : undefined;
 
   return (
     <div className="flex flex-col gap-5">
@@ -141,39 +381,37 @@ export function Hq3dStore({ childId }: Props) {
               const price = data.prices[tool.id] ?? 0;
               const owned = data.owned[tool.id] ?? 0;
               const missing = Math.max(0, price - data.points_balance);
-              const affordable = missing === 0;
               const mine = flash?.id === tool.id ? flash : null;
               return (
                 <li
                   key={tool.id}
                   className="flex flex-col gap-2 rounded-[24px] bg-white p-3 shadow-[0_12px_28px_-22px_rgba(26,43,71,0.45)]"
                 >
-                  <div className="relative flex aspect-square items-center justify-center rounded-[18px] bg-[#F7FBFF]">
-                    {tool.thumb ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- static WebP thumbnails served from /public
-                      <img
-                        src={`${BASE}${tool.thumb.replace(/^\.\//, "")}`}
-                        alt=""
-                        loading="lazy"
-                        className="h-[88%] w-[88%] object-contain"
-                      />
-                    ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setPreviewId(tool.id)}
+                    aria-label={`${t("storeTryIt")}: ${tool.name}`}
+                    className="relative aspect-square w-full overflow-hidden rounded-[18px] bg-gradient-to-b from-[#EAF4FF] to-[#F7FBFF]"
+                  >
+                    <ToolCanvas shelf={shelf} tool={tool} />
                     {owned > 0 ? (
                       <span className="absolute start-2 top-2 rounded-full bg-[#2DBEA1] px-2.5 py-0.5 text-xs font-extrabold text-white">
                         {t("storeOwned", { count: owned })}
                       </span>
                     ) : null}
-                  </div>
+                    {shelf ? (
+                      <span className="absolute bottom-2 end-2 rounded-full bg-white/90 px-2.5 py-1 text-xs font-extrabold text-primary-orange shadow">
+                        {t("storeTryShort")}
+                      </span>
+                    ) : null}
+                  </button>
                   <h3 className="text-sm font-extrabold leading-snug text-text-navy">{tool.name}</h3>
-                  {tool.info?.why ? (
-                    <p className="line-clamp-2 min-h-[2.4em] text-xs font-bold leading-relaxed text-text-gray">{tool.info.why}</p>
-                  ) : null}
                   <p className="text-base font-extrabold text-primary-orange">
                     {price} {t("pointsUnit")}
                   </p>
                   <Button
                     onClick={() => void buy(tool)}
-                    disabled={!affordable || busy !== null}
+                    disabled={missing > 0 || busy !== null}
                     fullWidth
                     className="!min-h-11 !px-3 !py-2 text-sm"
                   >
@@ -181,7 +419,7 @@ export function Hq3dStore({ childId }: Props) {
                       ? t("storeBought")
                       : mine && !mine.ok
                         ? t("storeFailed")
-                        : affordable
+                        : missing === 0
                           ? t("storeBuy")
                           : t("storeNeedMore", { count: missing })}
                   </Button>
@@ -191,6 +429,20 @@ export function Hq3dStore({ childId }: Props) {
           </ul>
         </section>
       ))}
+
+      {previewTool && shelf ? (
+        <ToolPreview
+          key={previewTool.id}
+          shelf={shelf}
+          tool={previewTool}
+          price={data.prices[previewTool.id] ?? 0}
+          owned={data.owned[previewTool.id] ?? 0}
+          balance={data.points_balance}
+          busy={busy !== null}
+          onBuy={() => void buy(previewTool)}
+          onClose={closePreview}
+        />
+      ) : null}
     </div>
   );
 }

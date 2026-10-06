@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { useStudentChrome } from "@/components/StudentChrome";
 
 // Bump when /public/hq-lab is republished so browsers fetch the new bundle/CSS.
-const ASSET_VERSION = "3";
+const ASSET_VERSION = "4";
 const BASE = "/hq-lab/";
 
 type Hq3dLoad = {
