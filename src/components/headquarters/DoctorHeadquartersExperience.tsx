@@ -353,6 +353,25 @@ export function DoctorHeadquartersExperience({
           </p>
         ) : null}
 
+        {profession === "doctor" ? (
+          <section className="mb-4 flex items-center gap-3 rounded-[28px] bg-gradient-to-l from-[#FFF3E3] to-white p-4 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.4)]">
+            <span className="text-4xl" aria-hidden="true">
+              🏥
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-extrabold text-text-navy">{tHq("play3dTitle")}</p>
+              <p className="text-xs font-bold leading-relaxed text-text-gray">{tHq("play3dBody")}</p>
+            </div>
+            <Button
+              href={withChildQuery("/headquarters/3d", child.id)}
+              fullWidth
+              className="!min-h-11 !w-auto shrink-0 !px-5 !py-2 text-sm"
+            >
+              {tHq("play3dCta")}
+            </Button>
+          </section>
+        ) : null}
+
         <DoctorStageViewport
           stage={activeStageDef}
           fadeFrom={fadeFromDef}

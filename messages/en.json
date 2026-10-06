@@ -707,6 +707,13 @@
       "open": "Open calendar"
     },
     "hq": {
+      "play3dTitle": "Your 3D clinic!",
+      "play3dBody": "Buy tools, place them, try them out and learn how doctors use them.",
+      "play3dCta": "Enter your clinic",
+      "play3dBack": "Back to HQ",
+      "play3dLoading": "Getting your clinic ready…",
+      "play3dError": "Couldn't load the clinic. Check your connection and try again.",
+      "play3dRetry": "Try again",
       "welcomeTitle": "Welcome to your headquarters!",
       "welcomeBody": "You are the future {profession}, {name}!",
       "emptyWelcome": "Your HQ is empty for now. Earn points from lessons, then decorate it from the store.",
