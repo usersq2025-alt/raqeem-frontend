@@ -721,6 +721,15 @@
           "groupSmall": "Small tools (placed on a desk)",
           "groupWall": "Wall tools"
         },
+        "chef": {
+          "title": "Your 3D kitchen!",
+          "storeTitle": "Kitchen tools store",
+          "storeSubtitle": "Buy tools with your points, then place and try them in your kitchen.",
+          "goTo": "Go to my kitchen",
+          "groupFloor": "Kitchen appliances and furniture",
+          "groupSmall": "Small tools (placed on a counter)",
+          "groupWall": "Wall tools (mounted on the wall)"
+        },
         "pilot": {
           "title": "Your 3D airplane!",
           "storeTitle": "Airplane tools store",

@@ -1,5 +1,5 @@
 /** Professions whose headquarters is the 3D game (static bundle in /public/hq-lab, data per profession). */
-export const HQ3D_PROFESSIONS = ["doctor", "pilot"] as const;
+export const HQ3D_PROFESSIONS = ["doctor", "pilot", "chef"] as const;
 export type Hq3dProfession = (typeof HQ3D_PROFESSIONS)[number];
 
 export function isHq3dProfession(code: string | null | undefined): code is Hq3dProfession {
