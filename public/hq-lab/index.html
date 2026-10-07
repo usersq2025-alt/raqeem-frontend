@@ -1,4 +1,8 @@
 <!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>مقر المهنة — رقيم (تجربة)</title>
-<link rel="stylesheet" href="./hq3d.css"><style>html,body{margin:0;height:100%;background:#F7FBFF;font-family:Cairo,Tajawal,"Segoe UI",Tahoma,sans-serif}#root{position:fixed;inset:0;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}</style></head>
-<body><div id="root" class="hq3d"></div><script type="module" src="./app.bundle.js"></script></body></html>
+<link rel="stylesheet" href="./hq3d.css"><style>html,body{margin:0;height:100%;background:#F7FBFF;font-family:Cairo,Tajawal,"Segoe UI",Tahoma,sans-serif}#h{position:fixed;inset:0;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}</style></head>
+<body><div id="h" class="hq3d"></div><script type="module">
+import {mount} from './app.bundle.js';
+const p = new URLSearchParams(location.search).get('p') || 'doctor';
+mount(document.getElementById('h'), {base: p === 'doctor' ? './' : './' + p + '/', profession: p});
+</script></body></html>
