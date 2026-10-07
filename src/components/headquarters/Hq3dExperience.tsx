@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
+import { withChildQuery } from "@/lib/config/subjects";
 import { Button } from "@/components/ui/Button";
 import { useStudentChrome } from "@/components/StudentChrome";
 import { HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
 
 // Bump when /public/hq-lab is republished so browsers fetch the new bundle/CSS.
-const ASSET_VERSION = "7";
+const ASSET_VERSION = "9";
 
 type Hq3dLoad = {
   points_balance: number;
@@ -18,14 +20,21 @@ type Hq3dLoad = {
 
 type Remote = {
   load: () => Promise<Hq3dLoad>;
-  buy: (toolId: string) => Promise<{ points_balance: number; owned: Record<string, number> }>;
   save: (state: unknown) => Promise<void>;
   onPoints: (balance: number) => void;
 };
 
 type Mount = (
   el: HTMLElement,
-  opts: { base: string; profession: string; remote: Remote; defaults: { clinic: string } }
+  opts: {
+    base: string;
+    profession: string;
+    remote: Remote;
+    defaults: { clinic: string };
+    initialPlace: string | null;
+    onOpenStore: () => void;
+    onConsumed: () => void;
+  }
 ) => Promise<() => void>;
 
 class HttpError extends Error {
@@ -40,10 +49,12 @@ async function http<T>(url: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-type Props = { childId: number; childName: string; profession: Hq3dProfession };
+type Props = { childId: number; childName: string; profession: Hq3dProfession; initialPlace?: string | null };
 
 /** Hosts the 3D clinic (static bundle in /public/hq-lab) inside the student shell, wired to the student's points. */
-export function Hq3dExperience({ childId, profession }: Props) {
+export function Hq3dExperience({ childId, profession, initialPlace = null }: Props) {
+  const router = useRouter();
+  const initialPlaceRef = useRef(initialPlace);
   const t = useTranslations("student.hq");
   const th = useTranslations("student.hq.hq3d");
   const base = hq3dBase(profession);
@@ -65,12 +76,6 @@ export function Hq3dExperience({ childId, profession }: Props) {
         setChromePoints?.(data.points_balance);
         return data;
       },
-      buy: (toolId) =>
-        http(`${api}/buy`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ toolId }),
-        }),
       save: async (payload) => {
         await http(`${api}/state`, {
           method: "PUT",
@@ -86,7 +91,23 @@ export function Hq3dExperience({ childId, profession }: Props) {
         const mod = (await import(
           /* webpackIgnore: true */ /* turbopackIgnore: true */ `${HQ3D_BUNDLE}?v=${ASSET_VERSION}`
         )) as { mount: Mount };
-        const stop = await mod.mount(el, { base, profession, remote, defaults: { clinic: "" } });
+        const stop = await mod.mount(el, {
+          base,
+          profession,
+          remote,
+          defaults: { clinic: "" },
+          initialPlace: initialPlaceRef.current,
+          onOpenStore: () => router.push(withChildQuery("/store", childId)),
+          onConsumed: () => {
+            // the arrival is one-shot: drop ?place= so a refresh never re-triggers it (ownership itself is server-side)
+            initialPlaceRef.current = null;
+            const url = new URL(window.location.href);
+            if (url.searchParams.has("place")) {
+              url.searchParams.delete("place");
+              window.history.replaceState(window.history.state, "", url.toString());
+            }
+          },
+        });
         if (cancelled) stop();
         else {
           unmount = stop;
@@ -110,13 +131,12 @@ export function Hq3dExperience({ childId, profession }: Props) {
   }, []);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div>
       <link rel="stylesheet" href={`/hq-lab/hq3d.css?v=${ASSET_VERSION}`} />
-      <header className="min-w-0">
-        <h1 className="truncate text-xl font-extrabold text-text-navy md:text-2xl">{th(`${profession}.title`)}</h1>
-      </header>
+      <h1 className="sr-only">{th(`${profession}.title`)}</h1>
 
-      <div className="relative h-[calc(100dvh-11rem)] min-h-[480px] md:h-[calc(100dvh-8.5rem)] md:min-h-[560px]">
+      {/* the scene takes all the room the student shell leaves (bottom nav on phones, side nav on wide screens) */}
+      <div className="relative h-[calc(100dvh-7.75rem)] min-h-[460px] md:h-[calc(100dvh-3.5rem)] md:min-h-[560px]">
         <div ref={host} className="hq3d h-full w-full" />
         {state !== "ready" ? (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-[28px] bg-white/90 p-6 text-center shadow-[0_16px_36px_-24px_rgba(26,43,71,0.4)]">

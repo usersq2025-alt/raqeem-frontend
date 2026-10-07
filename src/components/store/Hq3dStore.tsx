@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { useStudentChrome } from "@/components/StudentChrome";
 import { withChildQuery } from "@/lib/config/subjects";
 import { HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
 
 // Bump when /public/hq-lab is republished so browsers fetch the new bundle.
-const ASSET_VERSION = "7";
+const ASSET_VERSION = "9";
 
 type CatalogTool = {
   id: string;
@@ -40,6 +41,49 @@ async function json<T>(url: string, init?: RequestInit): Promise<T> {
 
 function posterSrc(base: string, tool: CatalogTool) {
   return tool.thumb ? `${base}${tool.thumb.replace(/^\.\//, "")}` : null;
+}
+
+/** After a successful purchase: show the tool and let the student place it now or later (ownership is already saved server-side). */
+function ArrivalDialog({ tool, base, onPlace, onLater }: { tool: CatalogTool; base: string; onPlace: () => void; onLater: () => void }) {
+  const t = useTranslations("student.hq");
+  const poster = posterSrc(base, tool);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onLater();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onLater]);
+  return (
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-[#1A2B47]/55 p-0 backdrop-blur-sm md:items-center md:p-6" role="presentation" onClick={onLater}>
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-label={t("arrivalTitle")}
+        onClick={(event) => event.stopPropagation()}
+        className="flex w-full max-w-md flex-col items-center gap-3 rounded-t-[32px] bg-white p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-center shadow-[0_24px_60px_-20px_rgba(26,43,71,0.7)] md:rounded-[32px]"
+      >
+        <span className="flex h-36 w-36 items-center justify-center rounded-full bg-[#FFF3E3]">
+          {poster ? (
+            // eslint-disable-next-line @next/next/no-img-element -- static WebP thumbnail from /public
+            <img src={poster} alt="" className="h-[86%] w-[86%] object-contain" />
+          ) : (
+            <span aria-hidden="true" className="text-6xl">🎁</span>
+          )}
+        </span>
+        <h2 className="text-2xl font-extrabold text-text-navy">🎉 {t("arrivalTitle")}</h2>
+        <p className="text-sm font-bold leading-relaxed text-text-gray">{t("arrivalBody", { name: tool.name })}</p>
+        <div className="mt-2 flex w-full flex-col gap-2 sm:flex-row-reverse">
+          <Button onClick={onPlace} fullWidth className="!min-h-12">
+            {t("arrivalPlace")}
+          </Button>
+          <Button onClick={onLater} variant="secondary" fullWidth className="!min-h-12">
+            {t("arrivalLater")}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /** Live, slowly rotating 3D model; the static thumbnail shows until the model is ready (or if WebGL fails). */
@@ -255,6 +299,8 @@ export function Hq3dStore({ childId, profession }: { childId: number; profession
   const [flash, setFlash] = useState<{ id: string; ok: boolean } | null>(null);
   const [shelf, setShelf] = useState<Shelf | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [arrived, setArrived] = useState<CatalogTool | null>(null);
+  const router = useRouter();
 
   const load = useCallback(async () => {
     setFailed(false);
@@ -269,7 +315,7 @@ export function Hq3dStore({ childId, profession }: { childId: number; profession
     } catch {
       setFailed(true);
     }
-  }, [childId, setChromePoints]);
+  }, [childId, setChromePoints, BASE]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load
@@ -319,6 +365,8 @@ export function Hq3dStore({ childId, profession }: { childId: number; profession
       setData({ ...data, points_balance: result.points_balance, owned: result.owned });
       setChromePoints?.(result.points_balance);
       setFlash({ id: tool.id, ok: true });
+      setPreviewId(null);
+      setArrived(tool);
     } catch {
       setFlash({ id: tool.id, ok: false });
       void load();
@@ -432,6 +480,15 @@ export function Hq3dStore({ childId, profession }: { childId: number; profession
           </ul>
         </section>
       ))}
+
+      {arrived ? (
+        <ArrivalDialog
+          tool={arrived}
+          base={BASE}
+          onLater={() => setArrived(null)}
+          onPlace={() => router.push(`${withChildQuery("/headquarters/3d", childId)}&place=${encodeURIComponent(arrived.id)}`)}
+        />
+      ) : null}
 
       {previewTool && shelf ? (
         <ToolPreview

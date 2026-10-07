@@ -5,7 +5,7 @@ import { Hq3dExperience } from "@/components/headquarters/Hq3dExperience";
 import { isHq3dProfession } from "@/lib/config/hq3d";
 
 type Props = {
-  searchParams: Promise<{ childId?: string }>;
+  searchParams: Promise<{ childId?: string; place?: string }>;
 };
 
 export default async function Headquarters3dPage({ searchParams }: Props) {
@@ -15,5 +15,6 @@ export default async function Headquarters3dPage({ searchParams }: Props) {
     redirect({ href: "/headquarters", locale: await getLocale() });
     return null;
   }
-  return <Hq3dExperience childId={child.id} childName={child.fullName} profession={child.professionCode} />;
+  const place = params.place && /^[a-z0-9_]{1,64}$/.test(params.place) ? params.place : null;
+  return <Hq3dExperience childId={child.id} childName={child.fullName} profession={child.professionCode} initialPlace={place} />;
 }
