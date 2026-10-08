@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { StudentChromeProvider } from "@/components/StudentChrome";
 import { StudentNav } from "@/components/StudentNav";
+import { ExhibitionBar } from "@/components/exhibition/ExhibitionBar";
 import { ExperiencePrefsBootstrap } from "@/components/experience/ExperiencePrefsBootstrap";
 import { getChild, type ChildProfile } from "@/lib/api/children";
 import { lockGuardianMode } from "@/lib/api/guardian";
@@ -85,6 +86,7 @@ export function StudentShell({ children }: Props) {
           hideNav ? "bg-[#F7FBFF]" : isPathScreen ? "bg-[#F4F7FB]" : "student-sky bg-[#F7FBFF]"
         }`}
       >
+        {!hideNav && validChild && child ? <ExhibitionBar child={child} /> : null}
         {!hideNav && validChild ? <StudentNav childId={childId} /> : null}
         <div
           className={`relative min-h-screen w-full min-w-0 max-w-full ${

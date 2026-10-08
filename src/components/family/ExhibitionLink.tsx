@@ -14,5 +14,5 @@ export function ExhibitionLink() {
     return () => { active = false; };
   }, []);
   if (!enabled) return null;
-  return <Link href="/family/exhibition" className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-primary-orange px-5 py-2 text-sm font-extrabold text-white shadow-sm hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-orange">تبويب المعرض</Link>;
+  return <Link href="/family/exhibition/live" className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-primary-orange px-5 py-2 text-sm font-extrabold text-white shadow-sm hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-orange">تبويب المعرض</Link>;
 }

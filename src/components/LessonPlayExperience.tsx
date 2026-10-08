@@ -797,18 +797,39 @@ export function QuestionBody({
   return <p className="text-center font-bold text-text-gray">{question.gameType}</p>;
 }
 
-function optionList(payload: Record<string, unknown>): Array<{ id: string; text: string }> {
+/** Picture for an option / card / item: lets pre-readers play without reading (shown alone when the text is empty). */
+function ItemPicture({ url, text, small = false }: { url?: string | null; text?: string; small?: boolean }) {
+  if (!url) return null;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt={text || ""}
+      loading="lazy"
+      draggable={false}
+      className={`pointer-events-none mx-auto shrink-0 select-none rounded-2xl bg-white object-contain ${
+        small ? "h-16 w-16 sm:h-20 sm:w-20" : "h-24 w-24 sm:h-28 sm:w-28"
+      }`}
+    />
+  );
+}
+
+function optionList(payload: Record<string, unknown>): Array<{ id: string; text: string; imageUrl: string | null }> {
   const options = Array.isArray(payload.options) ? payload.options : [];
   return options
     .map((row, index) => {
-      if (typeof row === "string") return { id: String(index), text: toIndicDigits(row) };
+      if (typeof row === "string") return { id: String(index), text: toIndicDigits(row), imageUrl: null };
       if (row && typeof row === "object") {
-        const item = row as { id?: unknown; text?: unknown };
-        return { id: String(item.id ?? index), text: toIndicDigits(String(item.text ?? "")) };
+        const item = row as { id?: unknown; text?: unknown; image_url?: unknown };
+        return {
+          id: String(item.id ?? index),
+          text: toIndicDigits(String(item.text ?? "")),
+          imageUrl: typeof item.image_url === "string" && item.image_url ? item.image_url : null,
+        };
       }
-      return { id: String(index), text: "" };
+      return { id: String(index), text: "", imageUrl: null };
     })
-    .filter((row) => row.text);
+    .filter((row) => row.text || row.imageUrl);
 }
 
 function shuffleOptions<T>(items: T[]): T[] {
@@ -930,7 +951,7 @@ function McqBody({
               playUiTone("click");
               onChange({ selected_option_id: option.id }, true);
             }}
-            className={`play-choice-tile play-mcq-card relative flex min-h-[5.75rem] items-center gap-3 rounded-[26px] border-[3px] px-4 py-4 text-start text-lg font-extrabold text-text-navy transition-opacity sm:min-h-[7rem] sm:text-xl ${
+            className={`play-choice-tile play-mcq-card relative flex min-h-[5.75rem] items-center justify-between gap-3 rounded-[26px] border-[3px] px-4 py-4 text-start text-lg font-extrabold text-text-navy transition-opacity sm:min-h-[7rem] sm:text-xl ${
               isRight
                 ? "play-choice-right play-glow-ring border-emerald-400 bg-emerald-50"
                 : isWrong
@@ -951,7 +972,8 @@ function McqBody({
             >
               {letter}
             </span>
-            <span className="leading-snug">{option.text}</span>
+            <ItemPicture url={option.imageUrl} text={option.text} />
+            {option.text ? <span className="leading-snug">{option.text}</span> : null}
           </button>
         );
       })}
@@ -1045,11 +1067,11 @@ function MatchingBody({
 }) {
   const t = useTranslations("lesson");
   const left = useMemo(
-    () => (Array.isArray(payload.left_items) ? (payload.left_items as Array<{ id: string; text: string }>) : []),
+    () => (Array.isArray(payload.left_items) ? (payload.left_items as Array<{ id: string; text: string; image_url?: string | null }>) : []),
     [payload.left_items]
   );
   const right = useMemo(
-    () => (Array.isArray(payload.right_items) ? (payload.right_items as Array<{ id: string; text: string }>) : []),
+    () => (Array.isArray(payload.right_items) ? (payload.right_items as Array<{ id: string; text: string; image_url?: string | null }>) : []),
     [payload.right_items]
   );
   const matchItemsKey = useMemo(
@@ -1270,7 +1292,8 @@ function MatchingBody({
                     )}`}
                   >
                     {pairIndex != null ? <PairBadge accent={PAIR_ACCENTS[pairIndex]!} /> : null}
-                    <span>{leftItem.text}</span>
+                    <ItemPicture url={leftItem.image_url} text={leftItem.text} />
+                    {leftItem.text ? <span>{leftItem.text}</span> : null}
                     {ok === false && expected ? (
                       <span className="mt-1 text-xs font-bold text-rose-500">
                         {t("matchShouldBe", { text: expected })}
@@ -1299,12 +1322,13 @@ function MatchingBody({
                     data-match-right={rightItem.id}
                     disabled={locked}
                     onClick={() => onRightClick(rightItem.id)}
-                    className={`relative flex min-h-[4.75rem] w-full items-center rounded-[22px] border-[3px] px-3 py-3 text-start text-sm font-extrabold text-text-navy shadow-[0_8px_24px_-16px_rgba(26,43,71,0.35)] transition-colors sm:text-base ${cardTone(
+                    className={`relative flex min-h-[4.75rem] w-full flex-col items-stretch justify-center gap-1 rounded-[22px] border-[3px] px-3 py-3 text-start text-sm font-extrabold text-text-navy shadow-[0_8px_24px_-16px_rgba(26,43,71,0.35)] transition-colors sm:text-base ${cardTone(
                       { side: "right", id: rightItem.id, paired, ok }
                     )}`}
                   >
                     {pairIndex != null ? <PairBadge accent={PAIR_ACCENTS[pairIndex]!} /> : null}
-                    <span>{rightItem.text}</span>
+                    <ItemPicture url={rightItem.image_url} text={rightItem.text} />
+                    {rightItem.text ? <span>{rightItem.text}</span> : null}
                   </button>
                 );
               })()
@@ -1335,9 +1359,11 @@ function DragBody({
 }) {
   const t = useTranslations("lesson");
   const categories = Array.isArray(payload.categories)
-    ? (payload.categories as Array<{ id: string; name: string }>)
+    ? (payload.categories as Array<{ id: string; name: string; image_url?: string | null }>)
     : [];
-  const items = Array.isArray(payload.items) ? (payload.items as Array<{ id: string; text: string }>) : [];
+  const items = Array.isArray(payload.items)
+    ? (payload.items as Array<{ id: string; text: string; image_url?: string | null }>)
+    : [];
   const [assignments, setAssignments] = useState<Record<string, string>>(() => readAssignments(selected));
   const [pick, setPick] = useState<string | null>(null);
   const [drag, setDrag] = useState<{
@@ -1495,7 +1521,7 @@ function DragBody({
     return "border-neutral-100 bg-white shadow-[0_10px_24px_-14px_rgba(26,43,71,0.3)]";
   }
 
-  function renderCard(item: { id: string; text: string }, inBucket: boolean) {
+  function renderCard(item: { id: string; text: string; image_url?: string | null }, inBucket: boolean) {
     const isGhost = drag?.itemId === item.id;
     const assigned = assignments[item.id];
     const ok = locked && correctMap ? correctMap[item.id] === assigned : null;
@@ -1522,7 +1548,7 @@ function DragBody({
           setHoverZone(null);
           setPick(null);
         }}
-        className={`play-drag-card relative touch-none select-none min-h-[3.35rem] rounded-[22px] border-[3px] px-4 py-2.5 text-sm font-extrabold sm:text-base ${cardClass(
+        className={`play-drag-card relative flex flex-col items-center justify-center gap-1 touch-none select-none min-h-[3.35rem] rounded-[22px] border-[3px] px-4 py-2.5 text-sm font-extrabold sm:text-base ${cardClass(
           item.id,
           inBucket
         )} ${isGhost ? "opacity-30" : ""}`}
@@ -1538,6 +1564,7 @@ function DragBody({
             {wrongTheme.marker}
           </span>
         ) : null}
+        <ItemPicture url={item.image_url} text={item.text} small={inBucket} />
         {item.text}
         {expectedCategoryName ? <span className="mt-1 block text-xs font-bold">{t("belongsIn", { category: expectedCategoryName })}</span> : null}
       </button>
@@ -1586,7 +1613,8 @@ function DragBody({
                 <span className="text-2xl" aria-hidden="true">
                   {theme.marker}
                 </span>
-                <p className="text-base font-black text-text-navy">{cat.name}</p>
+                <ItemPicture url={cat.image_url} text={cat.name} small />
+                {cat.name ? <p className="text-base font-black text-text-navy">{cat.name}</p> : null}
               </button>
               <p className="mt-1 text-xs font-bold text-text-gray">{t("dropHere")}</p>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -1608,6 +1636,7 @@ function DragBody({
             transform: "scale(1.08) rotate(-2deg)",
           }}
         >
+          <ItemPicture url={draggingItem.image_url} text={draggingItem.text} small />
           {draggingItem.text}
         </div>
       ) : null}
@@ -1631,7 +1660,7 @@ function OrderingBody({
   onChange: (value: unknown, ready: boolean) => void;
 }) {
   const t = useTranslations("lesson");
-  const tokens = Array.isArray(payload.tokens) ? (payload.tokens as Array<{ id: string; text: string }>) : [];
+  const tokens = Array.isArray(payload.tokens) ? (payload.tokens as Array<{ id: string; text: string; image_url?: string | null }>) : [];
   const [order, setOrder] = useState<string[]>(() => readOrder(selected));
   const [justReturnedIds, setJustReturnedIds] = useState<string[]>([]);
   const returnTimerRef = useRef<number | null>(null);
@@ -1686,10 +1715,11 @@ function OrderingBody({
               type="button"
               disabled={locked}
               onClick={() => placeToken(token.id)}
-              className={`min-h-[3.25rem] rounded-[20px] border-[3px] border-white bg-sky-100 px-4 py-2.5 text-sm font-extrabold text-text-navy shadow-sm sm:text-base ${
+              className={`flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-[20px] border-[3px] border-white bg-sky-100 px-4 py-2.5 text-sm font-extrabold text-text-navy shadow-sm sm:text-base ${
                 justReturnedIds.includes(token.id) ? "play-return-pop" : ""
               }`}
             >
+              <ItemPicture url={token.image_url} text={token.text} small />
               {token.text}
             </button>
           ))}
@@ -1737,7 +1767,7 @@ function OrderingBody({
                   disabled={locked || !token}
                   onClick={() => clearSlot(index)}
                   aria-label={t("orderSlot", { n: toIndicDigits(index + 1) })}
-                  className={`flex min-h-[3.5rem] flex-1 items-center rounded-[22px] border-[3px] px-4 py-2 text-start text-sm font-extrabold sm:text-base ${
+                  className={`flex min-h-[3.5rem] flex-1 items-center gap-2 rounded-[22px] border-[3px] px-4 py-2 text-start text-sm font-extrabold sm:text-base ${
                     token
                       ? ok === false
                         ? "border-rose-300 bg-rose-50 text-rose-800"
@@ -1747,7 +1777,14 @@ function OrderingBody({
                       : "border-dashed border-slate-200 bg-white/70 text-text-gray"
                   }`}
                 >
-                  {token?.text ?? "…"}
+                  {token ? (
+                    <>
+                      <ItemPicture url={token.image_url} text={token.text} small />
+                      {token.text}
+                    </>
+                  ) : (
+                    "…"
+                  )}
                 </button>
               </li>
             );
