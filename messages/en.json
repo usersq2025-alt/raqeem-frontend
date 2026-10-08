@@ -730,6 +730,24 @@
           "groupSmall": "Small tools (placed on a counter)",
           "groupWall": "Wall tools (mounted on the wall)"
         },
+        "engineer": {
+          "title": "Your 3D engineering studio!",
+          "storeTitle": "Engineer tools store",
+          "storeSubtitle": "Buy tools with your points, then place and try them in your studio.",
+          "goTo": "Go to my studio",
+          "groupFloor": "Studio furniture and equipment",
+          "groupSmall": "Small tools (placed on a table)",
+          "groupWall": "Wall tools"
+        },
+        "teacher": {
+          "title": "Your 3D classroom!",
+          "storeTitle": "Classroom equipment store",
+          "storeSubtitle": "Buy equipment with your points, then arrange and try it in your classroom.",
+          "goTo": "Go to my classroom",
+          "groupFloor": "Classroom furniture and equipment",
+          "groupSmall": "Small tools (placed on a table)",
+          "groupWall": "Wall equipment (mounted on the wall)"
+        },
         "pilot": {
           "title": "Your 3D airplane!",
           "storeTitle": "Airplane tools store",

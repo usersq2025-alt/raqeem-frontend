@@ -7,7 +7,7 @@ import { useStudentChrome } from "@/components/StudentChrome";
 import { HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
 
 // Bump when /public/hq-lab is republished so browsers fetch the new bundle/CSS.
-const ASSET_VERSION = "11";
+const ASSET_VERSION = "12";
 
 type Hq3dLoad = {
   points_balance: number;
