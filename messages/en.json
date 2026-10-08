@@ -763,6 +763,8 @@
       "storeGroupSmall": "Small tools (placed on a desk)",
       "storeBuy": "Buy",
       "storeClose": "Close",
+      "storeBoughtState": "Bought",
+      "storeAnother": "+ one more ({price} points)",
       "storeTryIt": "Try it before you buy",
       "storeTryShort": "Try it 👆",
       "storeDragHint": "Drag to look around, pinch to zoom",

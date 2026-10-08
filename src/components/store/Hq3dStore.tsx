@@ -8,7 +8,7 @@ import { withChildQuery } from "@/lib/config/subjects";
 import { HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
 
 // Bump when /public/hq-lab is republished so browsers fetch the new bundle.
-const ASSET_VERSION = "12";
+const ASSET_VERSION = "14";
 
 type CatalogTool = {
   id: string;
@@ -40,6 +40,50 @@ async function json<T>(url: string, init?: RequestInit): Promise<T> {
 
 function posterSrc(base: string, tool: CatalogTool) {
   return tool.thumb ? `${base}${tool.thumb.replace(/^\.\//, "")}` : null;
+}
+
+/** Buy button; once a copy is owned it turns into a permanent green "bought" state (extra copies stay available below it). */
+function BuyArea({
+  owned,
+  price,
+  missing,
+  busy,
+  failed,
+  onBuy,
+}: {
+  owned: number;
+  price: number;
+  missing: number;
+  busy: boolean;
+  failed: boolean;
+  onBuy: () => void;
+}) {
+  const t = useTranslations("student.hq");
+  if (owned > 0) {
+    return (
+      <div className="flex flex-col items-stretch gap-1">
+        <div
+          role="status"
+          className="flex min-h-11 items-center justify-center gap-1.5 rounded-full border-[3px] border-white bg-[#2DBEA1] px-3 py-2 text-sm font-extrabold text-white shadow-[0_0_0_2.5px_#2DBEA1,0_5px_0_#1C8E78]"
+        >
+          <span aria-hidden="true">✓</span> {t("storeBoughtState")}
+        </div>
+        <button
+          type="button"
+          onClick={onBuy}
+          disabled={missing > 0 || busy}
+          className="min-h-10 rounded-full px-3 text-xs font-extrabold text-primary-orange disabled:opacity-50"
+        >
+          {failed ? t("storeFailed") : missing > 0 ? t("storeNeedMore", { count: missing }) : t("storeAnother", { price })}
+        </button>
+      </div>
+    );
+  }
+  return (
+    <Button onClick={onBuy} disabled={missing > 0 || busy} fullWidth className="!min-h-11 !px-3 !py-2 text-sm">
+      {failed ? t("storeFailed") : missing === 0 ? t("storeBuy") : t("storeNeedMore", { count: missing })}
+    </Button>
+  );
 }
 
 /** Live, slowly rotating 3D model; the static thumbnail shows until the model is ready (or if WebGL fails). */
@@ -232,9 +276,9 @@ function ToolPreview({ shelf, tool, price, owned, balance, busy, onBuy, onClose 
             </p>
             {owned > 0 ? <p className="text-xs font-bold text-[#1C8E78]">{t("storeOwned", { count: owned })}</p> : null}
           </div>
-          <Button onClick={onBuy} disabled={missing > 0 || busy} fullWidth className="!min-h-12 !w-auto !px-8 text-base">
-            {missing > 0 ? t("storeNeedMore", { count: missing }) : t("storeBuy")}
-          </Button>
+          <div className="w-44 shrink-0">
+            <BuyArea owned={owned} price={price} missing={missing} busy={busy} failed={false} onBuy={onBuy} />
+          </div>
         </div>
       </div>
     </div>
@@ -412,20 +456,14 @@ export function Hq3dStore({ childId, profession }: { childId: number; profession
                   <p className="text-base font-extrabold text-primary-orange">
                     {price} {t("pointsUnit")}
                   </p>
-                  <Button
-                    onClick={() => void buy(tool)}
-                    disabled={missing > 0 || busy !== null}
-                    fullWidth
-                    className="!min-h-11 !px-3 !py-2 text-sm"
-                  >
-                    {mine?.ok
-                      ? t("storeBought")
-                      : mine && !mine.ok
-                        ? t("storeFailed")
-                        : missing === 0
-                          ? t("storeBuy")
-                          : t("storeNeedMore", { count: missing })}
-                  </Button>
+                  <BuyArea
+                    owned={owned}
+                    price={price}
+                    missing={missing}
+                    busy={busy !== null}
+                    failed={Boolean(mine && !mine.ok)}
+                    onBuy={() => void buy(tool)}
+                  />
                 </li>
               );
             })}

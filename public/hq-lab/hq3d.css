@@ -155,3 +155,14 @@
 
 .hq3d .b.sec { margin:0; }
 
+
+/* compact tool action bar: one scrollable strip so the scene stays visible */
+.hq3d .sheet { bottom:8px; width:min(96%,640px); padding:6px 8px 8px; border-radius:22px; background:rgba(255,255,255,.94); backdrop-filter:blur(6px); box-shadow:0 10px 26px -14px rgba(26,43,71,.6); }
+.hq3d .sheethead { font-size:13px; margin-bottom:5px; gap:8px; }
+.hq3d .sheethead b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hq3d .sheethead .x { padding:4px 12px; font-size:12px; flex:none; }
+.hq3d .acts { flex-wrap:nowrap; justify-content:flex-start; gap:6px; overflow-x:auto; padding:2px 2px 6px; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
+.hq3d .act { flex:none; width:64px; min-width:64px; min-height:54px; padding:4px 2px 4px; font-size:10px; border-width:2px; border-radius:16px; }
+.hq3d .act i { font-size:20px; }
+.hq3d .act span { max-width:60px; line-height:1.1; text-align:center; }
+.hq3d .advbox { max-height:90px; margin-top:4px; padding:6px; }

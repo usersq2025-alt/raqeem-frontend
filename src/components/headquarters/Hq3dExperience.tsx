@@ -7,7 +7,7 @@ import { useStudentChrome } from "@/components/StudentChrome";
 import { HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
 
 // Bump when /public/hq-lab is republished so browsers fetch the new bundle/CSS.
-const ASSET_VERSION = "12";
+const ASSET_VERSION = "14";
 
 type Hq3dLoad = {
   points_balance: number;
@@ -110,13 +110,12 @@ export function Hq3dExperience({ childId, profession }: Props) {
   }, []);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div>
       <link rel="stylesheet" href={`/hq-lab/hq3d.css?v=${ASSET_VERSION}`} />
-      <header className="min-w-0">
-        <h1 className="truncate text-xl font-extrabold text-text-navy md:text-2xl">{th(`${profession}.title`)}</h1>
-      </header>
+      <h1 className="sr-only">{th(`${profession}.title`)}</h1>
 
-      <div className="relative h-[calc(100dvh-11rem)] min-h-[480px] md:h-[calc(100dvh-8.5rem)] md:min-h-[560px]">
+      {/* only the headquarters is visible: it fills all the room the student shell leaves */}
+      <div className="relative h-[calc(100dvh-7.75rem)] min-h-[460px] md:h-[calc(100dvh-3.5rem)] md:min-h-[560px]">
         <div ref={host} className="hq3d h-full w-full" />
         {state !== "ready" ? (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-[28px] bg-white/90 p-6 text-center shadow-[0_16px_36px_-24px_rgba(26,43,71,0.4)]">

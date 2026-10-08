@@ -763,6 +763,8 @@
       "storeGroupSmall": "أدوات صغيرة (تُوضع فوق المكتب)",
       "storeBuy": "اشترِ",
       "storeClose": "إغلاق",
+      "storeBoughtState": "تم الشراء",
+      "storeAnother": "+ نسخة أخرى ({price} نقطة)",
       "storeTryIt": "جرّبها قبل الشراء",
       "storeTryShort": "جرّبها 👆",
       "storeDragHint": "اسحب لتدور حولها وقرّب بإصبعين",
