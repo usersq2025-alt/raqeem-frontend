@@ -6,6 +6,7 @@ export const SUBJECT_KEYS = [
   "religion",
   "social",
   "science",
+  "mixed",
 ] as const;
 
 export type SubjectKey = (typeof SUBJECT_KEYS)[number];
@@ -20,6 +21,7 @@ const NAME_EN_TO_KEY: Record<string, SubjectKey> = {
   religion: "religion",
   "social studies": "social",
   science: "science",
+  "mixed questions": "mixed",
 };
 
 export const SUBJECT_TINTS: Record<SubjectKey, string> = {
@@ -30,6 +32,7 @@ export const SUBJECT_TINTS: Record<SubjectKey, string> = {
   religion: "bg-[#FFF4D6]",
   social: "bg-[#FFE9DC]",
   science: "bg-[#E7F7F4]",
+  mixed: "bg-[#FFE8EE]",
 };
 
 /** Strong accent used for subject progress fills (pairs with SUBJECT_TINTS). */
@@ -41,6 +44,7 @@ export const SUBJECT_ACCENTS: Record<SubjectKey, string> = {
   religion: "#E5A82E",
   social: "#E8895A",
   science: "#2BB3A0",
+  mixed: "#E8567F",
 };
 
 export const UNIT_ACCENTS = ["#7C9CFF", "#F48FB1", "#7ED3B2", "#F6C15B", "#C9A0FF", "#FF9F7A", "#6EC8E6"] as const;
