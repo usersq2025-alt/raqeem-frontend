@@ -29,6 +29,29 @@ export async function loadExhibitionSession(): Promise<ExhibitionSessionState> {
   return (await response.json()) as ExhibitionSessionState;
 }
 
+/** Public trial link (no login): the visitor picks a profession, the API mints a throwaway account. */
+export async function loadDemoProfessions(): Promise<ExhibitionSessionState> {
+  const response = await fetch("/api/demo/professions", { cache: "no-store" });
+  if (!response.ok) throw new ExhibitionSessionError(response.status);
+  const data = (await response.json()) as { professions: ExhibitionProfession[] };
+  return { session: null, professions: data.professions };
+}
+
+export async function startDemoSession(input: {
+  professionCode: string;
+  gradeLevel: number;
+  gender: "male" | "female";
+}): Promise<{ student_id: number }> {
+  const response = await fetch("/api/demo/start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+    body: JSON.stringify({ profession_code: input.professionCode, grade_level: input.gradeLevel, gender: input.gender }),
+  });
+  if (!response.ok) throw new ExhibitionSessionError(response.status);
+  return (await response.json()) as { student_id: number };
+}
+
 export async function startExhibitionSession(input: {
   professionCode: string;
   gradeLevel: number;

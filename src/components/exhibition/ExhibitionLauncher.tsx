@@ -6,7 +6,9 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { professionAvatarSrc } from "@/lib/config/professions";
 import {
   GRADE_NAMES,
+  loadDemoProfessions,
   loadExhibitionSession,
+  startDemoSession,
   startExhibitionSession,
   type ExhibitionProfession,
   type ExhibitionSession,
@@ -19,7 +21,7 @@ const pill =
   "min-h-11 rounded-2xl px-5 py-3 text-sm font-extrabold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-orange disabled:opacity-40";
 
 /** Exhibition entry: pick profession, grade and boy/girl, then land in the real student experience. */
-export function ExhibitionLauncher() {
+export function ExhibitionLauncher({ publicEntry = false }: { publicEntry?: boolean }) {
   const router = useRouter();
   const [professions, setProfessions] = useState<ExhibitionProfession[]>([]);
   const [current, setCurrent] = useState<ExhibitionSession | null>(null);
@@ -33,7 +35,7 @@ export function ExhibitionLauncher() {
 
   useEffect(() => {
     let active = true;
-    loadExhibitionSession()
+    (publicEntry ? loadDemoProfessions() : loadExhibitionSession())
       .then((state) => {
         if (!active) return;
         setProfessions(state.professions);
@@ -52,14 +54,16 @@ export function ExhibitionLauncher() {
     return () => {
       active = false;
     };
-  }, [attempt]);
+  }, [attempt, publicEntry]);
 
   async function start(fresh: boolean) {
     if (!profession || !grade || busy) return;
     setBusy(true);
     setError("");
     try {
-      const session = await startExhibitionSession({ professionCode: profession, gradeLevel: grade, gender, fresh });
+      const session = publicEntry
+        ? await startDemoSession({ professionCode: profession, gradeLevel: grade, gender })
+        : await startExhibitionSession({ professionCode: profession, gradeLevel: grade, gender, fresh });
       router.push(`/subjects?childId=${session.student_id}`);
     } catch {
       setError("تعذّر بدء التجربة. حاول مجددًا.");
@@ -75,14 +79,16 @@ export function ExhibitionLauncher() {
       <div className="mx-auto max-w-5xl">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <BrandLogo size="sm" />
-          <div className="flex flex-wrap gap-2">
-            <Link href="/family/exhibition" className={`${pill} bg-white`}>
-              معاينة الألعاب السريعة
-            </Link>
-            <Link href="/family/settings" className={`${pill} bg-white`}>
-              حساب ولي الأمر
-            </Link>
-          </div>
+          {publicEntry ? null : (
+            <div className="flex flex-wrap gap-2">
+              <Link href="/family/exhibition" className={`${pill} bg-white`}>
+                معاينة الألعاب السريعة
+              </Link>
+              <Link href="/family/settings" className={`${pill} bg-white`}>
+                حساب ولي الأمر
+              </Link>
+            </div>
+          )}
         </header>
 
         <section className={`${card} mb-5`}>
