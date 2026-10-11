@@ -14,6 +14,7 @@ export {
   type ExperiencePrefs,
   type TextSizePref,
   type ContrastPref,
+  type FontFamilyPref,
 } from "@/lib/experience/experiencePrefs";
 
 import { applyExperiencePrefsToDocument, type ExperiencePrefs } from "@/lib/experience/experiencePrefs";

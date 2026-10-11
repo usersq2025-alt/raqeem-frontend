@@ -1,6 +1,54 @@
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 
+/* A parent's display preference applies to every page, including portals. */
+html {
+  --font-cairo: var(--font-cairo-base);
+  --font-tajawal: var(--font-tajawal-base);
+  --font-plex-ar: var(--font-plex-ar-base);
+}
+
+html[data-raqeem-font="tajawal"] {
+  --font-cairo: var(--font-tajawal-base);
+  --font-tajawal: var(--font-tajawal-base);
+  --font-plex-ar: var(--font-tajawal-base);
+}
+
+html[data-raqeem-font="naskh"] {
+  --font-cairo: var(--font-naskh);
+  --font-tajawal: var(--font-naskh);
+  --font-plex-ar: var(--font-naskh);
+}
+
+html[data-raqeem-font="naskh"] body,
+html[data-raqeem-font="naskh"] body *:not(svg):not(svg *) {
+  line-height: 1.9 !important;
+}
+
+html[data-raqeem-font="ruqaa"] {
+  --font-cairo: var(--font-ruqaa);
+  --font-tajawal: var(--font-ruqaa);
+  --font-plex-ar: var(--font-ruqaa);
+}
+
+html[data-raqeem-font="ruqaa"] body,
+html[data-raqeem-font="ruqaa"] body *:not(svg):not(svg *) {
+  line-height: 2 !important;
+}
+
+html[data-raqeem-font="ruqaa"] :is([data-match-left], [data-match-right]) {
+  gap: 0.75rem;
+}
+
+/* Ruqaa has smaller letterforms, so give short labels and body copy more room. */
+html[data-raqeem-font="ruqaa"] .text-xs { font-size: 1rem; }
+html[data-raqeem-font="ruqaa"] .text-sm { font-size: 1.125rem; }
+html[data-raqeem-font="ruqaa"] .text-base { font-size: 1.25rem; }
+html[data-raqeem-font="ruqaa"] .text-lg { font-size: 1.375rem; }
+html[data-raqeem-font="ruqaa"] .text-xl { font-size: 1.625rem; }
+html[data-raqeem-font="ruqaa"] .text-2xl { font-size: 1.875rem; }
+html[data-raqeem-font="ruqaa"] .text-3xl { font-size: 2.25rem; }
+
 @layer base {
   html {
     scroll-behavior: smooth;

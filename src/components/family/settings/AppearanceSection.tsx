@@ -8,6 +8,7 @@ import {
   type ContrastPref,
   type ExperiencePrefs,
   type TextSizePref,
+  type FontFamilyPref,
 } from "@/lib/experiencePrefs";
 import { CardShell, SectionIntro } from "./SettingsUi";
 
@@ -36,6 +37,26 @@ export function AppearanceSection({ prefs, onPrefs, onSaved }: Props) {
       <CardShell>
         <p className="mb-2 text-sm font-extrabold text-text-navy">{t("appearance.locale")}</p>
         <LanguageSwitcher />
+      </CardShell>
+
+      <CardShell>
+        <fieldset>
+          <legend className="text-sm font-extrabold text-text-navy">{t("appearance.fontFamily")}</legend>
+          <p className="mt-1 text-sm text-text-gray">{t("appearance.fontHint")}</p>
+          <div className="mt-3 grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("appearance.fontFamily")}>
+            {(["normal", "ruqaa", "tajawal", "naskh"] as FontFamilyPref[]).map((font) => (
+              <button key={font} type="button" role="radio" aria-checked={prefs.fontFamily === font}
+                className={`min-h-12 rounded-2xl px-3 py-2 text-base font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold ${prefs.fontFamily === font ? "bg-[#FFF1E4] text-primary-orange ring-2 ring-brand-gold" : "bg-white ring-1 ring-brand-navy/10 hover:bg-neutral-50"}`}
+                onClick={() => update({ fontFamily: font })}>
+                {t(`appearance.fonts.${font}`)}
+                <span className="mt-1 block text-base font-normal" style={{
+                  fontFamily: `var(${{ normal: "--font-cairo-base", ruqaa: "--font-ruqaa", tajawal: "--font-tajawal-base", naskh: "--font-naskh" }[font]})`,
+                  lineHeight: 2.1,
+                }}>{t("appearance.fontSample")}</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
       </CardShell>
 
       <CardShell>

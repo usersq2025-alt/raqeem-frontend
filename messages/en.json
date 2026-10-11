@@ -1277,6 +1277,15 @@
       "dayProgress": "Today: {done} of {goal}"
     },
     "appearance": {
+      "fontFamily": "Font style",
+      "fontHint": "Applies to all Raqeem pages on this device, including student pages and games.",
+      "fonts": {
+        "normal": "Cairo (current font)",
+        "ruqaa": "Ruqaa font",
+        "tajawal": "Tajawal",
+        "naskh": "Noto Naskh Arabic"
+      },
+      "fontSample": "أَتَعَلَّمُ وَأَكْتَشِفُ كُلَّ يَوْمٍ",
       "locale": "App language",
       "deviceNote": "Display settings are saved on this device only.",
       "darkUnavailable": "Dark mode is not available in the student app yet.",

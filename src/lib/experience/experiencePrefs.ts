@@ -2,6 +2,7 @@ export const EXPERIENCE_PREFS_STORAGE_KEY = "raqeem:experience-prefs";
 
 export type TextSizePref = "default" | "large" | "xlarge";
 export type ContrastPref = "default" | "high";
+export type FontFamilyPref = "normal" | "ruqaa" | "tajawal" | "naskh";
 
 export type ExperiencePrefs = {
   sfx: boolean;
@@ -9,6 +10,7 @@ export type ExperiencePrefs = {
   celebration: boolean;
   textSize: TextSizePref;
   contrast: ContrastPref;
+  fontFamily: FontFamilyPref;
 };
 
 export const DEFAULT_EXPERIENCE_PREFS: ExperiencePrefs = {
@@ -17,6 +19,7 @@ export const DEFAULT_EXPERIENCE_PREFS: ExperiencePrefs = {
   celebration: true,
   textSize: "default",
   contrast: "default",
+  fontFamily: "normal",
 };
 
 function normalize(raw: unknown): ExperiencePrefs {
@@ -30,6 +33,7 @@ function normalize(raw: unknown): ExperiencePrefs {
     base.textSize = o.textSize;
   }
   if (o.contrast === "default" || o.contrast === "high") base.contrast = o.contrast;
+  if (o.fontFamily === "normal" || o.fontFamily === "ruqaa" || o.fontFamily === "tajawal" || o.fontFamily === "naskh") base.fontFamily = o.fontFamily;
   return base;
 }
 
@@ -67,6 +71,7 @@ export function applyExperiencePrefsToDocument(prefs: ExperiencePrefs): void {
   const root = document.documentElement;
   root.dataset.raqeemTextSize = prefs.textSize;
   root.dataset.raqeemContrast = prefs.contrast;
+  root.dataset.raqeemFont = prefs.fontFamily;
 }
 
 /** Respect only the OS-level "prefers-reduced-motion" setting; there is no in-app override. */

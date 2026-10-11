@@ -7,7 +7,6 @@ import { usePathname } from "@/i18n/navigation";
 import { StudentChromeProvider } from "@/components/StudentChrome";
 import { StudentNav } from "@/components/StudentNav";
 import { ExhibitionBar } from "@/components/exhibition/ExhibitionBar";
-import { ExperiencePrefsBootstrap } from "@/components/experience/ExperiencePrefsBootstrap";
 import { getChild, type ChildProfile } from "@/lib/api/children";
 import { lockGuardianMode } from "@/lib/api/guardian";
 import { getStreak, type StudentStreak } from "@/lib/api/student";
@@ -73,7 +72,6 @@ export function StudentShell({ children }: Props) {
 
   return (
     <StudentChromeProvider value={chrome}>
-      <ExperiencePrefsBootstrap />
       <div
         className={`relative ${
           isPathScreen

@@ -8,21 +8,23 @@ import { Cairo, IBM_Plex_Sans_Arabic, Nunito, Tajawal } from "next/font/google";
 import { routing } from "@/i18n/routing";
 import { LATIN_NUMBER_FORMATS } from "@/lib/i18n/latinNumerals";
 import "../globals.css";
+import { ruqaaFont, naskhFont } from "@/lib/ruqaaFont";
+import { ExperiencePrefsBootstrap } from "@/components/experience/ExperiencePrefsBootstrap";
 
 const cairo = Cairo({
-  variable: "--font-cairo",
+  variable: "--font-cairo-base",
   subsets: ["arabic", "latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 const tajawal = Tajawal({
-  variable: "--font-tajawal",
+  variable: "--font-tajawal-base",
   subsets: ["arabic", "latin"],
   weight: ["400", "500", "700"],
 });
 
 const plexArabic = IBM_Plex_Sans_Arabic({
-  variable: "--font-plex-ar",
+  variable: "--font-plex-ar-base",
   subsets: ["arabic", "latin"],
   weight: ["400", "500", "600", "700"],
 });
@@ -80,10 +82,11 @@ export default async function LocaleLayout({ children, params }: Props) {
       lang={locale}
       dir={isRtl ? "rtl" : "ltr"}
       suppressHydrationWarning
-      className={`${cairo.variable} ${tajawal.variable} ${plexArabic.variable} ${nunito.variable} h-full antialiased${isRtl ? " numerals-latn" : ""}`}
+      className={`${cairo.variable} ${tajawal.variable} ${plexArabic.variable} ${nunito.variable} ${ruqaaFont.variable} ${naskhFont.variable} h-full antialiased${isRtl ? " numerals-latn" : ""}`}
     >
       <body className={`min-h-full bg-background-white ${isRtl ? "font-sans" : "font-sans-ltr"}`}>
         <NextIntlClientProvider locale={locale} messages={messages} formats={LATIN_NUMBER_FORMATS}>
+          <ExperiencePrefsBootstrap />
           <Suspense fallback={null}><LastVisitTracker /></Suspense>
           {children}
         </NextIntlClientProvider>
