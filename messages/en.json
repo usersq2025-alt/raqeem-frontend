@@ -1327,15 +1327,21 @@
       "privacy": "Privacy policy",
       "terms": "Terms of use",
       "logout": "Log out",
+      "removePin": "Remove parent PIN",
+      "pinRemoved": "PIN removed. Parent mode now opens directly.",
+      "removePinCredential": "Current parent PIN or account password",
+      "removePinInvalid": "The parent PIN or account password is incorrect.",
+      "removePinLocked": "The PIN is temporarily locked after too many attempts. Try later or use your account password.",
+      "removePinError": "Could not remove the PIN. Please try again.",
       "pinTitle": "Set parent PIN",
-      "pinLead": "A 4–6 digit code to open parent mode from the student space.",
+      "pinLead": "Optional protection with a 4–6 digit PIN. Without a PIN, parent mode opens directly. You can enable it here anytime.",
       "aiNote": "Future smart-report data will only power educational recommendations.",
       "panelTitle": "Security and access",
       "panelLead": "Protect your account and control the return from child space to parent mode.",
       "confirmPassword": "Confirm new password",
       "passwordMin": "At least 8 characters.",
       "passwordMismatch": "Passwords do not match.",
-      "pinMissing": "No PIN set yet",
+      "pinMissing": "PIN protection is off (optional)",
       "pinActive": "Parent PIN is active",
       "createPin": "Create PIN",
       "privacyHeading": "Privacy"
@@ -1588,7 +1594,7 @@
       "generic": "Could not verify. Try again.",
       "locked": "PIN is temporarily locked.",
       "setupFailed": "Could not verify. Try again.",
-      "unavailable": "Could not reach the verification service. Check the server and try again."
+      "unavailable": "Unable to check guardian PIN status. Please try again."
     },
     "lead": "Confirm you are the parent or guardian to leave this child profile.",
     "setupPinLead": "Set a quick PIN next time so you do not need your full password.",
@@ -1598,7 +1604,10 @@
     "checking": "Verifying…",
     "usePassword": "Use password instead",
     "skipPin": "Skip for now",
-    "passwordHint": "You have not set a parent PIN yet, so we ask for the same login password you use for Raqeem."
+    "passwordHint": "You have not set a parent PIN yet, so we ask for the same login password you use for Raqeem.",
+    "retry": "Try again",
+    "demoBody": "You are using the demo account. Return to the demo to choose a grade.",
+    "backToDemo": "Back to demo"
   },
   "questionImage": {
     "description": "Illustration for the question",

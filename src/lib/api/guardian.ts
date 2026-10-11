@@ -1,6 +1,7 @@
 import { ApiError } from "@/lib/api/client";
 
 export type GuardianStatus = {
+  isDemo?: boolean;
   pinSet: boolean;
   unlocked: boolean;
   pinLocked: boolean;
@@ -80,6 +81,7 @@ function mapStatus(raw: Record<string, unknown>): GuardianStatus {
   const pinLocked = Boolean(raw.pin_locked ?? raw.pinLocked);
   const unlockTtlMinutes = Number(raw.unlock_ttl_minutes ?? raw.unlockTtlMinutes ?? 15);
   return {
+    isDemo: Boolean(raw.is_demo),
     pinSet,
     unlocked: Boolean(raw.unlocked),
     pinLocked,
@@ -121,6 +123,13 @@ function mapAccount(raw: Record<string, unknown>): ParentAccount {
 export async function getGuardianStatus() {
   const raw = await call<Record<string, unknown>>("/api/parent/guardian-mode");
   return mapStatus(raw);
+}
+
+export function clearGuardianPin(password: string) {
+  return call<{ pin_set: boolean; unlocked: boolean }>("/api/parent/guardian-mode/clear-pin", {
+    method: "POST",
+    body: JSON.stringify({ password }),
+  });
 }
 
 export function verifyGuardianPin(pin: string) {

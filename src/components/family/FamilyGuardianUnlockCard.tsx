@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/Button";
 import { FieldInput, LockIcon } from "@/components/ui/FieldInput";
 import {
   getGuardianStatus,
-  verifyGuardianPassword,
   verifyGuardianPin,
   type GuardianStatus,
 } from "@/lib/api/guardian";
@@ -16,16 +15,16 @@ type Props = {
 };
 
 export function FamilyGuardianUnlockCard({ onUnlocked }: Props) {
+  const tGate = useTranslations("parentGate");
   const t = useTranslations("familySettings.guardian");
   const [status, setStatus] = useState<GuardianStatus | null>(null);
   const [pin, setPin] = useState("");
-  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    getGuardianStatus().then(setStatus).catch(() => setStatus(null));
-  }, []);
+    getGuardianStatus().then((next) => { setStatus(next); if (next.unlocked) onUnlocked(next); }).catch(() => setError(tGate("errors.unavailable")));
+  }, [onUnlocked, tGate]);
 
   async function handleUnlock(event: React.FormEvent) {
     event.preventDefault();
@@ -36,13 +35,13 @@ export function FamilyGuardianUnlockCard({ onUnlocked }: Props) {
       if (status?.pinSet) {
         await verifyGuardianPin(pin.trim());
       } else {
-        await verifyGuardianPassword(password);
+        // No PIN is configured: refresh access without requesting credentials.
       }
       const next = await getGuardianStatus();
       setStatus(next);
+      if (!next.unlocked) { setError(tGate(next.isDemo ? "demoBody" : "errors.unavailable")); return; }
       onUnlocked(next);
       setPin("");
-      setPassword("");
     } catch (caught) {
       const code =
         caught && typeof caught === "object" && "code" in caught
@@ -79,22 +78,10 @@ export function FamilyGuardianUnlockCard({ onUnlocked }: Props) {
             disabled={busy || Boolean(status?.pinLocked)}
             placeholder={t("pinPlaceholder")}
           />
-        ) : (
-          <FieldInput
-            id="family-unlock-password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            icon={<LockIcon />}
-            disabled={busy}
-            placeholder={t("passwordPlaceholder")}
-          />
-        )}
+        ) : null}
         {error ? <p className="text-sm font-semibold text-red-600">{error}</p> : null}
         <Button type="submit" className="w-full" disabled={busy || Boolean(status?.pinLocked)}>
-          {busy ? t("unlocking") : t("unlock")}
+          {busy ? t("unlocking") : usePin ? t("unlock") : tGate("retry")}
         </Button>
       </form>
     </div>

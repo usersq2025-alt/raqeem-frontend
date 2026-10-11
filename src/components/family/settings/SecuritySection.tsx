@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { changeParentPassword } from "@/lib/api/parentAccount";
-import { getGuardianStatus, setGuardianPin } from "@/lib/api/guardian";
+import { clearGuardianPin, getGuardianStatus, setGuardianPin } from "@/lib/api/guardian";
 import type { ParentAccount } from "@/lib/api/parentAccount";
 import { CardShell, SectionIntro } from "./SettingsUi";
 
@@ -25,6 +25,7 @@ export function SecuritySection({ account, onAccount, onSaved, onLogout }: Props
   const [pinValue, setPinValue] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");
   const [showPinForm, setShowPinForm] = useState(false);
+  const [removePin, setRemovePin] = useState(false);
   const [busy, setBusy] = useState(false);
   const [pwError, setPwError] = useState("");
   const [pinError, setPinError] = useState("");
@@ -117,20 +118,29 @@ export function SecuritySection({ account, onAccount, onSaved, onLogout }: Props
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
+            disabled={busy || !account}
             className="min-h-11 rounded-2xl bg-[#003890] px-4 text-sm font-extrabold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
             onClick={() => {
               setShowPinForm(true);
+              setRemovePin(false);
+              setPinPassword("");
               setPinError("");
             }}
           >
             {pinSet ? t("security.changePin") : t("security.createPin")}
           </button>
+          {pinSet ? (
+            <button type="button" disabled={busy} className="min-h-11 rounded-2xl border border-neutral-200 px-4 text-sm font-extrabold text-text-navy disabled:opacity-45"
+              onClick={() => { setRemovePin(true); setShowPinForm(true); setPinPassword(""); setPinError(""); }}>
+              {t("security.removePin")}
+            </button>
+          ) : null}
         </div>
 
         {showPinForm ? (
           <div className="mt-4 space-y-2 border-t border-neutral-200 pt-4">
             <label className="block text-sm font-semibold" htmlFor="pin-pw">
-              {t("security.currentPassword")}
+              {t(removePin ? "security.removePinCredential" : "security.pinPassword")}
             </label>
             <PasswordInput
               id="pin-pw"
@@ -139,6 +149,7 @@ export function SecuritySection({ account, onAccount, onSaved, onLogout }: Props
               value={pinPassword}
               onChange={setPinPassword}
             />
+            {!removePin ? <>
             <label className="block text-sm font-semibold" htmlFor="pin-val">
               {t("security.newPin")}
             </label>
@@ -161,24 +172,25 @@ export function SecuritySection({ account, onAccount, onSaved, onLogout }: Props
               onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, "").slice(0, 6))}
               className="min-h-11 w-full rounded-2xl border border-neutral-200 px-3 tracking-widest outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
             />
+            </> : null}
             <button
               type="button"
               disabled={
                 busy ||
                 pinPassword.length < 1 ||
-                pinValue.length < 4 ||
-                pinValue !== pinConfirm
+                (!removePin && (pinValue.length < 4 || pinValue !== pinConfirm))
               }
               className="min-h-11 rounded-2xl bg-primary-orange px-4 text-sm font-extrabold text-white disabled:opacity-45"
               onClick={async () => {
-                if (pinValue !== pinConfirm) {
+                if (!removePin && pinValue !== pinConfirm) {
                   setPinError(t("security.pinMismatch"));
                   return;
                 }
                 setBusy(true);
                 setPinError("");
                 try {
-                  await setGuardianPin({
+                  if (removePin) await clearGuardianPin(pinPassword);
+                  else await setGuardianPin({
                     password: pinPassword,
                     pin: pinValue,
                     pinConfirmation: pinConfirm,
@@ -187,22 +199,25 @@ export function SecuritySection({ account, onAccount, onSaved, onLogout }: Props
                   if (account) {
                     onAccount({
                       ...account,
-                      pinSet: status?.pinSet ?? true,
+                      pinSet: status?.pinSet ?? !removePin,
                     });
                   }
                   setPinPassword("");
                   setPinValue("");
                   setPinConfirm("");
                   setShowPinForm(false);
-                  onSaved(t("security.pinSaved"));
-                } catch {
-                  setPinError(t("security.pinError"));
+                  onSaved(t(removePin ? "security.pinRemoved" : "security.pinSaved"));
+                } catch (caught) {
+                  const code = caught && typeof caught === "object" && "code" in caught ? String(caught.code) : "";
+                  if (removePin && code === "INVALID_CREDENTIALS") setPinError(t("security.removePinInvalid"));
+                  else if (removePin && code === "LOCKED") setPinError(t("security.removePinLocked"));
+                  else setPinError(t(removePin ? "security.removePinError" : "security.pinError"));
                 } finally {
                   setBusy(false);
                 }
               }}
             >
-              {t("security.savePin")}
+              {t(removePin ? "security.removePin" : "security.savePin")}
             </button>
             {pinError ? <p className="text-sm font-semibold text-red-600">{pinError}</p> : null}
           </div>

@@ -7,8 +7,6 @@ import { useRouter } from "@/i18n/navigation";
 import { FieldInput, LockIcon } from "@/components/ui/FieldInput";
 import {
   getGuardianStatus,
-  setGuardianPin,
-  verifyGuardianPassword,
   verifyGuardianPin,
   type GuardianStatus,
 } from "@/lib/api/guardian";
@@ -20,8 +18,6 @@ type Props = {
   onUnlocked?: () => void;
 };
 
-type Step = "auth" | "suggestPin" | "setPin";
-
 export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: Props) {
   const t = useTranslations("parentGate");
   const router = useRouter();
@@ -29,21 +25,16 @@ export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: P
   const panelRef = useRef<HTMLDivElement>(null);
   const firstFieldRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<GuardianStatus | null>(null);
-  const [step, setStep] = useState<Step>("auth");
   const [pin, setPin] = useState("");
-  const [password, setPassword] = useState("");
-  const [setPinPassword, setSetPinPassword] = useState("");
-  const [newPin, setNewPin] = useState("");
-  const [newPinConfirm, setNewPinConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
   const [gateSession, setGateSession] = useState(false);
 
   if (open && !gateSession) {
     setGateSession(true);
-    setStep("auth");
+    setStatus(null);
     setPin("");
-    setPassword("");
     setError("");
     setBusy(false);
   }
@@ -59,25 +50,24 @@ export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: P
       if (cancelled) return;
       try {
         const next = await getGuardianStatus();
-        if (!cancelled) setStatus(next);
+        if (!cancelled) {
+          setStatus(next);
+          if (next.unlocked) {
+            onClose();
+            if (onUnlocked) onUnlocked();
+            else router.push("/children");
+          }
+        }
       } catch {
         if (!cancelled) {
-          setStatus({
-            pinSet: false,
-            unlocked: false,
-            pinLocked: false,
-            unlockTtlMinutes: 15,
-            pin_set: false,
-            pin_locked: false,
-            unlock_ttl_minutes: 15,
-          });
+          setError(t("errors.unavailable"));
         }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [open]);
+  }, [open, onClose, onUnlocked, router, retry, t]);
 
   useEffect(() => {
     if (!open) return;
@@ -116,51 +106,8 @@ export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: P
     setError("");
     setBusy(true);
     try {
-      if (status?.pinSet) {
-        await verifyGuardianPin(pin.trim());
-        finishToHub();
-        return;
-      }
-      const result = await verifyGuardianPassword(password);
-      if (result.suggestPinSetup && !onUnlocked) {
-        setStep("suggestPin");
-      } else {
-        finishToHub();
-      }
-    } catch (caught) {
-      const code =
-        caught && typeof caught === "object" && "code" in caught
-          ? String((caught as { code: string }).code)
-          : "NETWORK";
-      if (code === "INVALID_CREDENTIALS") setError(t("errors.invalidPassword"));
-      else if (code === "INVALID" || code === "INVALID_PIN" || code === "WRONG_PIN") setError(t("errors.invalidPin"));
-      else if (code === "LOCKED") setError(t("errors.pinLocked"));
-      else if (code === "NETWORK" || code === "501" || code === "mock") setError(t("errors.unavailable"));
-      else setError(t("errors.generic"));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleSetPin(event: React.FormEvent) {
-    event.preventDefault();
-    if (busy) return;
-    setError("");
-    if (newPin !== newPinConfirm) {
-      setError(t("errors.pinMismatch"));
-      return;
-    }
-    if (!/^\d{4,6}$/.test(newPin)) {
-      setError(t("errors.pinFormat"));
-      return;
-    }
-    setBusy(true);
-    try {
-      await setGuardianPin({
-        password: setPinPassword,
-        pin: newPin,
-        pinConfirmation: newPinConfirm,
-      });
+      if (!status?.pinSet) return;
+      await verifyGuardianPin(pin.trim());
       finishToHub();
     } catch (caught) {
       const code =
@@ -168,6 +115,12 @@ export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: P
           ? String((caught as { code: string }).code)
           : "NETWORK";
       if (code === "INVALID_CREDENTIALS") setError(t("errors.invalidPassword"));
+      else if (code === "INVALID" || code === "INVALID_PIN" || code === "WRONG_PIN") setError(t("errors.invalidPin"));
+      else if (code === "LOCKED") {
+        setStatus((current) => current ? { ...current, pinLocked: true } : current);
+        setError(t("errors.pinLocked"));
+      }
+      else if (code === "NETWORK" || code === "501" || code === "mock") setError(t("errors.unavailable"));
       else setError(t("errors.generic"));
     } finally {
       setBusy(false);
@@ -197,15 +150,21 @@ export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: P
           {t("title")}
         </h2>
         <p className="mt-2 text-center text-sm font-semibold leading-relaxed text-text-gray">{t("subtitle")}</p>
-        {!usePin && step === "auth" ? (
-          <p className="mt-3 rounded-2xl bg-[#FFF8F1] px-3 py-2 text-center text-xs font-semibold leading-relaxed text-text-navy">
-            {t("passwordHint")}
-          </p>
+        {!status && !error ? <p role="status" className="mt-5 text-center">{t("checking")}</p> : null}
+        {status?.isDemo ? <p className="mt-5 text-center text-sm">{t("demoBody")}</p> : null}
+        {!usePin && (error || (status && !status.unlocked && !status.isDemo)) ? (
+          <p role="alert" className="mt-5 text-sm text-red-600">{error || t("errors.unavailable")}</p>
         ) : null}
+        {!usePin ? <div className="mt-5 flex gap-2">
+          <button type="button" className="min-h-12 flex-1 rounded-full border-2 border-primary-orange text-primary-orange font-bold" onClick={onClose}>{t("cancel")}</button>
+          <button type="button" className="min-h-12 flex-1 rounded-full bg-primary-orange text-white font-bold" onClick={() => {
+            if (status?.isDemo) { onClose(); router.push("/demo"); }
+            else { setStatus(null); setError(""); setRetry((value) => value + 1); }
+          }}>{status?.isDemo ? t("backToDemo") : t("retry")}</button>
+        </div> : null}
 
-        {step === "auth" ? (
+        {usePin && status ? (
           <form className="mt-5 space-y-3" onSubmit={handleSubmitAuth}>
-            {usePin ? (
               <div>
                 <label htmlFor="parent-gate-pin" className="mb-1.5 block text-sm font-bold text-text-navy">
                   {t("pinLabel")}
@@ -223,24 +182,6 @@ export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: P
                   disabled={busy || Boolean(status?.pinLocked)}
                 />
               </div>
-            ) : (
-              <div>
-                <label htmlFor="parent-gate-password" className="mb-1.5 block text-sm font-bold text-text-navy">
-                  {t("passwordLabel")}
-                </label>
-                <FieldInput
-                  ref={firstFieldRef}
-                  id="parent-gate-password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  icon={<LockIcon />}
-                  disabled={busy}
-                />
-              </div>
-            )}
             {status?.pinLocked ? (
               <p className="text-sm font-semibold text-red-600">{t("errors.pinLocked")}</p>
             ) : null}
@@ -256,7 +197,7 @@ export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: P
               </button>
               <button
                 type="submit"
-                disabled={busy || Boolean(status?.pinLocked) || (usePin ? pin.length < 4 : password.length < 1)}
+                disabled={busy || Boolean(status?.pinLocked) || pin.length < 4}
                 className="min-h-12 w-full rounded-full bg-primary-orange px-3 text-sm font-extrabold text-white disabled:opacity-45"
               >
                 {busy ? t("verifying") : t("confirm")}
@@ -265,88 +206,6 @@ export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: P
           </form>
         ) : null}
 
-        {step === "suggestPin" ? (
-          <div className="mt-5 space-y-3">
-            <p className="text-sm font-semibold leading-relaxed text-text-gray">{t("suggestPinBody")}</p>
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                className="min-h-12 w-full rounded-full bg-primary-orange text-sm font-extrabold text-white"
-                onClick={() => setStep("setPin")}
-              >
-                {t("suggestPinCta")}
-              </button>
-              <button
-                type="button"
-                className="min-h-12 w-full rounded-full border-2 border-primary-orange bg-white text-sm font-extrabold text-primary-orange"
-                onClick={finishToHub}
-              >
-                {t("suggestPinSkip")}
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {step === "setPin" ? (
-          <form className="mt-5 space-y-3" onSubmit={handleSetPin}>
-            <div>
-              <label htmlFor="parent-gate-set-password" className="mb-1.5 block text-sm font-bold text-text-navy">
-                {t("passwordLabel")}
-              </label>
-              <FieldInput
-                ref={firstFieldRef}
-                id="parent-gate-set-password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                value={setPinPassword}
-                onChange={(event) => setSetPinPassword(event.target.value)}
-                icon={<LockIcon />}
-                disabled={busy}
-              />
-            </div>
-            <div>
-              <label htmlFor="parent-gate-new-pin" className="mb-1.5 block text-sm font-bold text-text-navy">
-                {t("newPinLabel")}
-              </label>
-              <FieldInput
-                id="parent-gate-new-pin"
-                name="pin"
-                type="password"
-                inputMode="numeric"
-                autoComplete="off"
-                value={newPin}
-                onChange={(event) => setNewPin(event.target.value)}
-                icon={<LockIcon />}
-                disabled={busy}
-              />
-            </div>
-            <div>
-              <label htmlFor="parent-gate-new-pin-confirm" className="mb-1.5 block text-sm font-bold text-text-navy">
-                {t("confirmPinLabel")}
-              </label>
-              <FieldInput
-                id="parent-gate-new-pin-confirm"
-                name="pinConfirm"
-                type="password"
-                inputMode="numeric"
-                autoComplete="off"
-                value={newPinConfirm}
-                onChange={(event) => setNewPinConfirm(event.target.value)}
-                icon={<LockIcon />}
-                disabled={busy}
-              />
-            </div>
-            {error ? <p className="text-sm font-semibold text-red-600">{error}</p> : null}
-            <button
-              type="submit"
-              disabled={busy}
-              className="min-h-12 w-full rounded-full bg-primary-orange text-sm font-extrabold text-white disabled:opacity-45"
-            >
-              {busy ? t("savingPin") : t("savePin")}
-            </button>
-          </form>
-        ) : null}
       </div>
     </div>,
     document.body
