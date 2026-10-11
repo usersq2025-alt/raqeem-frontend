@@ -685,12 +685,32 @@ export function PlayFeedbackBanner({
       <div className="min-w-0">
         <p className="text-base font-extrabold">{isCorrect ? correctLabel : incorrectLabel}</p>
         {!isCorrect ? <p className="text-sm font-bold opacity-80">{niceTryLabel}</p> : null}
-        {explanation ? (
-          <p className="mt-2 text-sm font-bold leading-relaxed text-text-navy">
-            <span className="text-primary-orange">{t("explanation")}: </span>{explanation}
-          </p>
-        ) : null}
+        {explanation ? <WhyToggle key={explanation} label={t("why")} title={t("explanation")} explanation={explanation} /> : null}
       </div>
+    </div>
+  );
+}
+
+/** The explanation stays folded behind a prominent "why?" button so students notice it and tap it on purpose. */
+function WhyToggle({ label, title, explanation }: { label: string; title: string; explanation: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-3">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary-orange px-5 py-2 text-base font-black text-white shadow-[0_6px_0_0_rgba(194,100,20,0.35)] transition active:translate-y-[2px] active:shadow-[0_3px_0_0_rgba(194,100,20,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-orange"
+      >
+        <span aria-hidden="true">💡</span>
+        {label}
+      </button>
+      {open ? (
+        <div className="mt-3 rounded-2xl border-2 border-primary-orange/40 bg-white px-4 py-3 shadow-sm">
+          <p className="mb-1 text-sm font-extrabold text-primary-orange">{title}</p>
+          <p className="text-lg font-bold leading-relaxed text-text-navy">{explanation}</p>
+        </div>
+      ) : null}
     </div>
   );
 }
