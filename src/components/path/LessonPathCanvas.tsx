@@ -79,7 +79,7 @@ export function LessonPathCanvas({ data, childId, focusLessonId = null }: Props)
     if (!scroller || !stage) return;
     const measure = () => {
       const labelHeight = Math.max(0, ...Array.from(stage.querySelectorAll(".path-lesson-label"),
-        (label) => label.getBoundingClientRect().height));
+        (label) => (label as HTMLElement).offsetHeight));
       const viewportHeight = scroller.clientHeight;
       setStageMetrics((previous) => previous.viewportHeight === viewportHeight && previous.labelHeight === labelHeight
         ? previous : { viewportHeight, labelHeight });
