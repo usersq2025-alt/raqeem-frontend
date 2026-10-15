@@ -11,15 +11,24 @@ import {
   type ExperiencePrefs,
   type TextSizePref,
   type ContrastPref,
+  type FontFamilyPref,
 } from "@/lib/experiencePrefs";
 import { playUiTone } from "@/lib/play/uiSounds";
 import { ParentGateModal } from "@/components/family/ParentGateModal";
 
 type Props = { childId: number };
 
+const FONT_VARS: Record<FontFamilyPref, string> = {
+  normal: "--font-cairo-base",
+  ruqaa: "--font-ruqaa",
+  tajawal: "--font-tajawal-base",
+  naskh: "--font-naskh",
+};
+
 export function ExperiencePreferencesExperience({ childId }: Props) {
   const t = useTranslations("experiencePrefs");
   const tGate = useTranslations("parentGate");
+  const tFamily = useTranslations("familySettings");
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -105,6 +114,33 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
                 onClick={() => update({ textSize: size })}
               >
                 {t(`display.textSize_${size}`)}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        <fieldset className="mt-4">
+          <legend className="text-sm font-extrabold text-text-navy">{tFamily("appearance.fontFamily")}</legend>
+          <div className="mt-2 grid grid-cols-2 gap-2" role="radiogroup" aria-label={tFamily("appearance.fontFamily")}>
+            {(["normal", "ruqaa", "tajawal", "naskh"] as FontFamilyPref[]).map((font) => (
+              <button
+                key={font}
+                type="button"
+                role="radio"
+                className={`min-h-12 rounded-2xl px-3 py-2 text-base font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold ${
+                  prefs.fontFamily === font
+                    ? "bg-[#FFF1E4] text-primary-orange ring-2 ring-brand-gold"
+                    : "bg-neutral-50 text-text-navy hover:bg-neutral-100"
+                }`}
+                aria-checked={prefs.fontFamily === font}
+                onClick={() => update({ fontFamily: font })}
+              >
+                {tFamily(`appearance.fonts.${font}`)}
+                <span
+                  className="mt-1 block text-base font-normal"
+                  style={{ fontFamily: `var(${FONT_VARS[font]})`, lineHeight: 2.1 }}
+                >
+                  {tFamily("appearance.fontSample")}
+                </span>
               </button>
             ))}
           </div>
