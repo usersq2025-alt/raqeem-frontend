@@ -256,11 +256,15 @@ export function ReviewStationExperience({ unitId, childId }: Props) {
 
       {phase === "feedback" && isCorrect != null ? (
         <PlayFeedbackBanner
+          key={`${question?.id}-${summary?.remaining ?? 0}`}
           isCorrect={isCorrect}
           correctLabel={t("correct")}
           incorrectLabel={t("incorrect")}
           niceTryLabel={t("niceTry")}
           explanation={typeof feedback.explanation === "string" ? feedback.explanation : null}
+          onNext={onNext}
+          nextLabel={t("next")}
+          nextDisabled={busy}
         />
       ) : null}
 

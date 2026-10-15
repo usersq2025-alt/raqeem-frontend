@@ -165,15 +165,6 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
   }, [canSubmit, phase, browsingPast, question?.id]);
 
   useEffect(() => {
-    if (phase !== "feedback" || isCorrect == null || browsingPast || isCorrect !== false) return;
-    // Wrong answers show an explanation under the question: bring it into view.
-    const timer = window.setTimeout(() => {
-      document.querySelector("[data-play-feedback]")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }, 200);
-    return () => window.clearTimeout(timer);
-  }, [phase, isCorrect, browsingPast, question?.id]);
-
-  useEffect(() => {
     if (phase !== "feedback" || isCorrect == null || browsingPast || !question || rewardedQuestions.current.has(question.id)) return;
     rewardedQuestions.current.add(question.id);
     if (isCorrect === false) {
@@ -442,11 +433,25 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
 
       {(phase === "feedback" || browsingPast) && isCorrect != null ? (
         <PlayFeedbackBanner
+          key={`${question?.id}-${browseIndex ?? "live"}`}
           isCorrect={isCorrect}
           correctLabel={t("correct")}
           incorrectLabel={t("incorrect")}
           niceTryLabel={t("niceTry")}
           explanation={typeof feedback.explanation === "string" ? feedback.explanation : null}
+          onNext={browsingPast ? goToNextQuestionView : () => void onNext()}
+          nextLabel={
+            browsingPast
+              ? browseIndex != null && browseIndex >= history.length - 1
+                ? t("backToCurrent")
+                : t("nextQuestion")
+              : attempt.status === "battery_depleted"
+                ? t("goToBreak")
+                : attempt.answeredCount >= attempt.totalQuestions
+                  ? t("finishLesson")
+                  : t("nextQuestion")
+          }
+          nextDisabled={!browsingPast && (busy || transitioning)}
         />
       ) : null}
 
@@ -668,66 +673,119 @@ function FlagIcon() {
   );
 }
 
+/**
+ * Answer feedback as a bottom sheet: green when correct, orange when wrong. The explanation opens by itself on a
+ * wrong answer and stays behind a "why?" button on a correct one. The X only closes the sheet; moving on is the
+ * separate next button. Callers should key it per question so a closed sheet re-opens for the next one.
+ */
 export function PlayFeedbackBanner({
   isCorrect,
   correctLabel,
   incorrectLabel,
   niceTryLabel,
   explanation,
+  onNext,
+  nextLabel,
+  nextDisabled,
 }: {
   isCorrect: boolean;
   correctLabel: string;
   incorrectLabel: string;
   niceTryLabel: string;
   explanation?: string | null;
+  onNext?: () => void;
+  nextLabel?: string;
+  nextDisabled?: boolean;
 }) {
   const t = useTranslations("lesson");
+  const [open, setOpen] = useState(true);
+  const [whyOpen, setWhyOpen] = useState(false);
+  const showExplanation = Boolean(explanation) && (!isCorrect || whyOpen);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  if (!open) {
+    return explanation ? (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary-orange px-5 py-2 text-base font-black text-white shadow-[0_6px_0_0_rgba(194,100,20,0.35)] transition active:translate-y-[2px] active:shadow-[0_3px_0_0_rgba(194,100,20,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-orange"
+      >
+        <span aria-hidden="true">💡</span>
+        {t("explanation")}
+      </button>
+    ) : null;
+  }
+
   return (
     <div
       data-play-feedback
-      className={`play-feedback-banner mt-4 flex items-center gap-3 rounded-[22px] border-4 px-4 py-3 ${
-        isCorrect
-          ? "play-feedback-correct border-emerald-300 bg-emerald-50 text-emerald-700"
-          : "border-amber-200 bg-amber-50 text-amber-800"
-      }`}
       role="status"
+      className={`play-feedback-banner play-feedback-sheet fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-2xl rounded-t-[28px] border-x-4 border-t-4 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-18px_40px_-18px_rgba(26,43,71,0.45)] ${
+        isCorrect
+          ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+          : "border-orange-300 bg-orange-50 text-orange-900"
+      }`}
     >
-      <span
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl font-black text-white ${
-          isCorrect ? "bg-emerald-500" : "bg-amber-400"
-        }`}
-        aria-hidden="true"
-      >
-        {isCorrect ? "✓" : "!"}
-      </span>
-      <div className="min-w-0">
-        <p className="text-base font-extrabold">{isCorrect ? correctLabel : incorrectLabel}</p>
-        {!isCorrect ? <p className="text-sm font-bold opacity-80">{niceTryLabel}</p> : null}
-        {explanation ? <WhyToggle key={explanation} label={t("why")} title={t("explanation")} explanation={explanation} /> : null}
+      <div className="flex items-center gap-3">
+        <span
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl font-black text-white ${
+            isCorrect ? "bg-emerald-500" : "bg-primary-orange"
+          }`}
+          aria-hidden="true"
+        >
+          {isCorrect ? "✓" : "!"}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-base font-extrabold">{isCorrect ? correctLabel : incorrectLabel}</p>
+          {!isCorrect ? <p className="text-sm font-bold opacity-80">{niceTryLabel}</p> : null}
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          aria-label={t("reviewClose")}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/80 text-xl font-black leading-none text-text-navy transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-orange"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
       </div>
-    </div>
-  );
-}
 
-/** The explanation stays folded behind a prominent "why?" button so students notice it and tap it on purpose. */
-function WhyToggle({ label, title, explanation }: { label: string; title: string; explanation: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="mt-3">
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
-        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary-orange px-5 py-2 text-base font-black text-white shadow-[0_6px_0_0_rgba(194,100,20,0.35)] transition active:translate-y-[2px] active:shadow-[0_3px_0_0_rgba(194,100,20,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-orange"
-      >
-        <span aria-hidden="true">💡</span>
-        {label}
-      </button>
-      {open ? (
-        <div className="mt-3 rounded-2xl border-2 border-primary-orange/40 bg-white px-4 py-3 shadow-sm">
-          <p className="mb-1 text-sm font-extrabold text-primary-orange">{title}</p>
+      {explanation && isCorrect ? (
+        <button
+          type="button"
+          aria-expanded={whyOpen}
+          onClick={() => setWhyOpen((value) => !value)}
+          className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-500 px-5 py-2 text-base font-black text-white shadow-[0_6px_0_0_rgba(4,120,87,0.35)] transition active:translate-y-[2px] active:shadow-[0_3px_0_0_rgba(4,120,87,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+        >
+          <span aria-hidden="true">💡</span>
+          {t("why")}
+        </button>
+      ) : null}
+
+      {showExplanation ? (
+        <div
+          className={`mt-3 max-h-[40dvh] overflow-y-auto rounded-2xl border-2 bg-white px-4 py-3 shadow-sm ${
+            isCorrect ? "border-emerald-300" : "border-orange-300"
+          }`}
+        >
+          <p className={`mb-1 text-sm font-extrabold ${isCorrect ? "text-emerald-600" : "text-primary-orange"}`}>
+            {t("explanation")}
+          </p>
           <p className="text-lg font-bold leading-relaxed text-text-navy">{explanation}</p>
         </div>
+      ) : null}
+
+      {onNext ? (
+        <Button onClick={onNext} disabled={nextDisabled} fullWidth className="mt-3">
+          {nextLabel}
+        </Button>
       ) : null}
     </div>
   );
