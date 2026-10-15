@@ -1064,6 +1064,7 @@
     "nextLesson": "Next lesson",
     "replayPoints": "Replays do not add new points",
     "stars": "{count, plural, one {# star} other {# stars}}",
+    "exitLesson": "Exit lesson",
     "previousQuestion": "Previous",
     "nextQuestion": "Next",
     "backToCurrent": "Back to current question",

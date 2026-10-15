@@ -17,7 +17,8 @@ import { LessonCompleteCelebration } from "@/components/LessonCompleteCelebratio
 import { LessonPlayLoading } from "@/components/LessonPlayLoading";
 import { QuestionTransitionBar } from "@/components/QuestionTransitionBar";
 import { Button } from "@/components/ui/Button";
-import { withChildQuery } from "@/lib/config/subjects";
+import { Link } from "@/i18n/navigation";
+import { unitLessonPath, withChildQuery } from "@/lib/config/subjects";
 import { toIndicDigits } from "@/lib/format/indicDigits";
 import {
   completeAttempt,
@@ -406,6 +407,8 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
         previousDisabled={!canGoPrevious || transitioning}
         nextDisabled={!canGoForward || transitioning}
         viewingPastLabel={browsingPast ? t("viewingPast") : null}
+        exitHref={attempt.unitId ? unitLessonPath(attempt.unitId, childId) : withChildQuery("/subjects", childId)}
+        exitLabel={t("exitLesson")}
       />
 
       {question ? (
@@ -527,7 +530,11 @@ export function PlayChrome({
   previousDisabled,
   nextDisabled,
   viewingPastLabel,
+  exitHref,
+  exitLabel,
 }: {
+  exitHref?: string;
+  exitLabel?: string;
   progressPct: number;
   questionLabel: string;
   gameLabel?: string;
@@ -552,6 +559,17 @@ export function PlayChrome({
 
   return (
     <div className="play-chrome space-y-2.5 rounded-[22px] bg-[#F7FBFF] px-3 py-3">
+      {exitHref && exitLabel ? (
+        <div className="flex justify-start">
+          <Link
+            href={exitHref}
+            className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-sm font-extrabold text-text-gray shadow-[0_6px_16px_-10px_rgba(26,43,71,0.5)] transition hover:text-text-navy"
+          >
+            <span aria-hidden="true">✕</span>
+            {exitLabel}
+          </Link>
+        </div>
+      ) : null}
       <div role="progressbar" aria-label={questionLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.max(0, Math.min(100, progressPct)))} className="play-trail relative h-3.5 overflow-hidden rounded-full bg-white shadow-inner">
         <div
           className="absolute inset-y-0 start-0 rounded-full bg-gradient-to-l from-primary-orange to-[#FFAA55] transition-[width] duration-500"
