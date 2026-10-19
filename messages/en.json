@@ -756,6 +756,24 @@
           "groupFloor": "Seats and airplane equipment",
           "groupSmall": "Small tools (placed on a surface)",
           "groupWall": "Wall tools (mounted on the cabin wall)"
+        },
+        "astronaut": {
+          "title": "Your 3D space station!",
+          "storeTitle": "Astronaut tools store",
+          "storeSubtitle": "Buy tools with your points, then place and try them in your station.",
+          "goTo": "Go to my station",
+          "groupFloor": "Station equipment and furniture",
+          "groupSmall": "Small tools (placed on the lab bench)",
+          "groupWall": "Wall tools"
+        },
+        "soldier": {
+          "title": "Your 3D training camp!",
+          "storeTitle": "Soldier gear store",
+          "storeSubtitle": "Buy gear with your points, then place and try it in your camp.",
+          "goTo": "Go to my camp",
+          "groupFloor": "Camp gear and equipment",
+          "groupSmall": "Small tools (placed on the map table)",
+          "groupWall": "Wall tools"
         }
       },      "storeTitle": "Clinic tools store",
       "storeSubtitle": "Buy tools with your points, then place and try them in your clinic.",
