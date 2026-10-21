@@ -11,6 +11,7 @@ import { getChild, type ChildProfile } from "@/lib/api/children";
 import { lockGuardianMode } from "@/lib/api/guardian";
 import { getStreak, type StudentStreak } from "@/lib/api/student";
 import { isHq3dProfession } from "@/lib/config/hq3d";
+import { OfflineBanner } from "@/components/offline/OfflineBanner";
 import { clearChildLocalData } from "@/lib/offline/clearChildCache";
 import { runBackgroundPreload } from "@/lib/offline/preloader";
 import { startSyncEngine } from "@/lib/offline/syncEngine";
@@ -104,6 +105,7 @@ export function StudentShell({ children }: Props) {
 
   return (
     <StudentChromeProvider value={chrome}>
+      <OfflineBanner />
       <div
         className={`relative ${
           isPathScreen

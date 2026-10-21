@@ -10,6 +10,7 @@ import { LATIN_NUMBER_FORMATS } from "@/lib/i18n/latinNumerals";
 import "../globals.css";
 import { ruqaaFont, naskhFont } from "@/lib/ruqaaFont";
 import { ExperiencePrefsBootstrap } from "@/components/experience/ExperiencePrefsBootstrap";
+import { OfflineBoot } from "@/components/offline/OfflineBoot";
 
 const cairo = Cairo({
   variable: "--font-cairo-base",
@@ -87,6 +88,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       <body className={`min-h-full bg-background-white ${isRtl ? "font-sans" : "font-sans-ltr"}`}>
         <NextIntlClientProvider locale={locale} messages={messages} formats={LATIN_NUMBER_FORMATS}>
           <ExperiencePrefsBootstrap />
+          <OfflineBoot />
           <Suspense fallback={null}><LastVisitTracker /></Suspense>
           {children}
         </NextIntlClientProvider>

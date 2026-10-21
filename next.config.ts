@@ -15,17 +15,39 @@ const withSerwist = withSerwistInit({
   swSrc: "src/app/sw.ts",
   swDest: "public/sw.js",
   disable: process.env.NODE_ENV !== "production",
+  // We register the SW ourselves (src/components/offline/OfflineBoot.tsx) with
+  // `{ immediate: true }` - the library's own default auto-register waits for the
+  // window "load" event, which measured 10-30+ seconds on a real phone on a slow
+  // connection with this app's first page. That delay was most of why the SW wasn't
+  // even installing yet, let alone ready, before a child went offline in testing.
+  register: false,
   // public/images and public/hq-lab are tens of MB of per-child/per-profession content;
   // they're cached deliberately at runtime (see src/app/sw.ts), never precached in bulk.
-  globPublicPatterns: ["favicon*.png", "favicon.ico", "icon*.png", "apple-touch-icon.png", "manifest.webmanifest", "robots.txt", "fonts/**/*"],
+  // Custom fonts likewise aren't needed by the tiny /offline shell below - they're
+  // cached lazily the first time a page that actually uses them is visited.
+  globPublicPatterns: ["favicon*.png", "favicon.ico", "icon*.png", "apple-touch-icon.png", "manifest.webmanifest", "robots.txt"],
   manifestTransforms: [
     async (manifestEntries) => ({
-      // Next also emits a webpack chunk per Route Handler (app/api/**/route-*.js) under
-      // .next/static/chunks - that's server-only code the browser never runs, but the
-      // plugin's own "server/"-prefix exclusion doesn't catch these (they're not under
-      // that prefix). Precaching ~80 of them made first install install alone take far
-      // longer than it should on a single small container - never finished in testing.
-      manifest: manifestEntries.filter((entry) => !/\/_next\/static\/chunks\/app\/api\//.test(entry.url)),
+      // The install-time precache manifest must stay a *small shell*, not the whole
+      // app: on a real phone on a slow connection, precaching the ~120 entries Serwist
+      // included by default (one JS chunk per page, ~20 webfont files) measured ~100s
+      // and installing but not yet active, the page is uncontrolled and plain
+      // browser fetches fail outright if the device goes offline meanwhile, exactly
+      // what testing hit. Precaching here is only for the /offline fallback (see
+      // fallbacks.entries in src/app/sw.ts) plus the framework JS every page needs to
+      // hydrate; every other page's JS/CSS/fonts/API data is cached lazily, the first
+      // time that page is actually visited online, by the runtime-caching rules below
+      // (unchanged, still network-first/stale-while-revalidate as before) - that's the
+      // normal and sufficient path for "works offline after being opened once".
+      manifest: manifestEntries.filter((entry) => {
+        if (/\/_next\/static\/chunks\/app\/api\//.test(entry.url)) return false; // server-only Route Handler code
+        // This transform runs before @serwist/next's own built-in one that percent-encodes
+        // "[" and "]" in URLs, so entries still read literally as "[locale]" here, not
+        // "%5Blocale%5D".
+        if (/\[locale\]/.test(entry.url)) return false; // every per-locale page's own JS, not the shared framework
+        if (/\/_next\/static\/media\//.test(entry.url)) return false; // next/font webfont files
+        return true;
+      }),
       warnings: [],
     }),
   ],

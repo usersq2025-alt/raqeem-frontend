@@ -1550,6 +1550,9 @@
     "accountTitle": "Account and children",
     "accountBody": "From family settings you add children, edit profiles, and open each child space."
   },
+  "offlineBanner": {
+    "message": "You're offline right now"
+  },
   "experiencePrefs": {
     "title": "Settings",
     "subtitle": "Sound and display options for this device. They do not change parent account settings.",
