@@ -18,6 +18,17 @@ const withSerwist = withSerwistInit({
   // public/images and public/hq-lab are tens of MB of per-child/per-profession content;
   // they're cached deliberately at runtime (see src/app/sw.ts), never precached in bulk.
   globPublicPatterns: ["favicon*.png", "favicon.ico", "icon*.png", "apple-touch-icon.png", "manifest.webmanifest", "robots.txt", "fonts/**/*"],
+  manifestTransforms: [
+    async (manifestEntries) => ({
+      // Next also emits a webpack chunk per Route Handler (app/api/**/route-*.js) under
+      // .next/static/chunks - that's server-only code the browser never runs, but the
+      // plugin's own "server/"-prefix exclusion doesn't catch these (they're not under
+      // that prefix). Precaching ~80 of them made first install install alone take far
+      // longer than it should on a single small container - never finished in testing.
+      manifest: manifestEntries.filter((entry) => !/\/_next\/static\/chunks\/app\/api\//.test(entry.url)),
+      warnings: [],
+    }),
+  ],
 });
 
 const nextConfig: NextConfig = {
