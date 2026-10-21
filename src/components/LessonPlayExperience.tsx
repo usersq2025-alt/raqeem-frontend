@@ -20,14 +20,16 @@ import { Button } from "@/components/ui/Button";
 import { Link } from "@/i18n/navigation";
 import { unitLessonPath, withChildQuery } from "@/lib/config/subjects";
 import { toIndicDigits } from "@/lib/format/indicDigits";
+import { type LessonAttempt, type PlayQuestion } from "@/lib/api/lessonPlay";
+// Offline-aware drop-in replacements (same signatures/shapes as @/lib/api/lessonPlay):
+// fall back to a pre-downloaded local bundle when offline, otherwise behave exactly
+// like the real API. See src/lib/offline/offlineLessonPlay.ts.
 import {
   completeAttempt,
   getCurrentQuestion,
   startLessonAttempt,
   submitAnswer,
-  type LessonAttempt,
-  type PlayQuestion,
-} from "@/lib/api/lessonPlay";
+} from "@/lib/offline/offlineLessonPlay";
 import { playUiTone } from "@/lib/play/uiSounds";
 import { isExperienceCelebrationEnabled } from "@/lib/experience/experiencePrefs";
 

@@ -33,10 +33,71 @@ export interface MetaRow {
   value: string;
 }
 
+export interface OfflineBundleQuestion {
+  id: number;
+  game_id: number;
+  game_type: string;
+  question_text: string;
+  image_url: string | null;
+  image_alt: string | null;
+  difficulty: string;
+  payload: Record<string, unknown>;
+  answer_key: Record<string, unknown>;
+}
+
+export interface GameRules {
+  battery: {
+    segment_1_lost_at_wrong_ratio: number;
+    segment_2_lost_at_wrong_ratio: number;
+    depleted_at_wrong_ratio: number;
+    total_segments: number;
+    recharge_minutes: number;
+  };
+  stars: { three_star_min_ratio: number; two_star_min_ratio: number };
+  max_questions_per_attempt: number;
+  points: Record<string, number>;
+}
+
+/** Downloaded once per attempt (GET .../offline-bundle), kept until the attempt is
+ * synced/completed. Keyed by attemptId, which is already globally unique server-side.
+ * startIndex/startCorrectCount/startWrongCount mirror the real attempt's position at
+ * download time (0 for a brand new attempt, >0 when resuming one with prior online
+ * progress) - the only hint available to bootstrap local progress correctly if
+ * connectivity drops before any question-specific call (which would otherwise let the
+ * question_id itself locate the right index - see lessonOffline.ts). */
+export interface LessonBundleCache {
+  attemptId: number;
+  lessonId: number;
+  childId: number;
+  questions: OfflineBundleQuestion[];
+  rules: GameRules;
+  cachedAt: number;
+  startIndex: number;
+  startCorrectCount: number;
+  startWrongCount: number;
+}
+
+/** Locally-computed progress through a bundle - lets a child close the app mid-lesson
+ * while offline and resume exactly where they left off. */
+export interface LocalAttemptProgress {
+  attemptId: number;
+  lessonId: number;
+  childId: number;
+  currentIndex: number;
+  correctCount: number;
+  wrongCount: number;
+  totalQuestions: number;
+  status: "in_progress" | "battery_depleted" | "all_answered";
+  answers: { questionId: number; selectedAnswer: unknown }[];
+  updatedAt: number;
+}
+
 class RaqeemOfflineDB extends Dexie {
   outbox!: EntityTable<OutboxItem, "id">;
   hqState!: EntityTable<HqStateCache, "childId">;
   meta!: EntityTable<MetaRow, "key">;
+  lessonBundles!: EntityTable<LessonBundleCache, "attemptId">;
+  lessonProgress!: EntityTable<LocalAttemptProgress, "attemptId">;
 
   constructor() {
     super("raqeem-offline");
@@ -44,6 +105,8 @@ class RaqeemOfflineDB extends Dexie {
       outbox: "id, kind, childId",
       hqState: "childId",
       meta: "key",
+      lessonBundles: "attemptId, lessonId, childId",
+      lessonProgress: "attemptId, lessonId, childId",
     });
   }
 }
