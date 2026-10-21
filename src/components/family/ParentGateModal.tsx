@@ -55,7 +55,9 @@ export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: P
           if (next.unlocked) {
             onClose();
             if (onUnlocked) onUnlocked();
-            else router.push("/children");
+            // replace: the gate never pushed a history entry when it opened, so this exits
+            // to the parent hub instead of leaving a back-stack entry that re-opens it.
+            else router.replace("/children");
           }
         }
       } catch {
@@ -97,7 +99,7 @@ export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: P
   function finishToHub() {
     onClose();
     if (onUnlocked) onUnlocked();
-    else router.push("/children");
+    else router.replace("/children");
   }
 
   async function handleSubmitAuth(event: React.FormEvent) {
@@ -158,7 +160,7 @@ export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: P
         {!usePin ? <div className="mt-5 flex gap-2">
           <button type="button" className="min-h-12 flex-1 rounded-full border-2 border-primary-orange text-primary-orange font-bold" onClick={onClose}>{t("cancel")}</button>
           <button type="button" className="min-h-12 flex-1 rounded-full bg-primary-orange text-white font-bold" onClick={() => {
-            if (status?.isDemo) { onClose(); router.push("/demo"); }
+            if (status?.isDemo) { onClose(); router.replace("/demo"); }
             else { setStatus(null); setError(""); setRetry((value) => value + 1); }
           }}>{status?.isDemo ? t("backToDemo") : t("retry")}</button>
         </div> : null}

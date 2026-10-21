@@ -61,7 +61,7 @@ export function StudentNav({ childId }: Props) {
         aria-label={t("aria")}
       >
         <div className="flex h-full min-h-0 flex-col overflow-y-auto py-5">
-          <Link href={withChildQuery("/subjects", childId)} className="mb-6 flex shrink-0 items-center justify-center px-4">
+          <Link href={withChildQuery("/subjects", childId)} replace className="mb-6 flex shrink-0 items-center justify-center px-4">
             <Image
               src="/images/brand/logo.png"
               alt={tBrand("brandAlt")}
@@ -152,8 +152,12 @@ function NavItem({
   desktop?: boolean;
 }) {
   return (
+    // replace, not push: these are tabs, not a drill-down — switching tabs must not grow
+    // history, or the phone/tablet back button steps backward through old tabs instead of
+    // leaving the student area.
     <Link
       href={withChildQuery(item.href, childId)}
+      replace
       className={
         desktop
           ? `flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-extrabold transition-colors ${
