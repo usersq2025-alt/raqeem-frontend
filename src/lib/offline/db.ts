@@ -26,15 +26,24 @@ export interface HqStateCache {
   updatedAt: number;
 }
 
+/** Small key/value bookkeeping table - e.g. "which content version is currently
+ * precached under this key", so a version bump can be detected and evicted. */
+export interface MetaRow {
+  key: string;
+  value: string;
+}
+
 class RaqeemOfflineDB extends Dexie {
   outbox!: EntityTable<OutboxItem, "id">;
   hqState!: EntityTable<HqStateCache, "childId">;
+  meta!: EntityTable<MetaRow, "key">;
 
   constructor() {
     super("raqeem-offline");
     this.version(1).stores({
       outbox: "id, kind, childId",
       hqState: "childId",
+      meta: "key",
     });
   }
 }

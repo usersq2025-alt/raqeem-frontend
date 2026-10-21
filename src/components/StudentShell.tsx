@@ -10,6 +10,8 @@ import { ExhibitionBar } from "@/components/exhibition/ExhibitionBar";
 import { getChild, type ChildProfile } from "@/lib/api/children";
 import { lockGuardianMode } from "@/lib/api/guardian";
 import { getStreak, type StudentStreak } from "@/lib/api/student";
+import { isHq3dProfession } from "@/lib/config/hq3d";
+import { runBackgroundPreload } from "@/lib/offline/preloader";
 import { startSyncEngine } from "@/lib/offline/syncEngine";
 
 type Props = {
@@ -63,6 +65,16 @@ export function StudentShell({ children }: Props) {
       cancelled = true;
     };
   }, [childId, validChild]);
+
+  useEffect(() => {
+    if (!child) return;
+    // Let the current screen finish its own loading before competing for bandwidth/CPU.
+    const timer = window.setTimeout(() => {
+      const profession = isHq3dProfession(child.professionCode) ? child.professionCode : null;
+      void runBackgroundPreload(child.id, profession);
+    }, 4000);
+    return () => window.clearTimeout(timer);
+  }, [child]);
 
   const chrome = useMemo(
     () => ({

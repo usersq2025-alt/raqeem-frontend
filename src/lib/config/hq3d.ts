@@ -13,3 +13,11 @@ export function hq3dBase(code: Hq3dProfession): string {
 
 /** The game bundle is shared by all professions. */
 export const HQ3D_BUNDLE = "/hq-lab/app.bundle.js";
+
+/**
+ * Bump when /public/hq-lab is republished so browsers fetch the new bundle/CSS, and so
+ * the offline preloader's own hq-lab-assets cache knows its stored copy is stale and
+ * needs evicting (see src/lib/offline/preloader.ts). Shared by Hq3dExperience's own
+ * cache-busting query param and the preloader's version bookkeeping.
+ */
+export const HQ3D_ASSET_VERSION = "17";
