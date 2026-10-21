@@ -10,6 +10,7 @@ import { ExhibitionBar } from "@/components/exhibition/ExhibitionBar";
 import { getChild, type ChildProfile } from "@/lib/api/children";
 import { lockGuardianMode } from "@/lib/api/guardian";
 import { getStreak, type StudentStreak } from "@/lib/api/student";
+import { startSyncEngine } from "@/lib/offline/syncEngine";
 
 type Props = {
   children: ReactNode;
@@ -32,6 +33,10 @@ export function StudentShell({ children }: Props) {
     if (!validChild) return;
     lockGuardianMode().catch(() => undefined);
   }, [validChild, childId]);
+
+  useEffect(() => {
+    startSyncEngine();
+  }, []);
 
   if (!validChild && (child !== null || streak !== null || points !== null)) {
     setChild(null);
