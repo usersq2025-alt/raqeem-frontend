@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { parseSessionCookie, SESSION_COOKIE_NAME, type SessionPayload } from "@/lib/auth/sessionCookie";
+import { parseSessionCookie, SESSION_COOKIE_NAME, SESSION_HINT_COOKIE_NAME, type SessionPayload } from "@/lib/auth/sessionCookie";
 
 const MAX_AGE = 60 * 60 * 24 * 365;
 
@@ -24,6 +24,13 @@ export async function POST(request: Request) {
     path: "/",
     maxAge: MAX_AGE,
   });
+  response.cookies.set(SESSION_HINT_COOKIE_NAME, "1", {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: MAX_AGE,
+  });
 
   return response;
 }
@@ -32,6 +39,13 @@ export async function DELETE() {
   const response = NextResponse.json({ ok: true });
   response.cookies.set(SESSION_COOKIE_NAME, "", {
     httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+  response.cookies.set(SESSION_HINT_COOKIE_NAME, "", {
+    httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
