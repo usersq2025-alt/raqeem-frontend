@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { StudentChromeProvider } from "@/components/StudentChrome";
@@ -11,6 +11,7 @@ import { getChild, type ChildProfile } from "@/lib/api/children";
 import { lockGuardianMode } from "@/lib/api/guardian";
 import { getStreak, type StudentStreak } from "@/lib/api/student";
 import { isHq3dProfession } from "@/lib/config/hq3d";
+import { clearChildLocalData } from "@/lib/offline/clearChildCache";
 import { runBackgroundPreload } from "@/lib/offline/preloader";
 import { startSyncEngine } from "@/lib/offline/syncEngine";
 
@@ -39,6 +40,20 @@ export function StudentShell({ children }: Props) {
   useEffect(() => {
     startSyncEngine();
   }, []);
+
+  // A family device may be shared between children: once we're sure we've actually
+  // switched (not just the first mount), clear the previous child's cached per-child
+  // data so it can't linger and show through under the next one. Never touches the
+  // sync outbox - see clearChildLocalData.
+  const previousChildIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!validChild) return;
+    const previous = previousChildIdRef.current;
+    if (previous !== null && previous !== childId) {
+      void clearChildLocalData(previous);
+    }
+    previousChildIdRef.current = childId;
+  }, [childId, validChild]);
 
   if (!validChild && (child !== null || streak !== null || points !== null)) {
     setChild(null);

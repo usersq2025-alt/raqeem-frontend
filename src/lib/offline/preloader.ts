@@ -43,8 +43,37 @@ async function fetchAndForget(url: string): Promise<void> {
   }
 }
 
+// Bump when this function's own fetch/walk logic changes, to invalidate every child's
+// recorded freshness below regardless of how recently they were preloaded.
+const SUBJECT_TREE_PRELOAD_VERSION = "1";
+// The subjects/units/path endpoints carry no server-exposed content version today, so a
+// time-based refresh is the practical staleness signal - this is what actually keeps a
+// re-opened app from re-fetching the whole tree on every single session.
+const SUBJECT_TREE_TTL_MS = 6 * 60 * 60 * 1000;
+
+function subjectTreeMetaKey(childId: number): string {
+  return `subject-tree:${childId}`;
+}
+
+async function isSubjectTreeFresh(childId: number): Promise<boolean> {
+  const row = await db.meta.get(subjectTreeMetaKey(childId));
+  if (!row) return false;
+  const [version, fetchedAtRaw] = row.value.split(":");
+  if (version !== SUBJECT_TREE_PRELOAD_VERSION) return false;
+  const fetchedAt = Number(fetchedAtRaw);
+  return Number.isFinite(fetchedAt) && Date.now() - fetchedAt < SUBJECT_TREE_TTL_MS;
+}
+
+async function recordSubjectTreePreload(childId: number): Promise<void> {
+  await db.meta.put({ key: subjectTreeMetaKey(childId), value: `${SUBJECT_TREE_PRELOAD_VERSION}:${Date.now()}` });
+}
+
 async function preloadSubjectTree(childId: number, respectDataSaver: boolean): Promise<void> {
   if (!canPreloadNow(respectDataSaver)) return;
+  // `respectDataSaver: false` only ever comes from the explicit Settings "download all
+  // now" action - that also means "yes, go fetch fresh data now" regardless of the TTL.
+  if (respectDataSaver && (await isSubjectTreeFresh(childId))) return;
+
   const subjects = await getSubjects(childId).catch(() => []);
   for (const subject of subjects) {
     if (!canPreloadNow(respectDataSaver)) return;
@@ -56,6 +85,10 @@ async function preloadSubjectTree(childId: number, respectDataSaver: boolean): P
       await idle();
     }
   }
+  // Only reached once the whole tree walk ran to completion (every early `return` above
+  // skips this), so a connectivity drop or data-saver toggle mid-walk never gets
+  // recorded as "fresh" - the next preload pass will retry the full walk.
+  await recordSubjectTreePreload(childId);
 }
 
 async function preloadStaticPages(respectDataSaver: boolean): Promise<void> {
