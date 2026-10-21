@@ -92,12 +92,41 @@ export interface LocalAttemptProgress {
   updatedAt: number;
 }
 
+/** Downloaded once per review session (GET .../offline-bundle) - only the
+ * not-yet-correctly-answered questions, same set ReviewStationController::currentQuestion
+ * would ever serve, already ordered by id (lowest-id-first = "current" question, matching
+ * the server's own selection rule exactly). Keyed by sessionId. */
+export interface ReviewBundleCache {
+  sessionId: number;
+  unitId: number;
+  childId: number;
+  questions: OfflineBundleQuestion[];
+  cachedAt: number;
+}
+
+/** Local progress through a review bundle. remainingIds mirrors the server's
+ * retry-until-correct model: a wrong answer leaves its id in place (same question is
+ * presented again next), a correct one removes it; completed once empty. */
+export interface LocalReviewProgress {
+  sessionId: number;
+  unitId: number;
+  childId: number;
+  remainingIds: number[];
+  totalQuestions: number;
+  correctCount: number;
+  status: "in_progress" | "completed";
+  answers: { questionId: number; selectedAnswer: unknown }[];
+  updatedAt: number;
+}
+
 class RaqeemOfflineDB extends Dexie {
   outbox!: EntityTable<OutboxItem, "id">;
   hqState!: EntityTable<HqStateCache, "childId">;
   meta!: EntityTable<MetaRow, "key">;
   lessonBundles!: EntityTable<LessonBundleCache, "attemptId">;
   lessonProgress!: EntityTable<LocalAttemptProgress, "attemptId">;
+  reviewBundles!: EntityTable<ReviewBundleCache, "sessionId">;
+  reviewProgress!: EntityTable<LocalReviewProgress, "sessionId">;
 
   constructor() {
     super("raqeem-offline");
@@ -107,6 +136,8 @@ class RaqeemOfflineDB extends Dexie {
       meta: "key",
       lessonBundles: "attemptId, lessonId, childId",
       lessonProgress: "attemptId, lessonId, childId",
+      reviewBundles: "sessionId, unitId, childId",
+      reviewProgress: "sessionId, unitId, childId",
     });
   }
 }

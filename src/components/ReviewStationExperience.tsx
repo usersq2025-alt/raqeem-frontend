@@ -13,12 +13,8 @@ import {
   QuestionBody,
   hintLabelForGameType,
 } from "@/components/LessonPlayExperience";
-import {
-  getReviewQuestion,
-  getUnitReview,
-  submitReviewAnswer,
-  type ReviewSummary,
-} from "@/lib/api/review";
+import { type ReviewSummary } from "@/lib/api/review";
+import { getReviewQuestion, getUnitReview, submitReviewAnswer } from "@/lib/offline/offlineReviewPlay";
 import type { PlayQuestion } from "@/lib/api/lessonPlay";
 import { withChildQuery } from "@/lib/config/subjects";
 import { playUiTone } from "@/lib/play/uiSounds";
