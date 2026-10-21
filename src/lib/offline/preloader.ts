@@ -2,6 +2,7 @@ import { getSubjects, getUnits } from "@/lib/api/student";
 import { getUnitPath } from "@/lib/api/units";
 import { HQ3D_ASSET_VERSION, HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
 import { db } from "./db";
+import { isDataSaverEnabled } from "./dataSaverPref";
 
 const STATIC_PAGE_PATHS = ["/terms", "/privacy", "/contact", "/features"] as const;
 
@@ -20,7 +21,9 @@ function idle(): Promise<void> {
 
 function isDataSaverActive(): boolean {
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-  return Boolean(connection?.saveData);
+  // The OS/browser signal (Android Chrome) and the explicit in-app toggle (the only
+  // option on iOS Safari, which never exposes navigator.connection) both count.
+  return Boolean(connection?.saveData) || isDataSaverEnabled();
 }
 
 /** Whether background preloading may proceed right now. Checked before every step, not

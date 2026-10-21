@@ -15,6 +15,10 @@ import {
 } from "@/lib/experiencePrefs";
 import { playUiTone } from "@/lib/play/uiSounds";
 import { ParentGateModal } from "@/components/family/ParentGateModal";
+import { useStudentChrome } from "@/components/StudentChrome";
+import { isHq3dProfession } from "@/lib/config/hq3d";
+import { isDataSaverEnabled, setDataSaverEnabled } from "@/lib/offline/dataSaverPref";
+import { runBackgroundPreload } from "@/lib/offline/preloader";
 
 type Props = { childId: number };
 
@@ -37,7 +41,9 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
   const [savedFlash, setSavedFlash] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
   const returnRef = useRef<HTMLButtonElement>(null);
-  void childId;
+  const chrome = useStudentChrome();
+  const [dataSaver, setDataSaver] = useState(() => isDataSaverEnabled());
+  const [downloadStatus, setDownloadStatus] = useState<"idle" | "downloading" | "done">("idle");
 
   useEffect(() => {
     applyExperiencePrefs(prefs);
@@ -52,6 +58,15 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
     });
     setSavedFlash(true);
     window.setTimeout(() => setSavedFlash(false), 1600);
+  }
+
+  async function downloadAllNow() {
+    if (dataSaver && !window.confirm(t("offline.downloadAllConfirm"))) return;
+    const profession = chrome?.child && isHq3dProfession(chrome.child.professionCode) ? chrome.child.professionCode : null;
+    setDownloadStatus("downloading");
+    await runBackgroundPreload(childId, profession, false);
+    setDownloadStatus("done");
+    window.setTimeout(() => setDownloadStatus("idle"), 2400);
   }
 
   function setLocale(next: "ar" | "en") {
@@ -196,6 +211,31 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
             English
           </button>
         </div>
+      </section>
+
+      <section className="rounded-[28px] bg-white p-5 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.28)]">
+        <h2 className="text-lg font-extrabold text-text-navy">{t("offline.title")}</h2>
+        <p className="mt-1 text-sm font-medium text-text-gray">{t("offline.lead")}</p>
+        <ul className="mt-4 space-y-3">
+          <ToggleRow
+            label={t("offline.dataSaver")}
+            checked={dataSaver}
+            onChange={(value) => {
+              setDataSaver(value);
+              setDataSaverEnabled(value);
+            }}
+          />
+        </ul>
+        <p className="mt-2 text-xs font-medium text-text-gray">{t("offline.dataSaverHint")}</p>
+        <button
+          type="button"
+          disabled={downloadStatus === "downloading"}
+          className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-primary-orange px-4 text-sm font-extrabold text-primary-orange transition-colors hover:bg-[#FFF1E4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold disabled:opacity-60"
+          onClick={() => void downloadAllNow()}
+        >
+          {downloadStatus === "downloading" ? t("offline.downloading") : downloadStatus === "done" ? t("offline.done") : t("offline.downloadAll")}
+        </button>
+        <p className="mt-2 text-xs font-medium text-text-gray">{t("offline.downloadAllHint")}</p>
       </section>
 
       <section className="rounded-[28px] border-2 border-primary-orange/25 bg-[#FFF8F1] p-5 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.28)]">

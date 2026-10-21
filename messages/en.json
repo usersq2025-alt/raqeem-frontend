@@ -1586,6 +1586,17 @@
       "report": "Report a problem",
       "reportHint": "For account changes, ask a parent to use family settings from the children hub."
     },
+    "offline": {
+      "title": "Downloads & data",
+      "lead": "Raqeem downloads content gradually in the background so it works without internet. You can control that here.",
+      "dataSaver": "Data saver",
+      "dataSaverHint": "No content is downloaded in the background while this is on.",
+      "downloadAll": "Download all content now",
+      "downloadAllHint": "Includes the child's subjects, units and headquarters. Overrides data saver after you confirm.",
+      "downloadAllConfirm": "Data saver is on. Downloading now may use mobile data. Continue?",
+      "downloading": "Downloading…",
+      "done": "Downloaded"
+    },
     "saved": "Preference saved on this device"
   },
   "parentGate": {
