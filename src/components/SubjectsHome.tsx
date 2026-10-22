@@ -1,19 +1,80 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { ChildProfile } from "@/lib/api/children";
-import type { StudentStreak, SubjectProgress } from "@/lib/api/student";
+import { getSubjects, type StudentStreak, type SubjectProgress } from "@/lib/api/student";
 import { StreakBadge } from "@/components/StreakBadge";
 import { SubjectCard } from "@/components/SubjectCard";
 import { SubjectLessonProgress } from "@/components/SubjectLessonProgress";
+import { useStudentChrome } from "@/components/StudentChrome";
+import { fetchWithCache } from "@/lib/offline/contentCache";
 import { professionAvatarSrc } from "@/lib/config/professions";
 import { SUBJECT_ACCENTS, subjectCoverSrc, streakPath, withChildQuery } from "@/lib/config/subjects";
 import { useMountedViewTransitionName } from "@/lib/utils/useMountedViewTransitionName";
 import { useAnimatedFill } from "@/lib/utils/useAnimatedFill";
 import { Link } from "@/i18n/navigation";
 
-type Props = {
+type Props = { childId: number };
+
+/**
+ * Used to be a Server Component page fetching subjects/streak directly from Laravel
+ * during render - a service worker has no visibility into that server-to-server call,
+ * so it never worked offline, and a failed client-side navigation to this route wasn't
+ * even caught by the app's own /offline fallback (Next's RSC fetch for the route failed
+ * before any of this component's code ever ran). Fetching here instead, with a cache
+ * fallback, is what makes "keep browsing after connectivity drops" actually work.
+ *
+ * child/streak come from StudentChrome (StudentShell already loads + caches them once
+ * per child, shared by every page) rather than being fetched a third time here.
+ */
+export function SubjectsHome({ childId }: Props) {
+  const t = useTranslations("student");
+  const chrome = useStudentChrome();
+  const [subjects, setSubjects] = useState<SubjectProgress[] | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchWithCache(`subjects:${childId}`, () => getSubjects(childId))
+      .then((data) => {
+        if (cancelled) return;
+        setSubjects(data);
+        setFailed(false);
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [childId]);
+
+  if (failed) {
+    return <p className="py-16 text-center font-bold text-text-gray">{t("offlineNoCache")}</p>;
+  }
+
+  const child = chrome?.child;
+  const streak = chrome?.streak;
+  if (!child || !streak || !subjects) {
+    return <SubjectsHomeSkeleton />;
+  }
+
+  return <SubjectsHomeView child={child} subjects={subjects} streak={streak} />;
+}
+
+function SubjectsHomeSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4" aria-hidden="true">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="h-28 animate-pulse rounded-[22px] bg-white/60" />
+      ))}
+    </div>
+  );
+}
+
+type ViewProps = {
   child: ChildProfile;
   subjects: SubjectProgress[];
   streak: StudentStreak;
@@ -24,7 +85,7 @@ function subjectPercentage(subject: SubjectProgress): number {
   return Math.min(100, Math.round((subject.completedLessons / subject.totalLessons) * 100));
 }
 
-export function SubjectsHome({ child, subjects, streak }: Props) {
+export function SubjectsHomeView({ child, subjects, streak }: ViewProps) {
   const t = useTranslations("student");
   const tDesk = useTranslations("student.desktop");
   const tGrades = useTranslations("child.grades");

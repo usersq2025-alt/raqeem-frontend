@@ -119,6 +119,17 @@ export interface LocalReviewProgress {
   updatedAt: number;
 }
 
+/** A cached GET-response for a browsing page (subjects list, units list, unit path, ...)
+ * - unlike the attempt/session caches above, this is read-only content with no local
+ * mutation, so one generic shape covers all of it. `key` encodes what it is (e.g.
+ * "subjects:{childId}", "units:{subjectId}:{childId}") - see
+ * src/lib/offline/contentCache.ts for the read-through-cache wrapper built on this. */
+export interface ContentCacheEntry {
+  key: string;
+  data: unknown;
+  cachedAt: number;
+}
+
 class RaqeemOfflineDB extends Dexie {
   outbox!: EntityTable<OutboxItem, "id">;
   hqState!: EntityTable<HqStateCache, "childId">;
@@ -127,6 +138,7 @@ class RaqeemOfflineDB extends Dexie {
   lessonProgress!: EntityTable<LocalAttemptProgress, "attemptId">;
   reviewBundles!: EntityTable<ReviewBundleCache, "sessionId">;
   reviewProgress!: EntityTable<LocalReviewProgress, "sessionId">;
+  contentCache!: EntityTable<ContentCacheEntry, "key">;
 
   constructor() {
     super("raqeem-offline");
@@ -138,6 +150,7 @@ class RaqeemOfflineDB extends Dexie {
       lessonProgress: "attemptId, lessonId, childId",
       reviewBundles: "sessionId, unitId, childId",
       reviewProgress: "sessionId, unitId, childId",
+      contentCache: "key",
     });
   }
 }

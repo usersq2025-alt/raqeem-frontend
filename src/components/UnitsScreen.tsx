@@ -1,18 +1,102 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
-import type { UnitProgress } from "@/lib/api/student";
-import type { SubjectKey } from "@/lib/config/subjects";
+import { useLocale, useTranslations } from "next-intl";
+import { getSubjects, getUnits, type SubjectProgress, type UnitProgress } from "@/lib/api/student";
+import { SUBJECT_KEYS, type SubjectKey } from "@/lib/config/subjects";
 import { subjectCoverSrc, UNIT_ACCENTS, unitLessonPath, unitReviewPath, withChildQuery } from "@/lib/config/subjects";
 import { UnitCard } from "@/components/UnitCard";
 import { UnitTopicIcon } from "@/components/UnitTopicIcon";
 import { Button } from "@/components/ui/Button";
 import { useMountedViewTransitionName } from "@/lib/utils/useMountedViewTransitionName";
+import { fetchWithCache } from "@/lib/offline/contentCache";
 import { Link } from "@/i18n/navigation";
 
-type Props = {
+type Props = { childId: number; subjectId: number };
+
+/**
+ * Used to be a Server Component page fetching units (and the whole subjects list, just
+ * to resolve this one subject's name/icon) directly from Laravel during render - see
+ * SubjectsHome.tsx's doc comment for why that never worked offline. Fetches both lists
+ * here instead, with a cache fallback; the subjects list reuses the SAME cache key
+ * SubjectsHome already populates, avoiding a second subjects round-trip.
+ */
+export function UnitsScreen({ childId, subjectId }: Props) {
+  const locale = useLocale();
+  const t = useTranslations("student");
+  const [subjects, setSubjects] = useState<SubjectProgress[] | null>(null);
+  const [units, setUnits] = useState<UnitProgress[] | null>(null);
+  const [unitsFailed, setUnitsFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchWithCache(`subjects:${childId}`, () => getSubjects(childId)).then((data) => {
+      if (!cancelled) setSubjects(data);
+    }).catch(() => {
+      // Best effort - only used to resolve this subject's display name/icon, which
+      // already has a code-derived fallback below; the units list itself is what
+      // actually matters for this screen.
+      if (!cancelled) setSubjects([]);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [childId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchWithCache(`units:${subjectId}:${childId}`, () => getUnits(subjectId, childId))
+      .then((data) => {
+        if (cancelled) return;
+        setUnits(data);
+        setUnitsFailed(false);
+      })
+      .catch(() => {
+        if (!cancelled) setUnitsFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [subjectId, childId]);
+
+  if (unitsFailed) {
+    return <p className="py-16 text-center font-bold text-text-gray">{t("offlineNoCache")}</p>;
+  }
+
+  if (!subjects || !units) {
+    return <UnitsScreenSkeleton />;
+  }
+
+  const subject = subjects.find((row) => row.subjectId === subjectId);
+  const subjectKey: SubjectKey = subject?.key ?? SUBJECT_KEYS[Math.max(0, subjectId - 1)] ?? "arabic";
+  const localizedApiName = locale.startsWith("ar") ? subject?.nameAr?.trim() : subject?.nameEn?.trim();
+  const subjectName = localizedApiName || subject?.nameAr?.trim() || subject?.nameEn?.trim() || t(`subjects.${subjectKey}`);
+  const iconUrl = subject?.iconUrl ?? null;
+
+  return (
+    <UnitsScreenView
+      childId={childId}
+      subjectId={subjectId}
+      subjectKey={subjectKey}
+      subjectName={subjectName}
+      iconUrl={iconUrl}
+      units={units}
+    />
+  );
+}
+
+function UnitsScreenSkeleton() {
+  return (
+    <div className="flex flex-col gap-3" aria-hidden="true">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="h-20 animate-pulse rounded-[22px] bg-white/60" />
+      ))}
+    </div>
+  );
+}
+
+type ViewProps = {
   childId: number;
   subjectId: number;
   subjectKey: SubjectKey;
@@ -21,7 +105,7 @@ type Props = {
   units: UnitProgress[];
 };
 
-export function UnitsScreen({ childId, subjectId, subjectKey, subjectName, iconUrl, units }: Props) {
+function UnitsScreenView({ childId, subjectId, subjectKey, subjectName, iconUrl, units }: ViewProps) {
   const t = useTranslations("student");
   const tDesk = useTranslations("student.desktop");
   const cover = subjectCoverSrc(subjectKey, iconUrl);

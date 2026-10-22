@@ -28,26 +28,13 @@ import {
   submitLocalReviewAnswer,
 } from "./reviewOffline";
 import type { LocalReviewProgress, OfflineBundleQuestion, ReviewBundleCache } from "./db";
+import { isConnectivityError, isOnline } from "./connectivity";
 
 class ReviewUnavailableError extends Error {
   status = 0;
   constructor() {
     super("OFFLINE_NO_REVIEW_BUNDLE");
   }
-}
-
-function isOnline(): boolean {
-  return typeof navigator === "undefined" || navigator.onLine;
-}
-
-// Same reasoning as offlineLessonPlay.ts's isConnectivityError - navigator.onLine only
-// reflects the device's own network interface, not whether OUR server is reachable, so
-// the real trigger for falling back is a failed real call, not a false onLine flag.
-// Genuine HTTP errors from the backend itself still surface normally.
-function isConnectivityError(err: unknown): boolean {
-  const status = (err as { status?: number } | null)?.status;
-  if (status === undefined) return true;
-  return status >= 500;
 }
 
 function questionFromBundle(q: OfflineBundleQuestion): PlayQuestion {

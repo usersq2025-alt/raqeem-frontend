@@ -679,6 +679,7 @@
     "lessonsTitle": "Lessons",
     "emptyUnits": "No published units for this subject yet.",
     "emptyLessons": "No playable lessons in this unit yet.",
+    "offlineNoCache": "This page needs an internet connection the first time you open it. Check your connection and try again.",
     "points": "{count} points",
     "lessonsCount": "{completed} of {total} lessons",
     "unitLessons": "{completed} of {total} lessons",

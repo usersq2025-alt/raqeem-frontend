@@ -679,6 +679,7 @@
     "lessonsTitle": "الدروس",
     "emptyUnits": "لا توجد وحدات منشورة بعد لهذه المادة.",
     "emptyLessons": "لا توجد دروس جاهزة للعب في هذه الوحدة بعد.",
+    "offlineNoCache": "هذه الصفحة تحتاج اتصالاً بالإنترنت في أول مرة تفتحها فيها. تحقق من اتصالك وحاول مرة أخرى.",
     "points": "{count} نقطة",
     "lessonsCount": "{completed} من {total} درساً",
     "unitLessons": "{completed} من {total} دروس",

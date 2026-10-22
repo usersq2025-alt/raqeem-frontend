@@ -3,16 +3,17 @@
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { usePathname } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { StudentChromeProvider } from "@/components/StudentChrome";
 import { StudentNav } from "@/components/StudentNav";
 import { ExhibitionBar } from "@/components/exhibition/ExhibitionBar";
-import { getChild, type ChildProfile } from "@/lib/api/children";
+import { getChildDetail, hasChosenProfession, type ChildProfile } from "@/lib/api/children";
 import { lockGuardianMode } from "@/lib/api/guardian";
 import { getStreak, type StudentStreak } from "@/lib/api/student";
 import { isHq3dProfession } from "@/lib/config/hq3d";
 import { OfflineBanner } from "@/components/offline/OfflineBanner";
 import { clearChildLocalData } from "@/lib/offline/clearChildCache";
+import { fetchWithCache } from "@/lib/offline/contentCache";
 import { runBackgroundPreload } from "@/lib/offline/preloader";
 import { startSyncEngine } from "@/lib/offline/syncEngine";
 
@@ -23,6 +24,7 @@ type Props = {
 export function StudentShell({ children }: Props) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const router = useRouter();
   const childId = Number(searchParams.get("childId") ?? 0);
   const hideNav =
     (pathname.includes("/lessons/") && pathname.includes("/play")) || pathname.includes("/review");
@@ -32,6 +34,11 @@ export function StudentShell({ children }: Props) {
   const [child, setChild] = useState<ChildProfile | null>(null);
   const [streak, setStreak] = useState<StudentStreak | null>(null);
   const [points, setPoints] = useState<number | null>(null);
+  // The childId a child-load attempt last settled for (success or failure) - compared
+  // against the current childId below instead of a plain boolean, so switching to a new
+  // childId naturally stops being "settled" without needing a synchronous reset inside
+  // the effect (not allowed by this project's lint rules).
+  const [settledChildId, setSettledChildId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!validChild) return;
@@ -65,7 +72,13 @@ export function StudentShell({ children }: Props) {
   useEffect(() => {
     if (!validChild) return;
     let cancelled = false;
-    Promise.all([getChild(childId), getStreak(childId)])
+    // Cached so the whole shell (nav, points, streak) still renders on a later
+    // navigation that happens offline - without this, any connectivity drop made the
+    // entire student chrome disappear, not just the page content.
+    Promise.all([
+      fetchWithCache(`child:${childId}`, () => getChildDetail(childId)),
+      fetchWithCache(`streak:${childId}`, () => getStreak(childId)),
+    ])
       .then(([nextChild, nextStreak]) => {
         if (cancelled) return;
         setChild(nextChild);
@@ -76,11 +89,30 @@ export function StudentShell({ children }: Props) {
         if (cancelled) return;
         setChild(null);
         setStreak(null);
+      })
+      .finally(() => {
+        if (!cancelled) setSettledChildId(childId);
       });
     return () => {
       cancelled = true;
     };
   }, [childId, validChild]);
+
+  // Mirrors what every page under (student) used to check individually via
+  // requireStudentChild (redirect to /children if the child doesn't exist, to
+  // career-selection if no profession chosen) - centralized here so it keeps working
+  // from cached data while offline instead of needing its own server round-trip per
+  // page. Only acts once the load has genuinely settled for THIS childId (not just
+  // "still loading" or "offline with no cache yet", which also show as child === null
+  // transiently, and not a stale settlement left over from a previous childId).
+  useEffect(() => {
+    if (!validChild || settledChildId !== childId) return;
+    if (!child) {
+      router.replace("/children");
+    } else if (!hasChosenProfession(child)) {
+      router.replace(`/career-selection?childId=${child.id}`);
+    }
+  }, [child, childId, router, settledChildId, validChild]);
 
   useEffect(() => {
     if (!child) return;
