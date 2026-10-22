@@ -71,3 +71,6 @@ __pycache__/
 # Never commit nested dependency folders or local social-bot data
 **/node_modules/
 /tools/social-post-bot/data/
+
+# Ephemeral fixture that scripts/verify-ux.mjs creates and deletes around each run
+/src/app/[locale]/ux-qa/
