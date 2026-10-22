@@ -3,6 +3,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 import withSerwistInit from "@serwist/next";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+const imageOrigin = new URL(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api");
 
 // @serwist/next bundles the service worker with webpack and doesn't support Turbopack.
 // Next 16 defaults both `next dev` and `next build` to Turbopack, under which this plugin's
@@ -58,9 +59,17 @@ const nextConfig: NextConfig = {
   images: {
     // Admin-uploaded HQ assets are served from Laravel /storage on the API host.
     remotePatterns: [
-      { protocol: "http", hostname: "**" },
-      { protocol: "https", hostname: "**" },
+      { protocol: imageOrigin.protocol === "https:" ? "https" : "http", hostname: imageOrigin.hostname, port: imageOrigin.port, pathname: "/storage/**" },
     ],
+  },
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: "/:path*", headers: [
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "X-Frame-Options", value: "SAMEORIGIN" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "Content-Security-Policy", value: "frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" },
+    ] }];
   },
 };
 

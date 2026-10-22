@@ -108,8 +108,9 @@ export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: P
     setError("");
     setBusy(true);
     try {
-      if (!status?.pinSet) return;
-      await verifyGuardianPin(pin.trim());
+      if (status?.pinSet) {
+        await verifyGuardianPin(pin.trim());
+      }
       finishToHub();
     } catch (caught) {
       const code =
@@ -154,15 +155,21 @@ export function ParentGateModal({ open, onClose, returnFocusRef, onUnlocked }: P
         <p className="mt-2 text-center text-sm font-semibold leading-relaxed text-text-gray">{t("subtitle")}</p>
         {!status && !error ? <p role="status" className="mt-5 text-center">{t("checking")}</p> : null}
         {status?.isDemo ? <p className="mt-5 text-center text-sm">{t("demoBody")}</p> : null}
-        {!usePin && (error || (status && !status.unlocked && !status.isDemo)) ? (
-          <p role="alert" className="mt-5 text-sm text-red-600">{error || t("errors.unavailable")}</p>
+        {error && !status ? (
+          <p role="alert" className="mt-5 text-sm text-red-600">{error}</p>
         ) : null}
-        {!usePin ? <div className="mt-5 flex gap-2">
+        {!usePin && status ? <div className="mt-5 flex gap-2">
           <button type="button" className="min-h-12 flex-1 rounded-full border-2 border-primary-orange text-primary-orange font-bold" onClick={onClose}>{t("cancel")}</button>
           <button type="button" className="min-h-12 flex-1 rounded-full bg-primary-orange text-white font-bold" onClick={() => {
-            if (status?.isDemo) { onClose(); router.replace("/demo"); }
+            if (status.isDemo) { onClose(); router.replace("/demo"); }
             else { setStatus(null); setError(""); setRetry((value) => value + 1); }
-          }}>{status?.isDemo ? t("backToDemo") : t("retry")}</button>
+          }}>{status.isDemo ? t("backToDemo") : t("retry")}</button>
+        </div> : null}
+        {!status && error ? <div className="mt-5 flex gap-2">
+          <button type="button" className="min-h-12 flex-1 rounded-full border-2 border-primary-orange text-primary-orange font-bold" onClick={onClose}>{t("cancel")}</button>
+          <button type="button" className="min-h-12 flex-1 rounded-full bg-primary-orange text-white font-bold" onClick={() => {
+            setStatus(null); setError(""); setRetry((value) => value + 1);
+          }}>{t("retry")}</button>
         </div> : null}
 
         {usePin && status ? (

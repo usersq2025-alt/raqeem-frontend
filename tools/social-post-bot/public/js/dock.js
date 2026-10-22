@@ -20,6 +20,7 @@ export async function savePost(post) {
     }));
   }
   app.dirty = false;
+  document.dispatchEvent(new Event('history-changed'));
   return items;
 }
 

@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { SmsPhoneLoginForm } from "./SmsPhoneLoginForm";
 import { Link, useRouter } from "@/i18n/navigation";
 import { RocketIcon } from "@/components/ui/Button";
-import { FieldInput, MailIcon, UserIcon, WarningIcon } from "@/components/ui/FieldInput";
+import { FieldInput, MailIcon, PhoneIcon, UserIcon, WarningIcon } from "@/components/ui/FieldInput";
 import { PasswordInput } from "@/components/ui/PasswordInput";
-import { AuthApiError, registerUser } from "@/lib/api/auth";
+import { AuthApiError, fetchOtpChannels, registerUser, type OtpChannel } from "@/lib/api/auth";
 import {
   NAME_PATTERN,
   createRegisterSchema,
@@ -21,9 +22,35 @@ import {
   saveRegisterPasswordDraft,
 } from "@/lib/registerDraft";
 
-type FieldErrors = Partial<Record<"fullName" | "email" | "password" | "terms", string>>;
+type FieldErrors = Partial<Record<"fullName" | "email" | "password" | "terms" | "phone", string>>;
+
+/** Strips spaces/dashes; accepts +963… or 00963… and returns E.164, or null. */
+function toE164(raw: string): string | null {
+  let value = raw.replace(/[\s\-().]/g, "");
+  if (value.startsWith("00")) value = `+${value.slice(2)}`;
+  return /^\+[1-9]\d{7,14}$/.test(value) ? value : null;
+}
 
 export function RegisterForm() {
+  const ar = useLocale() === "ar";
+  const [method, setMethod] = useState<"email" | "phone">("email");
+  const [smsAvailable, setSmsAvailable] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void fetchOtpChannels().then((channels) => { if (active) setSmsAvailable(channels.sms === true); });
+    return () => { active = false; };
+  }, []);
+
+  return <>
+    {smsAvailable && <div className="mb-4 grid grid-cols-2 gap-2" role="group" aria-label={ar ? "طريقة إنشاء الحساب" : "Registration method"}>
+      <button type="button" aria-pressed={method === "phone"} onClick={() => setMethod("phone")} className={`rounded-xl border p-3 font-bold ${method === "phone" ? "border-primary-orange bg-orange-50" : "border-gray-200"}`}>{ar ? "برقم الهاتف" : "Phone number"}</button>
+      <button type="button" aria-pressed={method === "email"} onClick={() => setMethod("email")} className={`rounded-xl border p-3 font-bold ${method === "email" ? "border-primary-orange bg-orange-50" : "border-gray-200"}`}>{ar ? "بالبريد الإلكتروني" : "Email"}</button>
+    </div>}
+    {method === "phone" && smsAvailable ? <SmsPhoneLoginForm mode="register" channelAvailable /> : <EmailRegisterForm />}
+  </>;
+}
+
+function EmailRegisterForm() {
   const t = useTranslations("register");
   const router = useRouter();
 
@@ -54,6 +81,19 @@ export function RegisterForm() {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
+  const [whatsappAvailable, setWhatsappAvailable] = useState(false);
+  const [channel, setChannel] = useState<OtpChannel>("email");
+  const [phone, setPhone] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchOtpChannels().then((result) => {
+      if (!cancelled) setWhatsappAvailable(result.whatsapp);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     void (async () => {
@@ -79,7 +119,9 @@ export function RegisterForm() {
 
   const formValues = { fullName, email, password, acceptedTerms };
   const schemaValid = schema.safeParse(formValues).success;
-  const canSubmit = schemaValid && !emailTaken && !submitting;
+  const useWhatsApp = whatsappAvailable && channel === "whatsapp";
+  const phoneE164 = toE164(phone);
+  const canSubmit = schemaValid && !emailTaken && !submitting && (!useWhatsApp || phoneE164 !== null);
 
   function liveNameError(): string | undefined {
     const value = fullName.trim();
@@ -124,20 +166,37 @@ export function RegisterForm() {
       return;
     }
 
+    if (useWhatsApp && !phoneE164) {
+      setErrors({ phone: t("errors.phoneInvalid") });
+      return;
+    }
+
     setSubmitting(true);
     try {
       const result = await registerUser({
         fullName: parsed.data.fullName,
         email: parsed.data.email,
         password: parsed.data.password,
+        phone: phoneE164 ?? undefined,
+        otpChannel: useWhatsApp ? "whatsapp" : "email",
       });
       clearRegisterDraft();
-      router.push(
-        `/verify-otp?parentId=${result.parentId}&email=${encodeURIComponent(parsed.data.email)}`
-      );
+      const query = new URLSearchParams({
+        parentId: String(result.parentId),
+        email: parsed.data.email,
+      });
+      if (result.channel === "whatsapp") {
+        query.set("channel", "whatsapp");
+        if (result.phoneMasked) query.set("phone", result.phoneMasked);
+      }
+      router.push(`/verify-otp?${query.toString()}`);
     } catch (error) {
       if (error instanceof AuthApiError && error.code === "EMAIL_TAKEN") {
         setEmailTaken(true);
+        return;
+      }
+      if (error instanceof AuthApiError && error.status === 422 && useWhatsApp) {
+        setErrors({ phone: t("errors.phoneInvalid") });
         return;
       }
       setFormError(t("errors.generic"));
@@ -260,6 +319,69 @@ export function RegisterForm() {
           </p>
         ) : null}
       </div>
+
+      {whatsappAvailable ? (
+        <fieldset>
+          <legend className="mb-1.5 block text-start text-sm font-semibold text-text-gray">
+            {t("channel.legend")}
+          </legend>
+          <div className="grid grid-cols-2 gap-2">
+            {(["whatsapp", "email"] as const).map((option) => (
+              <label
+                key={option}
+                className={`flex cursor-pointer items-center justify-center rounded-2xl border px-3 py-2.5 text-sm font-bold transition-colors ${
+                  channel === option
+                    ? "border-primary-orange bg-orange-50 text-text-navy"
+                    : "border-neutral-200 text-text-gray"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="otpChannel"
+                  value={option}
+                  checked={channel === option}
+                  onChange={() => setChannel(option)}
+                  className="sr-only"
+                />
+                {t(`channel.${option}`)}
+              </label>
+            ))}
+          </div>
+
+          {useWhatsApp ? (
+            <div className="mt-3">
+              <label htmlFor="phone" className="mb-1.5 block text-start text-sm font-semibold text-text-gray">
+                {t("channel.phoneLabel")}
+              </label>
+              <FieldInput
+                id="phone"
+                name="phone"
+                variant="soft"
+                type="tel"
+                autoComplete="tel"
+                inputMode="tel"
+                dir="ltr"
+                value={phone}
+                placeholder="+963 9xx xxx xxx"
+                invalid={Boolean(errors.phone)}
+                aria-describedby={errors.phone ? "phone-error" : undefined}
+                icon={<PhoneIcon />}
+                onChange={(event) => {
+                  setPhone(event.target.value);
+                  setErrors((current) => ({ ...current, phone: undefined }));
+                }}
+              />
+              {errors.phone ? (
+                <p id="phone-error" className="mt-1 text-xs text-red-500">
+                  {errors.phone}
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-text-gray">{t("channel.phoneHint")}</p>
+              )}
+            </div>
+          ) : null}
+        </fieldset>
+      ) : null}
 
       <label className="flex cursor-pointer items-start gap-3 text-sm text-text-navy">
         <input

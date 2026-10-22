@@ -167,7 +167,7 @@
 
           <div class="card">
             <h2><span class="step">2</span>المحتوى <small class="muted" id="slideLabel"></small></h2>
-            <div class="field"><label for="tBadge">الشارة (اختياري)</label><input id="tBadge" type="text" maxlength="24" placeholder="مثال: إعلان"></div>
+            <div class="field"><label for="tBadge">الشارة (اختياري)</label><input id="tBadge" type="text" maxlength="24" placeholder="مثال: إعلان"><small class="hint">تظهر الشارة أعلى المنشور، وتختفي عند إضافة رسمة توضيحية.</small></div>
             <div class="field"><label for="tTitle">العنوان</label><input id="tTitle" type="text" maxlength="120" placeholder="مثال: التعلّم رحلة ممتعة"></div>
             <div class="field"><label for="tBody">النص <span class="counter" id="bodyCount"></span></label>
               <textarea id="tBody" rows="6" maxlength="900" placeholder="اكتب نص المنشور. كل سطر جديد يبدأ فقرة جديدة."></textarea>
@@ -250,6 +250,7 @@
         <div class="field">
           <label for="pubCaption">الكابشن <span class="counter" id="pubCount"></span></label>
           <textarea id="pubCaption" rows="7" placeholder="اكتب نص التعليق المصاحب للمنشور…"></textarea>
+          <input id="pubIdea" type="text" maxlength="300" placeholder="عمّ المنشور؟ جملة تساعد الذكاء الاصطناعي في كتابة الكابشن (اختياري للمنشورات النصية)" aria-label="فكرة الكابشن" style="margin-top:8px">
           <div class="row">
             <button class="btn soft small" id="pubAi" type="button"><svg class="i"><use href="#i-sparkle"/></svg>اكتب بالذكاء الاصطناعي</button>
             <button class="btn soft small" id="pubLocal" type="button">كابشن جاهز (بدون ذكاء اصطناعي)</button>
@@ -291,6 +292,17 @@
   <dialog id="viewerDialog" class="modal viewer" aria-label="عرض المنشور">
     <form method="dialog" class="modal-head"><h2 id="viewerTitle"></h2><button class="icon-btn" value="close" aria-label="إغلاق"><svg class="i"><use href="#i-x"/></svg></button></form>
     <div class="modal-body viewer-body"><img id="viewerImg" alt=""><div class="viewer-side" id="viewerSide"></div></div>
+  </dialog>
+
+  <dialog id="scheduleDialog" class="modal" aria-labelledby="schedTitle">
+    <form method="dialog" class="modal-head"><h2 id="schedTitle">تعديل الموعد والكابشن</h2><button class="icon-btn" value="close" aria-label="إغلاق"><svg class="i"><use href="#i-x"/></svg></button></form>
+    <div class="modal-body">
+      <div class="field"><label for="schedWhen">موعد النشر</label>
+        <div class="quick" id="schedQuick"></div>
+        <input type="datetime-local" id="schedWhen"></div>
+      <div class="field"><label for="schedCaption">الكابشن</label><textarea id="schedCaption" rows="6"></textarea></div>
+    </div>
+    <div class="modal-foot"><span class="spacer"></span><button class="btn ghost" id="schedCancel" type="button">إغلاق</button><button class="btn primary" id="schedSave" type="button">حفظ التعديل</button></div>
   </dialog>
 
   <dialog id="confirmDialog" class="modal small-modal" aria-labelledby="confirmTitle">

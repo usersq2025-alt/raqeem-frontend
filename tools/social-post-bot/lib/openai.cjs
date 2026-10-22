@@ -1,4 +1,4 @@
-const sharp = require('sharp');
+﻿const sharp = require('sharp');
 
 function fail(status, message) {
   const error = new Error(message);
@@ -24,6 +24,7 @@ function describeFailure(status, apiMessage) {
 // عميل OpenAI: إعادة محاولة ذكية، نماذج بديلة، وإلغاء عند انقطاع المتصفح.
 function createOpenAI({ getConfig, getKey = () => process.env.OPENAI_API_KEY, fetchImpl = (...args) => fetch(...args), logger, sleepImpl = sleep }) {
   const config = () => getConfig();
+  const baseUrl = () => String(process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/+$/, '');
 
   function requireKey() {
     const key = getKey();
@@ -45,6 +46,7 @@ function createOpenAI({ getConfig, getKey = () => process.env.OPENAI_API_KEY, fe
         response = await fetchImpl(url, { ...init, headers: { ...(init.headers || {}), Authorization: `Bearer ${key}` }, signal: combined });
       } catch (error) {
         if (signal?.aborted) throw fail(499, 'أُلغي الطلب.');
+        logger?.warn('خطأ شبكة مع OpenAI', `${error.name}: ${error.message}${error.cause ? ` (${error.cause.code || error.cause.message})` : ''}`);
         lastError = error.name === 'TimeoutError'
           ? fail(504, `انتهت مهلة OpenAI (${Math.round(timeoutMs / 60000 * 10) / 10} دقيقة).`)
           : fail(502, 'تعذر الاتصال بخدمة OpenAI. تحقق من الإنترنت.');
@@ -94,7 +96,7 @@ function createOpenAI({ getConfig, getKey = () => process.env.OPENAI_API_KEY, fe
     }
     const settings = config().imageEdit;
     return withModels(config().models.imageEdit, async model => {
-      const response = await call('https://api.openai.com/v1/images/edits', () => {
+      const response = await call(`${baseUrl()}/images/edits`, () => {
         const form = new FormData();
         form.append('model', model);
         form.append('image', new Blob([normalized], { type: 'image/png' }), 'photo.png');
@@ -114,7 +116,7 @@ function createOpenAI({ getConfig, getKey = () => process.env.OPENAI_API_KEY, fe
   const ILLUSTRATION_STYLE = [
     'A glossy 3D sticker-style illustration with a thick soft white outline, friendly and child-safe,',
     'rich navy blue and golden yellow color palette with small orange accents, soft studio lighting,',
-    'centered single subject, clean transparent background, absolutely no text, no letters, no numbers, no watermark.',
+    'centered single subject, isolated cut-out look, absolutely no text, no letters, no numbers, no watermark.',
     'Subject:',
   ].join(' ');
 
@@ -122,11 +124,12 @@ function createOpenAI({ getConfig, getKey = () => process.env.OPENAI_API_KEY, fe
     requireKey();
     return withModels(config().models.illustration, async model => {
       const send = async transparent => {
-        const response = await call('https://api.openai.com/v1/images/generations', () => ({
+        const response = await call(`${baseUrl()}/images/generations`, () => ({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model, prompt: `${ILLUSTRATION_STYLE} ${scene}`, size: '1024x1024', quality, output_format: 'png',
+            model, prompt: `${ILLUSTRATION_STYLE} ${scene}${transparent ? '' : '. Plain pure white background.'}`,
+            size: '1024x1024', quality, output_format: 'png',
             ...(transparent ? { background: 'transparent' } : {}),
           }),
         }), { signal, timeoutMs: 150_000, retries: 1 });
@@ -153,7 +156,7 @@ function createOpenAI({ getConfig, getKey = () => process.env.OPENAI_API_KEY, fe
   async function chatJson(system, user, { signal, kind = 'text' } = {}) {
     requireKey();
     const result = await withModels(config().models.text, async model => {
-      const response = await call('https://api.openai.com/v1/chat/completions', () => ({
+      const response = await call(`${baseUrl()}/chat/completions`, () => ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

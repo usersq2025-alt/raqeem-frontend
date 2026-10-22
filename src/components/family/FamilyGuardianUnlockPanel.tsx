@@ -59,7 +59,7 @@ export function FamilyGuardianUnlockPanel({ seed, pinSet, pinLocked, redirectTo 
       if (usePin) {
         await verifyGuardianPin(pin.trim());
       } else {
-        // No PIN is configured: refresh access without requesting credentials.
+        // No PIN is configured: the account unlocks automatically server-side.
       }
       const next = await getGuardianStatus();
       if (!next.unlocked) { setError(tGate(next.isDemo ? "demoBody" : "errors.unavailable")); return; }

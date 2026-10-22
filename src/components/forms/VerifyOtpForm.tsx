@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { FieldInput, MailIcon } from "@/components/ui/FieldInput";
@@ -23,6 +24,7 @@ type Status = "idle" | "invalid" | "expired" | "network";
 type Props = {
   parentId: number | null;
   email: string;
+  whatsappPhone?: string | null;
 };
 
 export const OTP_RESEND_MS = 60_000;
@@ -59,8 +61,13 @@ function formatRemaining(ms: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-export function VerifyOtpForm({ parentId, email }: Props) {
+export function VerifyOtpForm({ parentId, email, whatsappPhone = null }: Props) {
   const t = useTranslations("otp");
+  const ar = useLocale() === "ar";
+  const [emailPassword, setEmailPassword] = useState("");
+  const [nextRetryAt, setNextRetryAt] = useState<number | null>(null);
+  const [supportRequired, setSupportRequired] = useState(false);
+  const viaWhatsApp = whatsappPhone !== null;
   const tRegister = useTranslations("register");
   const router = useRouter();
   const [currentEmail, setCurrentEmail] = useState(email);
@@ -79,7 +86,7 @@ export function VerifyOtpForm({ parentId, email }: Props) {
   const [now, setNow] = useState(0);
   const [issuedAt, setIssuedAt] = useState<number | null>(null);
   const [status, setStatus] = useState<Status>("idle");
-  const [serverExpired, setServerExpired] = useState(false);
+  const [, setServerExpired] = useState(false);
   const [shake, setShake] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
@@ -99,6 +106,8 @@ export function VerifyOtpForm({ parentId, email }: Props) {
       const issued = readIssuedAt(parentId);
       if (cancelled) return;
       setIssuedAt(issued);
+      const retry = Number(sessionStorage.getItem(`raqeem:otp-retry:${parentId}`));
+      if (retry > 0) setNextRetryAt(retry);
       const tick = () => setNow(Date.now());
       tick();
       intervalId = window.setInterval(tick, 200);
@@ -118,11 +127,11 @@ export function VerifyOtpForm({ parentId, email }: Props) {
   const remainingExpiry =
     !mounted || issuedAt === null ? OTP_TTL_MS : Math.max(0, issuedAt + OTP_TTL_MS - now);
   const resendRemaining =
-    !mounted || issuedAt === null ? OTP_RESEND_MS : Math.max(0, issuedAt + OTP_RESEND_MS - now);
+    !mounted || issuedAt === null ? OTP_RESEND_MS : Math.max(0, (nextRetryAt ?? issuedAt + OTP_RESEND_MS) - now);
   const locallyExpired = remainingExpiry === 0;
-  const canResend = (resendRemaining === 0 || serverExpired) && !resending && !succeeded;
-  const progress = resendRemaining / OTP_RESEND_MS;
-  const inboxUrl = inboxUrlForEmail(currentEmail);
+  const canResend = resendRemaining === 0 && !resending && !succeeded && !supportRequired;
+  const progress = Math.min(1, resendRemaining / OTP_RESEND_MS);
+  const inboxUrl = viaWhatsApp ? null : inboxUrlForEmail(currentEmail);
   const errorMessage = useMemo(() => {
     if (locallyExpired || status === "expired") return t("expired");
     if (status === "invalid") return t("invalid");
@@ -185,15 +194,24 @@ export function VerifyOtpForm({ parentId, email }: Props) {
     if (!parentId || !canResend || succeeded) return;
     setResending(true);
     try {
-      await resendOtp(parentId);
+      const result = await resendOtp(parentId, viaWhatsApp ? "whatsapp" : "email");
+      const retryAt = Date.now() + (result.resend_after ?? 60) * 1000;
+      setNextRetryAt(retryAt);
+      sessionStorage.setItem(`raqeem:otp-retry:${parentId}`, String(retryAt));
+      setSupportRequired(result.support_required === true);
       const nextIssued = Date.now();
       writeIssuedAt(parentId, nextIssued);
       setIssuedAt(nextIssued);
       setCode("");
       setStatus("idle");
       setServerExpired(false);
-    } catch {
-      setStatus("network");
+    } catch (error) {
+      if (error instanceof AuthApiError && (error.status === 429 || error.supportRequired)) {
+        setSupportRequired(error.supportRequired);
+        const retryAt = Date.now() + error.retryAfter * 1000;
+        setNextRetryAt(retryAt);
+        sessionStorage.setItem(`raqeem:otp-retry:${parentId}`, String(retryAt));
+      } else setStatus("network");
     } finally {
       setResending(false);
     }
@@ -215,7 +233,8 @@ export function VerifyOtpForm({ parentId, email }: Props) {
     setSavingEmail(true);
     setEmailError("");
     try {
-      const result = await changeSignupEmail(parentId, next);
+      const result = await changeSignupEmail(parentId, next, emailPassword);
+      setEmailPassword("");
       setCurrentEmail(result.email);
       setEmailDraft(result.email);
       setEditingEmail(false);
@@ -264,6 +283,7 @@ export function VerifyOtpForm({ parentId, email }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="relative">
+      {supportRequired && <p role="alert" className="mb-4 text-sm text-red-700">{ar ? "توقف إرسال الرموز للحماية. " : "Code requests are paused. "}<a href="https://wa.me/963946794390" target="_blank" rel="noopener noreferrer" className="underline">{ar ? "تواصل مع دعم رقيم" : "Contact Raqeem support"}</a></p>}
       {succeeded ? (
         <div
           className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-3xl bg-white/92"
@@ -282,7 +302,14 @@ export function VerifyOtpForm({ parentId, email }: Props) {
       </h1>
 
       <div className="mt-2.5">
-        {editingEmail ? (
+        {viaWhatsApp ? (
+          <p className="flex flex-wrap items-center gap-x-1.5 text-start text-sm font-medium leading-relaxed text-text-gray">
+            <span>{t("sentToWhatsapp")}</span>
+            <span dir="ltr" className="font-extrabold text-text-navy">
+              {whatsappPhone}
+            </span>
+          </p>
+        ) : editingEmail ? (
           <div className="w-full">
             <FieldInput
               id="otp-email"
@@ -301,6 +328,9 @@ export function VerifyOtpForm({ parentId, email }: Props) {
               }}
             />
             {emailError ? <p className="mt-1 text-start text-xs text-red-500">{emailError}</p> : null}
+            <label className="mt-3 block text-sm">{ar ? "كلمة سر الحساب لتأكيد تغيير البريد" : "Account password to confirm email change"}
+              <PasswordInput id="change-email-password" name="password" placeholder={ar ? "كلمة سر الحساب" : "Account password"} autoComplete="current-password" value={emailPassword} onChange={setEmailPassword} />
+            </label>
             <div className="mt-2 flex justify-end gap-3 text-xs font-extrabold">
               <button
                 type="button"
@@ -316,7 +346,7 @@ export function VerifyOtpForm({ parentId, email }: Props) {
               <button
                 type="button"
                 className="text-primary-orange"
-                disabled={savingEmail}
+                disabled={savingEmail || !emailPassword}
                 onClick={() => void handleSaveEmail()}
               >
                 {savingEmail ? t("savingEmail") : t("saveEmail")}
@@ -441,7 +471,9 @@ export function VerifyOtpForm({ parentId, email }: Props) {
         >
           {resending ? t("resending") : t("resend")}
         </button>
-        <p className="mt-2 text-xs font-medium leading-relaxed text-text-gray">{t("spamHint")}</p>
+        <p className="mt-2 text-xs font-medium leading-relaxed text-text-gray">
+          {viaWhatsApp ? t("whatsappHint") : t("spamHint")}
+        </p>
       </div>
 
       <div className="mt-7">

@@ -67,9 +67,14 @@ async function suggest(local) {
   button.setAttribute('aria-busy', 'true');
   button.disabled = true;
   try {
-    const payload = { title: post.title || '', body: post.body || '', idea: post.idea || '', local };
+    const isText = post.kind === 'text';
+    const payload = {
+      title: isText ? post.title || '' : '', body: isText ? post.body || '' : '',
+      idea: $('pubIdea').value.trim() || post.idea || '', local,
+    };
     if (!payload.title && !payload.body && !payload.idea) {
-      toast('أضف عنوانًا أو نصًا في المنشور ليُكتب له كابشن، أو اكتب الكابشن بنفسك.', { type: 'warn' });
+      toast('اكتب في خانة «عمّ المنشور؟» جملة قصيرة ليُكتب له كابشن، أو اكتب الكابشن بنفسك.', { type: 'warn' });
+      $('pubIdea').focus();
       return;
     }
     const result = await api('/ai/caption', { method: 'POST', json: payload });
@@ -98,6 +103,7 @@ export async function openPublish({ items, post = {} }) {
     ? `منشور متعدد الصور (${items.length}). يُنشر كألبوم/كاروسيل.`
     : 'إنستغرام يستقبل الصورة بصيغة JPEG تلقائيًا (يحوّلها البوت).';
   $('pubTagInput').value = '';
+  $('pubIdea').value = '';
   document.querySelector('input[name=when][value=draft]').checked = true;
   $('pubWhen').value = '';
   $('pubFb').checked = Boolean(meta?.facebook?.ready);
@@ -116,7 +122,7 @@ export async function openPublish({ items, post = {} }) {
   updateCount();
   openDialog('publishDialog');
   // كابشن جاهز تلقائيًا إن لم يوجد: يوفّر الكتابة للمنشورات النصية.
-  if (!existingCaption && (post.title || post.body)) await suggest(true);
+  if (!existingCaption && post.kind === 'text' && (post.title || post.body)) await suggest(true);
 }
 
 async function confirmAndSubmit() {

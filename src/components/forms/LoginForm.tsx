@@ -1,22 +1,25 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { FieldInput, UserIcon, WarningIcon } from "@/components/ui/FieldInput";
 import { PasswordInput } from "@/components/ui/PasswordInput";
-import { loginUser } from "@/lib/api/auth";
+import { AuthApiError, loginUser } from "@/lib/api/auth";
 import { persistSession } from "@/lib/auth/persistSession";
+import { SmsPhoneLoginForm } from "./SmsPhoneLoginForm";
 
 export function LoginForm() {
   const t = useTranslations("login");
+  const locale = useLocale();
   const router = useRouter();
   const shakeTimer = useRef<number | null>(null);
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(false);
+  const [rateLimited, setRateLimited] = useState(false);
   const [shake, setShake] = useState(false);
 
   const canSubmit = login.trim().length > 0 && password.length > 0 && !submitting;
@@ -46,12 +49,18 @@ export function LoginForm() {
 
     setSubmitting(true);
     setError(false);
+    setRateLimited(false);
 
     try {
       const result = await loginUser({ login: login.trim(), password });
       await persistSession(result.token, result.parent);
       router.replace("/children");
-    } catch {
+    } catch (e) {
+      if (e instanceof AuthApiError && e.verification) {
+        router.push(`/verify-otp?parentId=${e.verification.parentId}&email=${encodeURIComponent(e.verification.email)}`);
+        return;
+      }
+      setRateLimited(e instanceof AuthApiError && e.status === 429);
       setError(true);
       triggerShake();
     } finally {
@@ -60,6 +69,8 @@ export function LoginForm() {
   }
 
   return (
+    <>
+    <SmsPhoneLoginForm />
     <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
       <div className={shake ? "login-shake" : undefined}>
         <label htmlFor="login" className="mb-1.5 block text-sm font-medium text-text-gray">
@@ -124,7 +135,7 @@ export function LoginForm() {
           className="login-error-enter flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-600"
         >
           <WarningIcon />
-          <p>{t("errors.invalid")}</p>
+          <p>{rateLimited ? (locale === "ar" ? "محاولات كثيرة. انتظر قليلًا قبل المحاولة مجددًا؛ قد تصل مهلة حماية الحساب إلى 15 دقيقة." : "Too many attempts. Wait before trying again; account protection may last up to 15 minutes.") : t("errors.invalid")}</p>
         </div>
       ) : null}
 
@@ -135,5 +146,6 @@ export function LoginForm() {
         </Link>
       </p>
     </form>
+    </>
   );
 }

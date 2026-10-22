@@ -5,7 +5,6 @@
 export const HQ_READY_ASSET_KEYS: readonly string[] = [
   "astronaut:0",
   "chef:0",
-  "doctor:0",
   "engineer:0",
   "soldier:0",
   "teacher:0"

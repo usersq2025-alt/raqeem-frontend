@@ -1,4 +1,4 @@
-const http = require('node:http');
+﻿const http = require('node:http');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const sharp = require('sharp');
@@ -41,7 +41,7 @@ function createApp(options = {}) {
   const dataDir = options.dataDir || defaultDataDir();
   let config = loadConfig(dataDir);
   const getConfig = () => config;
-  const logger = options.logger || createLogger(options.logDir || path.join(ROOT, '..', '..', 'logs'), { echo: options.echo !== false });
+  const logger = options.logger || createLogger(options.logDir || process.env.RAQEEM_LOG_DIR || path.join(ROOT, '..', '..', 'logs'), { echo: options.echo !== false });
   const store = createStore(dataDir, getConfig);
   const openai = options.openai || createOpenAI({
     getConfig, logger, getKey: options.getKey || (() => process.env.OPENAI_API_KEY), fetchImpl: options.fetchImpl,
@@ -323,7 +323,7 @@ function createApp(options = {}) {
 }
 
 function start() {
-  loadEnv();
+  if (process.env.RAQEEM_NO_ENV !== '1') loadEnv();
   const app = createApp();
   const { server, scheduler, logger, getConfig } = app;
   const HOST = '127.0.0.1';

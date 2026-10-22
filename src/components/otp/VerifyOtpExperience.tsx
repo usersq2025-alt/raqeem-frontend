@@ -9,9 +9,11 @@ import { VerifyOtpForm } from "@/components/forms/VerifyOtpForm";
 type Props = {
   parentId: number | null;
   email: string;
+  /** Masked phone when the code went out over WhatsApp, otherwise null. */
+  whatsappPhone: string | null;
 };
 
-export function VerifyOtpExperience({ parentId, email }: Props) {
+export function VerifyOtpExperience({ parentId, email, whatsappPhone }: Props) {
   const t = useTranslations("otp");
   const locale = useLocale();
   const isRtl = locale === "ar";
@@ -53,7 +55,7 @@ export function VerifyOtpExperience({ parentId, email }: Props) {
             </div>
           </header>
 
-          <VerifyOtpForm parentId={parentId} email={email} />
+          <VerifyOtpForm parentId={parentId} email={email} whatsappPhone={whatsappPhone} />
         </article>
       </div>
     </main>

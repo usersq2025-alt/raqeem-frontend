@@ -10,7 +10,7 @@ export type SessionPayload = {
   parent: {
     id: number;
     public_id?: string;
-    email?: string;
+    email?: string | null;
     full_name?: string;
   };
 };

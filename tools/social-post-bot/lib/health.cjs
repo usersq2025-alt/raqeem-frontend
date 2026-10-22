@@ -1,4 +1,4 @@
-const fs = require('node:fs/promises');
+﻿const fs = require('node:fs/promises');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -41,7 +41,7 @@ async function runHealthCheck({ dataDir, config }) {
     const file = `public/fonts/cairo-arabic-${weight}-normal.woff2`;
     try { await fs.access(path.join(ROOT, file)); add(`خط Cairo ${weight}`, true); } catch { add(`خط Cairo ${weight}`, false, `مفقود: ${file}`); }
   }
-  for (const file of ['public/index.html', 'public/app.js', 'public/app.css']) {
+  for (const file of ['public/index.html', 'public/app.js', 'public/app.css', 'public/js/util.js', 'public/js/photo.js', 'public/js/text.js', 'public/js/library.js', 'public/js/queue.js', 'public/js/publish.js', 'public/js/dock.js', 'public/js/settings.js']) {
     try { await fs.access(path.join(ROOT, file)); add(`واجهة ${path.basename(file)}`, true); } catch { add(`واجهة ${path.basename(file)}`, false, `مفقود: ${file}`); }
   }
 

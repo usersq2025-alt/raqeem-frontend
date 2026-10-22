@@ -41,22 +41,16 @@ export function saveRegisterDraft(draft: RegisterDraft): void {
 }
 
 export function loadRegisterPasswordDraft(): string {
-  if (!canUseStorage("sessionStorage")) return "";
-  try {
-    return window.sessionStorage.getItem(PASSWORD_KEY) ?? "";
-  } catch {
-    return "";
-  }
+  // Discard passwords saved by older versions. Passwords stay in form memory only.
+  saveRegisterPasswordDraft("");
+  return "";
 }
 
-export function saveRegisterPasswordDraft(password: string): void {
+export function saveRegisterPasswordDraft(_password: string): void {
+  void _password;
   if (!canUseStorage("sessionStorage")) return;
   try {
-    if (!password) {
-      window.sessionStorage.removeItem(PASSWORD_KEY);
-      return;
-    }
-    window.sessionStorage.setItem(PASSWORD_KEY, password);
+    window.sessionStorage.removeItem(PASSWORD_KEY);
   } catch {
     /* private mode / quota */
   }

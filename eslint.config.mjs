@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
     // Node one-off scripts (CommonJS) — not part of the Next app bundle
     "scripts/**",
     "tools/*_backup_*/**",
+    // Generated/vendored build output served as a static asset, not hand-written source.
+    "public/hq-lab/**/*.bundle.js",
   ]),
 ]);
 

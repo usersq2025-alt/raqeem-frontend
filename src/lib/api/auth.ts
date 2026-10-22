@@ -11,12 +11,16 @@ export class AuthApiError extends Error {
       | "NETWORK"
       | "OTP_INVALID"
       | "OTP_EXPIRED"
+      | "VERIFICATION_REQUIRED"
       | "INVALID_CREDENTIALS",
-    public readonly status = 400
+    public readonly status = 400,
+    public readonly retryAfter = 0,
+    public readonly supportRequired = false
   ) {
     super(message);
     this.name = "AuthApiError";
   }
+  verification?: { parentId: number; email: string };
 }
 
 export type RegisterPayload = {
@@ -24,16 +28,42 @@ export type RegisterPayload = {
   email: string;
   password: string;
   phone?: string;
+  otpChannel?: OtpChannel;
 };
+
+export type OtpChannel = "email" | "whatsapp";
 
 export type RegisterResult = {
   parentId: number;
   message: string;
+  /** The channel the code was actually sent through (falls back to email if WhatsApp failed). */
+  channel: OtpChannel;
+  phoneMasked: string | null;
 };
+
+export async function fetchOtpChannels(): Promise<{ whatsapp: boolean; sms?: boolean }> {
+  try {
+    const response = await fetch("/api/auth/channels", { cache: "no-store" });
+    if (!response.ok) return { whatsapp: false, sms: false };
+    return await response.json();
+  } catch {
+    return { whatsapp: false };
+  }
+}
 
 function toAuthError(error: unknown): AuthApiError {
   if (error instanceof AuthApiError) return error;
   if (error instanceof ApiError) {
+    const verification = error.body as { code?: string; parent_id?: number; email?: string } | null;
+    if (error.status === 403 && verification?.code === "VERIFICATION_REQUIRED" && verification.parent_id) {
+      const result = new AuthApiError(error.message, "VERIFICATION_REQUIRED", 403);
+      result.verification = { parentId: verification.parent_id, email: verification.email ?? "" };
+      return result;
+    }
+    if (error.status === 429 || error.status === 423) {
+      const details = error.body as { retry_after?: number; support_required?: boolean } | null;
+      return new AuthApiError(error.message, "NETWORK", error.status, details?.retry_after ?? 60, details?.support_required === true);
+    }
     if (error.status === 401) {
       return new AuthApiError(error.message, "INVALID_CREDENTIALS", 401);
     }
@@ -72,18 +102,23 @@ function toAuthError(error: unknown): AuthApiError {
 
 export async function registerUser(payload: RegisterPayload): Promise<RegisterResult> {
   try {
-    const result = await apiClient.post<{ parent_id: number; message: string }>(
-      "/register",
-      {
-        full_name: payload.fullName,
-        email: payload.email,
-        password: payload.password,
-        phone: payload.phone,
-      }
-    );
+    const result = await apiClient.post<{
+      parent_id: number;
+      message: string;
+      channel?: OtpChannel;
+      phone_masked?: string | null;
+    }>("/register", {
+      full_name: payload.fullName,
+      email: payload.email,
+      password: payload.password,
+      phone: payload.phone,
+      otp_channel: payload.otpChannel,
+    });
     return {
       parentId: result.parent_id,
       message: result.message,
+      channel: result.channel ?? "email",
+      phoneMasked: result.phone_masked ?? null,
     };
   } catch (error) {
     throw toAuthError(error);
@@ -95,7 +130,7 @@ export const OTP_TTL_MS = 5 * 60 * 1000;
 export type ParentUser = {
   id: number;
   public_id?: string;
-  email?: string;
+  email?: string | null;
   full_name?: string;
 };
 
@@ -116,10 +151,14 @@ export async function verifyOtp(parentId: number, code: string): Promise<VerifyO
   }
 }
 
-export async function resendOtp(parentId: number): Promise<{ message: string }> {
+export async function resendOtp(
+  parentId: number,
+  channel: OtpChannel = "email"
+): Promise<{ message: string; channel?: OtpChannel; resend_after?: number; support_required?: boolean }> {
   try {
-    return await apiClient.post<{ message: string }>("/verify-otp/resend", {
+    return await apiClient.post<{ message: string; channel?: OtpChannel; resend_after?: number; support_required?: boolean }>("/verify-otp/resend", {
       parent_id: parentId,
+      channel,
     });
   } catch (error) {
     throw toAuthError(error);
@@ -128,12 +167,14 @@ export async function resendOtp(parentId: number): Promise<{ message: string }> 
 
 export async function changeSignupEmail(
   parentId: number,
-  email: string
+  email: string,
+  password: string
 ): Promise<{ message: string; email: string }> {
   try {
     return await apiClient.post<{ message: string; email: string }>("/verify-otp/change-email", {
       parent_id: parentId,
       email,
+      password,
     });
   } catch (error) {
     throw toAuthError(error);

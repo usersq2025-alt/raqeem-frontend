@@ -324,6 +324,13 @@
       "confirmPassword": "Re-enter your password",
       "phone": "Enter your phone number"
     },
+    "channel": {
+      "legend": "How would you like to receive your verification code?",
+      "whatsapp": "WhatsApp",
+      "email": "Email",
+      "phoneLabel": "WhatsApp number",
+      "phoneHint": "Include the country code, e.g. +963944123456"
+    },
     "terms": "I agree to the <terms>Terms and Conditions</terms> and the <privacy>Privacy Policy</privacy>",
     "strength": {
       "weak": "Weak",
@@ -352,7 +359,7 @@
       "emailHint": "Example: name@gmail.com",
       "emailTaken": "This email is already registered",
       "loginLink": "Log in",
-      "phoneInvalid": "Enter a phone number with 6 to 12 digits",
+      "phoneInvalid": "Enter your WhatsApp number in international format, e.g. +963944123456",
       "passwordRequired": "Password is required",
       "passwordRules": "At least 8 characters, with uppercase, lowercase, and a number",
       "confirmRequired": "Please confirm your password",
@@ -366,6 +373,8 @@
     "verifyTitle": "Almost there! Let's confirm your email ✨",
     "subtitle": "Code sent to: {email}",
     "sentTo": "Code sent to:",
+    "sentToWhatsapp": "We sent the code to WhatsApp on:",
+    "whatsappHint": "Open WhatsApp and look for a message from Raqeem. It may take a few seconds 💬",
     "editEmail": "Edit email",
     "saveEmail": "Save",
     "savingEmail": "Saving...",
@@ -776,7 +785,8 @@
           "groupSmall": "Small tools (placed on the map table)",
           "groupWall": "Wall tools"
         }
-      },      "storeTitle": "Clinic tools store",
+      },
+      "storeTitle": "Clinic tools store",
       "storeSubtitle": "Buy tools with your points, then place and try them in your clinic.",
       "storeGroupFloor": "Clinic furniture and equipment",
       "storeGroupSmall": "Small tools (placed on a desk)",
@@ -1321,7 +1331,7 @@
         "tajawal": "Tajawal",
         "naskh": "Noto Naskh Arabic"
       },
-      "fontSample": "أَتَعَلَّمُ وَأَكْتَشِفُ كُلَّ يَوْمٍ",
+      "fontSample": "أَتَعَلَّمُ وَأَكْتَشِفُ كُلَّ يَوْمٍ",
       "locale": "App language",
       "deviceNote": "Display settings are saved on this device only.",
       "darkUnavailable": "Dark mode is not available in the student app yet.",

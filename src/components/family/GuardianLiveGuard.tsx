@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { getGuardianStatus } from "@/lib/api/guardian";
+import { getGuardianStatus, GuardianApiError } from "@/lib/api/guardian";
 import { FamilyGuardianUnlockPanel } from "@/components/family/FamilyGuardianUnlockPanel";
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 type Seed = { id: number; fullName: string; email: string | null };
 
@@ -17,14 +21,28 @@ export function GuardianLiveGuard({ seed, redirectTo, children }: { seed: Seed; 
     async function check() {
       const request = ++sequence;
       setState("checking");
-      try {
-        const status = await getGuardianStatus();
-        if (!active || request !== sequence) return;
-        setPinSet(status.pinSet);
-        setPinLocked(status.pinLocked);
-        setState(status.unlocked ? "unlocked" : "locked");
-      } catch {
-        if (active && request === sequence) setState("locked");
+      // A transient network hiccup or a rate limit (429) is not the same as
+      // guardian mode actually being locked — retry once before falling back,
+      // so a passing blip doesn't drop the parent into the unlock screen.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const status = await getGuardianStatus();
+          if (!active || request !== sequence) return;
+          setPinSet(status.pinSet);
+          setPinLocked(status.pinLocked);
+          setState(status.unlocked ? "unlocked" : "locked");
+          return;
+        } catch (caught) {
+          if (!active || request !== sequence) return;
+          const isRetryable =
+            caught instanceof GuardianApiError && (caught.status === 429 || caught.status === 0);
+          if (isRetryable && attempt === 0) {
+            await sleep(1000);
+            continue;
+          }
+          setState("locked");
+          return;
+        }
       }
     }
     void check();
