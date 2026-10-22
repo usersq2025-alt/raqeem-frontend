@@ -1,6 +1,8 @@
 "use client";
 
 import { QuestionImage } from "@/components/QuestionImage";
+import { QuestionAudioBar, QuestionAudioProvider, StopAudioOnChange } from "@/components/QuestionAudio";
+import { mapExplanationAudio } from "@/lib/speech/questionAudio";
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -29,6 +31,9 @@ type Props = {
 };
 
 type Phase = "playing" | "feedback" | "done" | "empty" | "error";
+
+/** Placeholder while no question is loaded, so the audio provider can always mount. */
+const NO_QUESTION: PlayQuestion = { id: 0, gameType: "", questionText: "", imageUrl: null, payload: {} };
 
 export function ReviewStationExperience({ unitId, childId }: Props) {
   const t = useTranslations("review");
@@ -262,12 +267,15 @@ export function ReviewStationExperience({ unitId, childId }: Props) {
         onLeave={confirmExitReview}
       />
 
+      <QuestionAudioProvider key={`audio-${question?.id ?? "none"}-${summary?.remaining ?? 0}`} question={question ?? NO_QUESTION}>
+      <StopAudioOnChange token={phase} />
       {question ? (
         <div className="play-question-card mt-4 rounded-[28px] border-[3px] border-white bg-white/95 px-5 py-6 shadow-[0_14px_36px_-18px_rgba(26,43,71,0.4)]">
           <p className="text-center text-xl font-extrabold leading-relaxed text-text-navy sm:text-2xl">
             {question.questionText}
           </p>
           <QuestionImage key={`${question.id}-${question.imageUrl}`} src={question.imageUrl} alt={question.imageAlt} />
+          <QuestionAudioBar />
         </div>
       ) : null}
 
@@ -300,11 +308,13 @@ export function ReviewStationExperience({ unitId, childId }: Props) {
           incorrectLabel={t("incorrect")}
           niceTryLabel={t("niceTry")}
           explanation={typeof feedback.explanation === "string" ? feedback.explanation : null}
+          explanationAudioUrl={mapExplanationAudio(feedback)}
           onNext={onNext}
           nextLabel={t("next")}
           nextDisabled={busy}
         />
       ) : null}
+      </QuestionAudioProvider>
 
       <div className="sticky bottom-0 z-10 mt-4 bg-gradient-to-t from-[#F7FBFF] via-[#F7FBFF]/95 to-transparent pt-3">
         {phase === "playing" ? (
