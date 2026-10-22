@@ -1136,7 +1136,11 @@
     "belongsIn": "Belongs in: {category}",
     "batteryLabel": "Battery {remaining} of {total}",
     "questionsRemaining": "{count} left",
-    "allDone": "You finished every question"
+    "allDone": "You finished every question",
+    "exitConfirmTitle": "Exit this lesson?",
+    "exitConfirmBody": "You haven't finished this lesson yet. Your answers are saved - you can finish it later.",
+    "exitConfirmStay": "Stay in the lesson",
+    "exitConfirmLeave": "Yes, exit"
   },
   "review": {
     "title": "Review station",
@@ -1152,7 +1156,11 @@
     "back": "Back to units",
     "check": "Check",
     "niceTry": "That's okay — see the right answer and keep going",
-    "questionProgress": "Question {current} of {total}"
+    "questionProgress": "Question {current} of {total}",
+    "exitConfirmTitle": "Exit the review?",
+    "exitConfirmBody": "You haven't finished this review yet. You can come back and finish it anytime.",
+    "exitConfirmStay": "Stay in the review",
+    "exitConfirmLeave": "Yes, exit"
   },
   "familySettings": {
     "title": "Account & family settings",

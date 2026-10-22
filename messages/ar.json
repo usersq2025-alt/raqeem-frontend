@@ -1136,7 +1136,11 @@
     "belongsIn": "مكانها: {category}",
     "batteryLabel": "الطاقة {remaining} من {total}",
     "questionsRemaining": "بقي {count}",
-    "allDone": "أنهيت كل الأسئلة"
+    "allDone": "أنهيت كل الأسئلة",
+    "exitConfirmTitle": "هل تريد الخروج من الدرس؟",
+    "exitConfirmBody": "لم تنتهِ من هذا الدرس بعد. إجاباتك محفوظة ويمكنك إكماله لاحقًا.",
+    "exitConfirmStay": "ابقَ في الدرس",
+    "exitConfirmLeave": "نعم، اخرج"
   },
   "review": {
     "title": "محطة المراجعة",
@@ -1152,7 +1156,11 @@
     "back": "العودة للوحدات",
     "check": "تحقق",
     "niceTry": "لا بأس — انظر الإجابة الصحيحة وتابع",
-    "questionProgress": "سؤال {current} من {total}"
+    "questionProgress": "سؤال {current} من {total}",
+    "exitConfirmTitle": "هل تريد الخروج من المراجعة؟",
+    "exitConfirmBody": "لم تنتهِ من هذه المراجعة بعد. يمكنك إكمالها لاحقًا في أي وقت.",
+    "exitConfirmStay": "ابقَ في المراجعة",
+    "exitConfirmLeave": "نعم، اخرج"
   },
   "familySettings": {
     "title": "إعدادات الحساب والعائلة",

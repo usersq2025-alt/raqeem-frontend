@@ -17,7 +17,9 @@ import { LessonCompleteCelebration } from "@/components/LessonCompleteCelebratio
 import { LessonPlayLoading } from "@/components/LessonPlayLoading";
 import { QuestionTransitionBar } from "@/components/QuestionTransitionBar";
 import { Button } from "@/components/ui/Button";
-import { Link } from "@/i18n/navigation";
+import { ExitConfirmModal } from "@/components/ui/ExitConfirmModal";
+import { useRouter } from "@/i18n/navigation";
+import { useGuardedBack } from "@/lib/navigation/useGuardedBack";
 import { unitLessonPath, withChildQuery } from "@/lib/config/subjects";
 import { toIndicDigits } from "@/lib/format/indicDigits";
 import { type LessonAttempt, type PlayQuestion } from "@/lib/api/lessonPlay";
@@ -59,6 +61,7 @@ type LiveDraft = {
 
 export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props) {
   const t = useTranslations("lesson");
+  const router = useRouter();
   const [attempt, setAttempt] = useState<LessonAttempt | null>(null);
   const [question, setQuestion] = useState<PlayQuestion | null>(null);
   const [phase, setPhase] = useState<Phase>("playing");
@@ -79,6 +82,33 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
   const rewardedQuestions = useRef(new Set<number>());
   const submitBarRef = useRef<HTMLDivElement>(null);
   const [runId, setRunId] = useState(0);
+
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const exitHref = attempt?.unitId ? unitLessonPath(attempt.unitId, childId) : withChildQuery("/subjects", childId);
+  // Guarded (confirm-before-leaving) for as long as there's an active, unfinished
+  // attempt - entering the lesson from the path screen is a real push, so leaving
+  // through here (back button or the in-page exit button, both funnelled through
+  // requestExit) pops that same entry instead of pushing a new one, which is what
+  // previously left a stale duplicate "lesson" entry behind on exit.
+  const { restoreGuard } = useGuardedBack(Boolean(attempt) && phase !== "done", () => setShowExitConfirm(true));
+
+  function requestExit() {
+    router.back();
+  }
+  function stayInLesson() {
+    setShowExitConfirm(false);
+    restoreGuard();
+  }
+  function confirmExitLesson() {
+    setShowExitConfirm(false);
+    const before = window.location.pathname;
+    router.back();
+    // Safety net for a deep-linked lesson with nothing to go back to in this tab's
+    // own history - falls back to a real navigation instead of silently doing nothing.
+    window.setTimeout(() => {
+      if (window.location.pathname === before) router.replace(exitHref);
+    }, 350);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -400,8 +430,18 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
         previousDisabled={!canGoPrevious || transitioning}
         nextDisabled={!canGoForward || transitioning}
         viewingPastLabel={browsingPast ? t("viewingPast") : null}
-        exitHref={attempt.unitId ? unitLessonPath(attempt.unitId, childId) : withChildQuery("/subjects", childId)}
+        onExit={requestExit}
         exitLabel={t("exitLesson")}
+      />
+
+      <ExitConfirmModal
+        open={showExitConfirm}
+        title={t("exitConfirmTitle")}
+        body={t("exitConfirmBody")}
+        stayLabel={t("exitConfirmStay")}
+        leaveLabel={t("exitConfirmLeave")}
+        onStay={stayInLesson}
+        onLeave={confirmExitLesson}
       />
 
       {question ? (
@@ -537,10 +577,10 @@ export function PlayChrome({
   previousDisabled,
   nextDisabled,
   viewingPastLabel,
-  exitHref,
+  onExit,
   exitLabel,
 }: {
-  exitHref?: string;
+  onExit?: () => void;
   exitLabel?: string;
   progressPct: number;
   questionLabel: string;
@@ -566,15 +606,16 @@ export function PlayChrome({
 
   return (
     <div className="play-chrome space-y-2.5 rounded-[22px] bg-[#F7FBFF] px-3 py-3">
-      {exitHref && exitLabel ? (
+      {onExit && exitLabel ? (
         <div className="flex justify-start">
-          <Link
-            href={exitHref}
+          <button
+            type="button"
+            onClick={onExit}
             className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-sm font-extrabold text-text-gray shadow-[0_6px_16px_-10px_rgba(26,43,71,0.5)] transition hover:text-text-navy"
           >
             <span aria-hidden="true">✕</span>
             {exitLabel}
-          </Link>
+          </button>
         </div>
       ) : null}
       <div role="progressbar" aria-label={questionLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.max(0, Math.min(100, progressPct)))} className="play-trail relative h-3.5 overflow-hidden rounded-full bg-white shadow-inner">
