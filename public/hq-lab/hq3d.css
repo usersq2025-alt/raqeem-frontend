@@ -212,3 +212,17 @@
   .hq3d .camttl { display:none; }
   .hq3d .cb.home { font-size:12px; }
 }
+/* ===== التجوّل: عصا حركة شفافة (أسفل اليسار) + زر نظرة عامة صغير؛ لا لوحة تحجب المقر ===== */
+.hq3d .joy { position:absolute; left:16px; bottom:calc(96px + var(--safe-b, 0px)); width:132px; height:132px; border-radius:50%; z-index:7; touch-action:none; -webkit-user-select:none; user-select:none; display:grid; place-items:center; background:radial-gradient(circle, rgba(255,255,255,.10) 0, rgba(255,255,255,.26) 100%); border:2.5px solid rgba(255,255,255,.75); box-shadow:0 6px 20px -8px rgba(26,43,71,.55), inset 0 0 0 1px rgba(26,43,71,.15); }
+.hq3d .joy i { width:58px; height:58px; border-radius:50%; background:rgba(26,43,71,.62); border:3px solid rgba(255,255,255,.9); box-shadow:0 4px 10px rgba(0,0,0,.3); pointer-events:none; will-change:transform; }
+.hq3d .joy .ja { position:absolute; color:#fff; font-size:15px; line-height:1; text-shadow:0 1px 3px rgba(26,43,71,.9); pointer-events:none; opacity:.9; }
+.hq3d .joy .up { top:6px; left:50%; transform:translateX(-50%); } .hq3d .joy .dn { bottom:6px; left:50%; transform:translateX(-50%); }
+.hq3d .joy .lf { left:7px; top:50%; transform:translateY(-50%); } .hq3d .joy .rt { right:7px; top:50%; transform:translateY(-50%); }
+.hq3d .navtoggle { position:absolute; top:12px; inset-inline-end:10px; z-index:6; min-height:44px; padding:0 14px; border-radius:22px; background:rgba(255,255,255,.88); color:var(--navy); font-weight:800; font-size:14px; border:2px solid rgba(26,43,71,.35); box-shadow:0 6px 16px -8px rgba(26,43,71,.6); touch-action:manipulation; }
+.hq3d .cb.home.walkgo { background:var(--orange); color:#fff; border-color:var(--orange); }
+@media (max-width: 640px) { .hq3d .joy { left:10px; width:120px; height:120px; bottom:calc(92px + var(--safe-b, 0px)); } .hq3d .joy i { width:52px; height:52px; } }.hq3d .camrail.compact { top:12px; inset-inline-end:10px; padding:5px; gap:5px; background:rgba(255,255,255,.72); }
+.hq3d .camrail.compact .cb { min-width:42px; min-height:42px; font-size:18px; border-radius:14px; }
+.hq3d .camrail.compact .cb.home.ico { border:none; background:var(--brand-navy); font-size:18px; padding:0; }
+.hq3d .camrail.compact .cb.home.walkgo { min-height:42px; font-size:13px; }
+.hq3d .placing .camrail.compact { top:auto; bottom:calc(var(--placeH, 190px) + 16px); }
+@media (max-width: 640px) { .hq3d .camrail.compact { top:12px; inset-inline-end:8px; } .hq3d .placing .camrail.compact { top:auto; } }

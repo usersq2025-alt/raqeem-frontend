@@ -11,17 +11,23 @@
     "predev": "npm run sync:hq",
     "prebuild": "npm run sync:hq",
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "test:hq": "npm run sync:hq && npx tsx src/lib/config/headquartersStages.verify.ts",
     "test:settings": "npx tsx scripts/verify-settings-separation.ts",
     "test:student-journey": "npx tsx scripts/verify-student-journey.ts",
     "test:numerals": "npx tsx scripts/verify-display-numerals.ts",
-    "test:ux": "node scripts/verify-ux.mjs"
+    "test:ux": "node scripts/verify-ux.mjs",
+    "test:audio": "npx tsx scripts/verify-question-audio.ts",
+    "test:audio-ux": "node scripts/verify-question-audio-ux.mjs",
+    "test:offline-grading": "npx tsx scripts/verify-offline-grading.ts",
+    "test:offline-lesson": "npx tsx scripts/verify-offline-lesson.ts",
+    "test:offline-review": "npx tsx scripts/verify-offline-review.ts"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
+    "dexie": "^4.4.6",
     "next": "16.3.3",
     "next-intl": "^4.14.1",
     "react": "19.2.8",
@@ -30,6 +36,7 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@serwist/next": "^9.5.13",
     "@tailwindcss/postcss": "^4",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
@@ -37,7 +44,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
+    "fake-indexeddb": "^6.2.6",
     "puppeteer-core": "^24.43.1",
+    "serwist": "^9.5.13",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

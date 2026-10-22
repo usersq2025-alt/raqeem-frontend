@@ -11,15 +11,28 @@ import {
   type ExperiencePrefs,
   type TextSizePref,
   type ContrastPref,
+  type FontFamilyPref,
 } from "@/lib/experiencePrefs";
 import { playUiTone } from "@/lib/play/uiSounds";
 import { ParentGateModal } from "@/components/family/ParentGateModal";
+import { useStudentChrome } from "@/components/StudentChrome";
+import { isHq3dProfession } from "@/lib/config/hq3d";
+import { isDataSaverEnabled, setDataSaverEnabled } from "@/lib/offline/dataSaverPref";
+import { runBackgroundPreload } from "@/lib/offline/preloader";
 
 type Props = { childId: number };
+
+const FONT_VARS: Record<FontFamilyPref, string> = {
+  normal: "--font-cairo-base",
+  ruqaa: "--font-ruqaa",
+  tajawal: "--font-tajawal-base",
+  naskh: "--font-naskh",
+};
 
 export function ExperiencePreferencesExperience({ childId }: Props) {
   const t = useTranslations("experiencePrefs");
   const tGate = useTranslations("parentGate");
+  const tFamily = useTranslations("familySettings");
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -28,7 +41,9 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
   const [savedFlash, setSavedFlash] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
   const returnRef = useRef<HTMLButtonElement>(null);
-  void childId;
+  const chrome = useStudentChrome();
+  const [dataSaver, setDataSaver] = useState(() => isDataSaverEnabled());
+  const [downloadStatus, setDownloadStatus] = useState<"idle" | "downloading" | "done">("idle");
 
   useEffect(() => {
     applyExperiencePrefs(prefs);
@@ -43,6 +58,15 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
     });
     setSavedFlash(true);
     window.setTimeout(() => setSavedFlash(false), 1600);
+  }
+
+  async function downloadAllNow() {
+    if (dataSaver && !window.confirm(t("offline.downloadAllConfirm"))) return;
+    const profession = chrome?.child && isHq3dProfession(chrome.child.professionCode) ? chrome.child.professionCode : null;
+    setDownloadStatus("downloading");
+    await runBackgroundPreload(childId, profession, false);
+    setDownloadStatus("done");
+    window.setTimeout(() => setDownloadStatus("idle"), 2400);
   }
 
   function setLocale(next: "ar" | "en") {
@@ -110,6 +134,33 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
           </div>
         </fieldset>
         <fieldset className="mt-4">
+          <legend className="text-sm font-extrabold text-text-navy">{tFamily("appearance.fontFamily")}</legend>
+          <div className="mt-2 grid grid-cols-2 gap-2" role="radiogroup" aria-label={tFamily("appearance.fontFamily")}>
+            {(["normal", "ruqaa", "tajawal", "naskh"] as FontFamilyPref[]).map((font) => (
+              <button
+                key={font}
+                type="button"
+                role="radio"
+                className={`min-h-12 rounded-2xl px-3 py-2 text-base font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold ${
+                  prefs.fontFamily === font
+                    ? "bg-[#FFF1E4] text-primary-orange ring-2 ring-brand-gold"
+                    : "bg-neutral-50 text-text-navy hover:bg-neutral-100"
+                }`}
+                aria-checked={prefs.fontFamily === font}
+                onClick={() => update({ fontFamily: font })}
+              >
+                {tFamily(`appearance.fonts.${font}`)}
+                <span
+                  className="mt-1 block text-base font-normal"
+                  style={{ fontFamily: `var(${FONT_VARS[font]})`, lineHeight: 2.1 }}
+                >
+                  {tFamily("appearance.fontSample")}
+                </span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        <fieldset className="mt-4">
           <legend className="text-sm font-extrabold text-text-navy">{t("display.contrast")}</legend>
           <p className="mt-1 text-xs font-medium text-text-gray">{t("display.contrastHint")}</p>
           <div className="mt-2 grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("display.contrast")}>
@@ -160,6 +211,31 @@ export function ExperiencePreferencesExperience({ childId }: Props) {
             English
           </button>
         </div>
+      </section>
+
+      <section className="rounded-[28px] bg-white p-5 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.28)]">
+        <h2 className="text-lg font-extrabold text-text-navy">{t("offline.title")}</h2>
+        <p className="mt-1 text-sm font-medium text-text-gray">{t("offline.lead")}</p>
+        <ul className="mt-4 space-y-3">
+          <ToggleRow
+            label={t("offline.dataSaver")}
+            checked={dataSaver}
+            onChange={(value) => {
+              setDataSaver(value);
+              setDataSaverEnabled(value);
+            }}
+          />
+        </ul>
+        <p className="mt-2 text-xs font-medium text-text-gray">{t("offline.dataSaverHint")}</p>
+        <button
+          type="button"
+          disabled={downloadStatus === "downloading"}
+          className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-primary-orange px-4 text-sm font-extrabold text-primary-orange transition-colors hover:bg-[#FFF1E4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold disabled:opacity-60"
+          onClick={() => void downloadAllNow()}
+        >
+          {downloadStatus === "downloading" ? t("offline.downloading") : downloadStatus === "done" ? t("offline.done") : t("offline.downloadAll")}
+        </button>
+        <p className="mt-2 text-xs font-medium text-text-gray">{t("offline.downloadAllHint")}</p>
       </section>
 
       <section className="rounded-[28px] border-2 border-primary-orange/25 bg-[#FFF8F1] p-5 shadow-[0_16px_36px_-24px_rgba(26,43,71,0.28)]">

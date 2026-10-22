@@ -103,7 +103,10 @@ export function LessonCompleteCelebration({ attempt, childId, onReplay }: Props)
       ) : null}
 
       <div className="mt-8 flex w-full max-w-md flex-col gap-3">
-        <Button href={pathHref} className="w-full">
+        {/* replace, not push: entering the lesson already pushed one history entry, so
+            this should swap it for the path screen instead of stacking another - leaving
+            a stale "lesson" entry one back-press below the destination otherwise. */}
+        <Button href={pathHref} replace className="w-full">
           {t("backToPath")}
         </Button>
         <Button type="button" onClick={onReplay} variant="secondary" className="w-full">

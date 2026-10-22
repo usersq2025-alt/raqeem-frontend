@@ -1564,6 +1564,7 @@ html[data-raqeem-font="ruqaa"] .text-3xl { font-size: 2.25rem; }
   .play-choice-selected,
   .play-choice-right,
   .play-feedback-correct,
+  .play-feedback-sheet,
   .play-choice-tile,
   .play-soft-shake,
   .play-match-line {
@@ -1613,6 +1614,21 @@ html[data-raqeem-font="ruqaa"] .text-3xl { font-size: 2.25rem; }
 
 .play-feedback-correct {
   animation: play-pop 0.4s cubic-bezier(0.34, 1.35, 0.64, 1) both;
+}
+
+.play-feedback-sheet {
+  animation: play-sheet-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes play-sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes play-pop {

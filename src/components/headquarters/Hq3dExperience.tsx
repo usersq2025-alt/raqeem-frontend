@@ -4,10 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { useStudentChrome } from "@/components/StudentChrome";
-import { HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
+import { HQ3D_ASSET_VERSION, HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
+import { cacheHqLoad, getCachedHqLoad, saveHqStateOffline, updateHqOwnership } from "@/lib/offline/hqSync";
 
-// Bump when /public/hq-lab is republished so browsers fetch the new bundle/CSS.
-const ASSET_VERSION = "16";
+const ASSET_VERSION = HQ3D_ASSET_VERSION;
 
 type Hq3dLoad = {
   points_balance: number;
@@ -61,24 +61,36 @@ export function Hq3dExperience({ childId, profession }: Props) {
     const api = `/api/students/${childId}/hq3d`;
     const remote: Remote = {
       load: async () => {
-        const data = await http<Hq3dLoad>(api);
-        setChromePoints?.(data.points_balance);
-        return data;
+        try {
+          const data = await http<Hq3dLoad>(api);
+          setChromePoints?.(data.points_balance);
+          void cacheHqLoad(childId, { pointsBalance: data.points_balance, prices: data.prices, owned: data.owned, state: data.state });
+          return data;
+        } catch (error) {
+          // Offline and never loaded before: nothing to show, surface the original error.
+          const cached = await getCachedHqLoad(childId);
+          if (!cached) throw error;
+          setChromePoints?.(cached.pointsBalance);
+          return { points_balance: cached.pointsBalance, prices: cached.prices, owned: cached.owned, state: cached.state };
+        }
       },
-      buy: (toolId) =>
-        http(`${api}/buy`, {
+      // Buying is online-only by design (server-authoritative balance check) - left as a
+      // plain network call, no offline queue, so it fails clearly instead of silently.
+      // The cache is still refreshed on success so a later offline visit shows the
+      // tool as owned and the balance spent, instead of a stale pre-purchase snapshot.
+      buy: async (toolId) => {
+        const result = await http<{ points_balance: number; owned: Record<string, number> }>(`${api}/buy`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ toolId }),
-        }),
-      save: async (payload) => {
-        await http(`${api}/state`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ state: payload }),
-          keepalive: true,
         });
+        void updateHqOwnership(childId, { pointsBalance: result.points_balance, owned: result.owned });
+        return result;
       },
+      // Arranging tools must work offline: write locally and queue the sync, never reject
+      // here (the state-save endpoint is a safe full overwrite server-side, so a later
+      // retry is all that's needed - see src/lib/offline/hqSync.ts).
+      save: (payload) => saveHqStateOffline(childId, payload),
       onPoints: (balance) => setChromePoints?.(balance),
     };
     void (async () => {

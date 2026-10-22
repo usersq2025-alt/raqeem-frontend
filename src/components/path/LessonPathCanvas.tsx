@@ -45,6 +45,8 @@ export function LessonPathCanvas({ data, childId, focusLessonId = null }: Props)
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const currentNodeRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [stageMetrics, setStageMetrics] = useState({ viewportHeight: 0, labelHeight: 0 });
 
   const stations = data.stations;
   const completedStations = useMemo(
@@ -65,7 +67,29 @@ export function LessonPathCanvas({ data, childId, focusLessonId = null }: Props)
 
   const points = useMemo(() => stationPoints(visibleRows.length), [visibleRows.length]);
   const fullPath = useMemo(() => smoothPath(curveSamples(64)), []);
-  const stageHeight = pathStageHeightPx(Math.max(visibleRows.length, 3));
+  const stageHeight = Math.max(
+    pathStageHeightPx(Math.max(visibleRows.length, 3)),
+    stageMetrics.viewportHeight,
+    (visibleRows.length - 1) * (stageMetrics.labelHeight + 32) / 0.68 + 168
+  );
+
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    const stage = stageRef.current;
+    if (!scroller || !stage) return;
+    const measure = () => {
+      const labelHeight = Math.max(0, ...Array.from(stage.querySelectorAll(".path-lesson-label"),
+        (label) => (label as HTMLElement).offsetHeight));
+      const viewportHeight = scroller.clientHeight;
+      setStageMetrics((previous) => previous.viewportHeight === viewportHeight && previous.labelHeight === labelHeight
+        ? previous : { viewportHeight, labelHeight });
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(scroller);
+    stage.querySelectorAll(".path-lesson-label").forEach((label) => observer.observe(label));
+    const frame = requestAnimationFrame(measure);
+    return () => { observer.disconnect(); cancelAnimationFrame(frame); };
+  }, [visibleRows]);
 
   const lastOpenVisibleIndex = visibleRows.reduce((last, row, index) => {
     if (row.station.status === "completed" || row.station.status === "available") return index;
@@ -205,8 +229,9 @@ export function LessonPathCanvas({ data, childId, focusLessonId = null }: Props)
         ) : null}
 
         <div
+          ref={stageRef}
           className="path-canvas-stage relative mx-auto w-[92%] max-w-md md:w-[78%]"
-          style={{ height: stageHeight }}
+          style={{ height: stageHeight, containerType: "inline-size" }}
         >
           <svg
             className="pointer-events-none absolute inset-0 h-full w-full"

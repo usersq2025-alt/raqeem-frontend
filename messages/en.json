@@ -679,6 +679,7 @@
     "lessonsTitle": "Lessons",
     "emptyUnits": "No published units for this subject yet.",
     "emptyLessons": "No playable lessons in this unit yet.",
+    "offlineNoCache": "This page needs an internet connection the first time you open it. Check your connection and try again.",
     "points": "{count} points",
     "lessonsCount": "{completed} of {total} lessons",
     "unitLessons": "{completed} of {total} lessons",
@@ -756,6 +757,24 @@
           "groupFloor": "Seats and airplane equipment",
           "groupSmall": "Small tools (placed on a surface)",
           "groupWall": "Wall tools (mounted on the cabin wall)"
+        },
+        "astronaut": {
+          "title": "Your 3D space station!",
+          "storeTitle": "Astronaut tools store",
+          "storeSubtitle": "Buy tools with your points, then place and try them in your station.",
+          "goTo": "Go to my station",
+          "groupFloor": "Station equipment and furniture",
+          "groupSmall": "Small tools (placed on the lab bench)",
+          "groupWall": "Wall tools"
+        },
+        "soldier": {
+          "title": "Your 3D training camp!",
+          "storeTitle": "Soldier gear store",
+          "storeSubtitle": "Buy gear with your points, then place and try it in your camp.",
+          "goTo": "Go to my camp",
+          "groupFloor": "Camp gear and equipment",
+          "groupSmall": "Small tools (placed on the map table)",
+          "groupWall": "Wall tools"
         }
       },      "storeTitle": "Clinic tools store",
       "storeSubtitle": "Buy tools with your points, then place and try them in your clinic.",
@@ -1052,6 +1071,14 @@
     "correct": "Great! That's correct",
     "explanation": "Answer explanation",
     "why": "Why?",
+    "listenAll": "Listen to the question and choices",
+    "listenStop": "Stop audio",
+    "listenReplay": "Listen again",
+    "listenPlaying": "Reading aloud…",
+    "listenItem": "Listen to {label}",
+    "listenOptionLabel": "choice {letter}",
+    "listenExplanation": "Listen to the explanation",
+    "listenError": "The audio could not be played. Try again.",
     "incorrect": "Not this time",
     "true": "True",
     "false": "False",
@@ -1064,6 +1091,7 @@
     "nextLesson": "Next lesson",
     "replayPoints": "Replays do not add new points",
     "stars": "{count, plural, one {# star} other {# stars}}",
+    "exitLesson": "Exit lesson",
     "previousQuestion": "Previous",
     "nextQuestion": "Next",
     "backToCurrent": "Back to current question",
@@ -1116,7 +1144,11 @@
     "belongsIn": "Belongs in: {category}",
     "batteryLabel": "Battery {remaining} of {total}",
     "questionsRemaining": "{count} left",
-    "allDone": "You finished every question"
+    "allDone": "You finished every question",
+    "exitConfirmTitle": "Exit this lesson?",
+    "exitConfirmBody": "You haven't finished this lesson yet. Your answers are saved - you can finish it later.",
+    "exitConfirmStay": "Stay in the lesson",
+    "exitConfirmLeave": "Yes, exit"
   },
   "review": {
     "title": "Review station",
@@ -1132,7 +1164,11 @@
     "back": "Back to units",
     "check": "Check",
     "niceTry": "That's okay — see the right answer and keep going",
-    "questionProgress": "Question {current} of {total}"
+    "questionProgress": "Question {current} of {total}",
+    "exitConfirmTitle": "Exit the review?",
+    "exitConfirmBody": "You haven't finished this review yet. You can come back and finish it anytime.",
+    "exitConfirmStay": "Stay in the review",
+    "exitConfirmLeave": "Yes, exit"
   },
   "familySettings": {
     "title": "Account & family settings",
@@ -1327,15 +1363,21 @@
       "privacy": "Privacy policy",
       "terms": "Terms of use",
       "logout": "Log out",
+      "removePin": "Remove parent PIN",
+      "pinRemoved": "PIN removed. Parent mode now opens directly.",
+      "removePinCredential": "Current parent PIN or account password",
+      "removePinInvalid": "The parent PIN or account password is incorrect.",
+      "removePinLocked": "The PIN is temporarily locked after too many attempts. Try later or use your account password.",
+      "removePinError": "Could not remove the PIN. Please try again.",
       "pinTitle": "Set parent PIN",
-      "pinLead": "A 4–6 digit code to open parent mode from the student space.",
+      "pinLead": "Optional protection with a 4–6 digit PIN. Without a PIN, parent mode opens directly. You can enable it here anytime.",
       "aiNote": "Future smart-report data will only power educational recommendations.",
       "panelTitle": "Security and access",
       "panelLead": "Protect your account and control the return from child space to parent mode.",
       "confirmPassword": "Confirm new password",
       "passwordMin": "At least 8 characters.",
       "passwordMismatch": "Passwords do not match.",
-      "pinMissing": "No PIN set yet",
+      "pinMissing": "PIN protection is off (optional)",
       "pinActive": "Parent PIN is active",
       "createPin": "Create PIN",
       "privacyHeading": "Privacy"
@@ -1525,6 +1567,10 @@
     "accountTitle": "Account and children",
     "accountBody": "From family settings you add children, edit profiles, and open each child space."
   },
+  "offlineBanner": {
+    "message": "You're offline right now",
+    "syncIssue": "We're trying to save your recent activity - we'll keep retrying"
+  },
   "experiencePrefs": {
     "title": "Settings",
     "subtitle": "Sound and display options for this device. They do not change parent account settings.",
@@ -1561,6 +1607,17 @@
       "report": "Report a problem",
       "reportHint": "For account changes, ask a parent to use family settings from the children hub."
     },
+    "offline": {
+      "title": "Downloads & data",
+      "lead": "Raqeem downloads content gradually in the background so it works without internet. You can control that here.",
+      "dataSaver": "Data saver",
+      "dataSaverHint": "No content is downloaded in the background while this is on.",
+      "downloadAll": "Download all content now",
+      "downloadAllHint": "Includes the child's subjects, units and headquarters. Overrides data saver after you confirm.",
+      "downloadAllConfirm": "Data saver is on. Downloading now may use mobile data. Continue?",
+      "downloading": "Downloading…",
+      "done": "Downloaded"
+    },
     "saved": "Preference saved on this device"
   },
   "parentGate": {
@@ -1588,7 +1645,7 @@
       "generic": "Could not verify. Try again.",
       "locked": "PIN is temporarily locked.",
       "setupFailed": "Could not verify. Try again.",
-      "unavailable": "Could not reach the verification service. Check the server and try again."
+      "unavailable": "Unable to check guardian PIN status. Please try again."
     },
     "lead": "Confirm you are the parent or guardian to leave this child profile.",
     "setupPinLead": "Set a quick PIN next time so you do not need your full password.",
@@ -1598,7 +1655,10 @@
     "checking": "Verifying…",
     "usePassword": "Use password instead",
     "skipPin": "Skip for now",
-    "passwordHint": "You have not set a parent PIN yet, so we ask for the same login password you use for Raqeem."
+    "passwordHint": "You have not set a parent PIN yet, so we ask for the same login password you use for Raqeem.",
+    "retry": "Try again",
+    "demoBody": "You are using the demo account. Return to the demo to choose a grade.",
+    "backToDemo": "Back to demo"
   },
   "questionImage": {
     "description": "Illustration for the question",

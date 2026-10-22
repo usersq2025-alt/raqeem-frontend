@@ -66,6 +66,8 @@ export function LessonNode({
         left: `${x}%`,
         top: `${y}%`,
         animationDelay: `${appearDelayMs}ms`,
+        ["--path-node-size" as string]: size,
+        ["--path-label-room" as string]: `${Math.max(x, 100 - x)}cqw`,
       }}
     >
       {current ? (

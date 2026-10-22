@@ -21,7 +21,7 @@ const BORDER: Record<StationVisualState, string> = {
 };
 
 /**
- * Unified lesson-name card -- cream surface, status-tint border, max 2 lines.
+ * Lesson-name card sized to the free space between its node and the stage edge.
  * When the lesson is completed and has a star rating, the stars render
  * inside this same card (below the title) instead of as a separate floating
  * badge next to the node.
@@ -44,23 +44,25 @@ export function LessonLabel({
     <div
       title={title}
       onClick={onSelect}
+      style={{ width: "min(172px, calc(var(--path-label-room) - var(--path-node-size) / 2 - 26px))" }}
       className={[
         "path-lesson-label absolute top-1/2 z-[5] -translate-y-1/2",
         onSelect ? "pointer-events-auto cursor-pointer" : "pointer-events-none",
-        "flex w-[132px] flex-col items-center justify-center gap-1 rounded-[16px] border px-3 py-2",
+        "flex flex-col items-center justify-center gap-1 rounded-[16px] border px-2 py-2",
         showStars ? "min-h-[62px] md:min-h-[68px]" : "min-h-[48px] md:min-h-[52px]",
         "shadow-[0_2px_8px_rgba(15,50,80,0.08)]",
-        "md:w-[172px] md:rounded-[17px] md:px-4 md:py-2.5",
+        "md:rounded-[17px] md:px-4 md:py-2.5",
         tone,
         BORDER[state],
-        side === "start" ? "end-[calc(100%+14px)] md:end-[calc(100%+16px)]" : "start-[calc(100%+14px)] md:start-[calc(100%+16px)]",
+        // Coordinates use physical left/right, independent of the text direction.
+        side === "start" ? "right-[calc(100%+14px)] md:right-[calc(100%+16px)]" : "left-[calc(100%+14px)] md:left-[calc(100%+16px)]",
       ].join(" ")}
     >
       <p
         className={[
           "w-full text-center font-extrabold leading-snug",
           "text-[15px] md:text-[17px]",
-          "line-clamp-2 break-words [overflow-wrap:anywhere]",
+          "break-words [overflow-wrap:anywhere]",
         ].join(" ")}
       >
         {title}

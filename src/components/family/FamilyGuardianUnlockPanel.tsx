@@ -9,7 +9,6 @@ import { FieldInput, LockIcon } from "@/components/ui/FieldInput";
 import { logout } from "@/lib/api/auth";
 import {
   getGuardianStatus,
-  verifyGuardianPassword,
   verifyGuardianPin,
 } from "@/lib/api/guardian";
 
@@ -22,6 +21,7 @@ type Props = {
 };
 
 export function FamilyGuardianUnlockPanel({ seed, pinSet, pinLocked, redirectTo = "/family/settings", onUnlocked }: Props) {
+  const tGate = useTranslations("parentGate");
   const t = useTranslations("familySettings.guardian");
   const tSettings = useTranslations("familySettings");
   const tSession = useTranslations("hub.settings");
@@ -29,7 +29,6 @@ export function FamilyGuardianUnlockPanel({ seed, pinSet, pinLocked, redirectTo 
   const titleId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pin, setPin] = useState("");
-  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [locked, setLocked] = useState(pinLocked);
@@ -60,9 +59,10 @@ export function FamilyGuardianUnlockPanel({ seed, pinSet, pinLocked, redirectTo 
       if (usePin) {
         await verifyGuardianPin(pin.trim());
       } else {
-        await verifyGuardianPassword(password);
+        // No PIN is configured: refresh access without requesting credentials.
       }
-      await getGuardianStatus();
+      const next = await getGuardianStatus();
+      if (!next.unlocked) { setError(tGate(next.isDemo ? "demoBody" : "errors.unavailable")); return; }
       if (onUnlocked) {
         onUnlocked();
         return;
@@ -132,32 +132,14 @@ export function FamilyGuardianUnlockPanel({ seed, pinSet, pinLocked, redirectTo 
                   disabled={busy || locked}
                 />
               </div>
-            ) : (
-              <div>
-                <label htmlFor="family-gate-password" className="mb-1.5 block text-sm font-bold text-text-navy">
-                  {t("passwordPlaceholder")}
-                </label>
-                <FieldInput
-                  ref={inputRef}
-                  id="family-gate-password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  icon={<LockIcon />}
-                  disabled={busy}
-                />
-                <p className="mt-2 text-xs font-semibold text-text-gray">{t("passwordHint")}</p>
-              </div>
-            )}
+            ) : null}
             {error ? <p className="text-sm font-semibold text-red-600">{error}</p> : null}
             <button
               type="submit"
-              disabled={busy || leaving || locked || (usePin ? pin.length < 4 : password.length < 1)}
+              disabled={busy || leaving || locked || (usePin && pin.length < 4)}
               className="min-h-12 w-full rounded-full bg-primary-orange text-sm font-extrabold text-white disabled:opacity-45"
             >
-              {busy ? t("unlocking") : t("unlock")}
+              {busy ? t("unlocking") : usePin ? t("unlock") : tGate("retry")}
             </button>
           </form>
           <button

@@ -1,6 +1,16 @@
 "use client";
 
 import { QuestionImage } from "@/components/QuestionImage";
+import {
+  ExplanationListen,
+  ListenItem,
+  QuestionAudioBar,
+  QuestionAudioProvider,
+  StopAudioOnChange,
+  useItemListen,
+  useReadingLayout,
+} from "@/components/QuestionAudio";
+import { mapExplanationAudio } from "@/lib/speech/questionAudio";
 
 import {
   useEffect,
@@ -17,16 +27,21 @@ import { LessonCompleteCelebration } from "@/components/LessonCompleteCelebratio
 import { LessonPlayLoading } from "@/components/LessonPlayLoading";
 import { QuestionTransitionBar } from "@/components/QuestionTransitionBar";
 import { Button } from "@/components/ui/Button";
-import { withChildQuery } from "@/lib/config/subjects";
+import { ExitConfirmModal } from "@/components/ui/ExitConfirmModal";
+import { useRouter } from "@/i18n/navigation";
+import { useGuardedBack } from "@/lib/navigation/useGuardedBack";
+import { unitLessonPath, withChildQuery } from "@/lib/config/subjects";
 import { toIndicDigits } from "@/lib/format/indicDigits";
+import { type LessonAttempt, type PlayQuestion } from "@/lib/api/lessonPlay";
+// Offline-aware drop-in replacements (same signatures/shapes as @/lib/api/lessonPlay):
+// fall back to a pre-downloaded local bundle when offline, otherwise behave exactly
+// like the real API. See src/lib/offline/offlineLessonPlay.ts.
 import {
   completeAttempt,
   getCurrentQuestion,
   startLessonAttempt,
   submitAnswer,
-  type LessonAttempt,
-  type PlayQuestion,
-} from "@/lib/api/lessonPlay";
+} from "@/lib/offline/offlineLessonPlay";
 import { playUiTone } from "@/lib/play/uiSounds";
 import { isExperienceCelebrationEnabled } from "@/lib/experience/experiencePrefs";
 
@@ -37,6 +52,9 @@ type Props = {
 };
 
 type Phase = "playing" | "feedback" | "recharge" | "done" | "error";
+
+/** Placeholder while no question is loaded, so the audio provider can always mount. */
+const NO_QUESTION: PlayQuestion = { id: 0, gameType: "", questionText: "", imageUrl: null, payload: {} };
 
 type AnsweredReview = {
   question: PlayQuestion;
@@ -56,6 +74,7 @@ type LiveDraft = {
 
 export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props) {
   const t = useTranslations("lesson");
+  const router = useRouter();
   const [attempt, setAttempt] = useState<LessonAttempt | null>(null);
   const [question, setQuestion] = useState<PlayQuestion | null>(null);
   const [phase, setPhase] = useState<Phase>("playing");
@@ -76,6 +95,33 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
   const rewardedQuestions = useRef(new Set<number>());
   const submitBarRef = useRef<HTMLDivElement>(null);
   const [runId, setRunId] = useState(0);
+
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const exitHref = attempt?.unitId ? unitLessonPath(attempt.unitId, childId) : withChildQuery("/subjects", childId);
+  // Guarded (confirm-before-leaving) for as long as there's an active, unfinished
+  // attempt - entering the lesson from the path screen is a real push, so leaving
+  // through here (back button or the in-page exit button, both funnelled through
+  // requestExit) pops that same entry instead of pushing a new one, which is what
+  // previously left a stale duplicate "lesson" entry behind on exit.
+  const { restoreGuard } = useGuardedBack(Boolean(attempt) && phase !== "done", () => setShowExitConfirm(true));
+
+  function requestExit() {
+    router.back();
+  }
+  function stayInLesson() {
+    setShowExitConfirm(false);
+    restoreGuard();
+  }
+  function confirmExitLesson() {
+    setShowExitConfirm(false);
+    const before = window.location.pathname;
+    router.back();
+    // Safety net for a deep-linked lesson with nothing to go back to in this tab's
+    // own history - falls back to a real navigation instead of silently doing nothing.
+    window.setTimeout(() => {
+      if (window.location.pathname === before) router.replace(exitHref);
+    }, 350);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -162,15 +208,6 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
     }, 150);
     return () => window.clearTimeout(timer);
   }, [canSubmit, phase, browsingPast, question?.id]);
-
-  useEffect(() => {
-    if (phase !== "feedback" || isCorrect == null || browsingPast || isCorrect !== false) return;
-    // Wrong answers show an explanation under the question: bring it into view.
-    const timer = window.setTimeout(() => {
-      document.querySelector("[data-play-feedback]")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }, 200);
-    return () => window.clearTimeout(timer);
-  }, [phase, isCorrect, browsingPast, question?.id]);
 
   useEffect(() => {
     if (phase !== "feedback" || isCorrect == null || browsingPast || !question || rewardedQuestions.current.has(question.id)) return;
@@ -406,14 +443,29 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
         previousDisabled={!canGoPrevious || transitioning}
         nextDisabled={!canGoForward || transitioning}
         viewingPastLabel={browsingPast ? t("viewingPast") : null}
+        onExit={requestExit}
+        exitLabel={t("exitLesson")}
       />
 
+      <ExitConfirmModal
+        open={showExitConfirm}
+        title={t("exitConfirmTitle")}
+        body={t("exitConfirmBody")}
+        stayLabel={t("exitConfirmStay")}
+        leaveLabel={t("exitConfirmLeave")}
+        onStay={stayInLesson}
+        onLeave={confirmExitLesson}
+      />
+
+      <QuestionAudioProvider key={`audio-${question?.id ?? "none"}-${browseIndex ?? "live"}`} question={question ?? NO_QUESTION}>
+      <StopAudioOnChange token={phase} />
       {question ? (
         <div className="play-question-card mt-3 rounded-[28px] border-[3px] border-white bg-white/95 px-5 py-6 shadow-[0_14px_36px_-18px_rgba(26,43,71,0.4)]">
           <p className="text-center text-xl font-extrabold leading-relaxed text-text-navy sm:text-2xl">
             {question.questionText}
           </p>
           <QuestionImage key={`${question.id}-${question.imageUrl}`} src={question.imageUrl} alt={question.imageAlt} />
+          <QuestionAudioBar />
         </div>
       ) : null}
 
@@ -439,13 +491,29 @@ export function LessonPlayExperience({ lessonId, childId, pointsBalance }: Props
 
       {(phase === "feedback" || browsingPast) && isCorrect != null ? (
         <PlayFeedbackBanner
+          key={`${question?.id}-${browseIndex ?? "live"}`}
           isCorrect={isCorrect}
           correctLabel={t("correct")}
           incorrectLabel={t("incorrect")}
           niceTryLabel={t("niceTry")}
           explanation={typeof feedback.explanation === "string" ? feedback.explanation : null}
+          explanationAudioUrl={mapExplanationAudio(feedback)}
+          onNext={browsingPast ? goToNextQuestionView : () => void onNext()}
+          nextLabel={
+            browsingPast
+              ? browseIndex != null && browseIndex >= history.length - 1
+                ? t("backToCurrent")
+                : t("nextQuestion")
+              : attempt.status === "battery_depleted"
+                ? t("goToBreak")
+                : attempt.answeredCount >= attempt.totalQuestions
+                  ? t("finishLesson")
+                  : t("nextQuestion")
+          }
+          nextDisabled={!browsingPast && (busy || transitioning)}
         />
       ) : null}
+      </QuestionAudioProvider>
 
       <div
         ref={submitBarRef}
@@ -527,7 +595,11 @@ export function PlayChrome({
   previousDisabled,
   nextDisabled,
   viewingPastLabel,
+  onExit,
+  exitLabel,
 }: {
+  onExit?: () => void;
+  exitLabel?: string;
   progressPct: number;
   questionLabel: string;
   gameLabel?: string;
@@ -552,6 +624,18 @@ export function PlayChrome({
 
   return (
     <div className="play-chrome space-y-2.5 rounded-[22px] bg-[#F7FBFF] px-3 py-3">
+      {onExit && exitLabel ? (
+        <div className="flex justify-start">
+          <button
+            type="button"
+            onClick={onExit}
+            className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-sm font-extrabold text-text-gray shadow-[0_6px_16px_-10px_rgba(26,43,71,0.5)] transition hover:text-text-navy"
+          >
+            <span aria-hidden="true">✕</span>
+            {exitLabel}
+          </button>
+        </div>
+      ) : null}
       <div role="progressbar" aria-label={questionLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.max(0, Math.min(100, progressPct)))} className="play-trail relative h-3.5 overflow-hidden rounded-full bg-white shadow-inner">
         <div
           className="absolute inset-y-0 start-0 rounded-full bg-gradient-to-l from-primary-orange to-[#FFAA55] transition-[width] duration-500"
@@ -650,66 +734,123 @@ function FlagIcon() {
   );
 }
 
+/**
+ * Answer feedback as a bottom sheet: green when correct, orange when wrong. The explanation opens by itself on a
+ * wrong answer and stays behind a "why?" button on a correct one. The X only closes the sheet; moving on is the
+ * separate next button. Callers should key it per question so a closed sheet re-opens for the next one.
+ */
 export function PlayFeedbackBanner({
   isCorrect,
   correctLabel,
   incorrectLabel,
   niceTryLabel,
   explanation,
+  explanationAudioUrl,
+  onNext,
+  nextLabel,
+  nextDisabled,
 }: {
   isCorrect: boolean;
   correctLabel: string;
   incorrectLabel: string;
   niceTryLabel: string;
   explanation?: string | null;
+  /** Pre-generated spoken explanation; arrives with the answer feedback, never before. */
+  explanationAudioUrl?: string | null;
+  onNext?: () => void;
+  nextLabel?: string;
+  nextDisabled?: boolean;
 }) {
   const t = useTranslations("lesson");
+  const [open, setOpen] = useState(true);
+  const [whyOpen, setWhyOpen] = useState(false);
+  const showExplanation = Boolean(explanation) && (!isCorrect || whyOpen);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  if (!open) {
+    return explanation ? (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary-orange px-5 py-2 text-base font-black text-white shadow-[0_6px_0_0_rgba(194,100,20,0.35)] transition active:translate-y-[2px] active:shadow-[0_3px_0_0_rgba(194,100,20,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-orange"
+      >
+        <span aria-hidden="true">💡</span>
+        {t("explanation")}
+      </button>
+    ) : null;
+  }
+
   return (
     <div
       data-play-feedback
-      className={`play-feedback-banner mt-4 flex items-center gap-3 rounded-[22px] border-4 px-4 py-3 ${
-        isCorrect
-          ? "play-feedback-correct border-emerald-300 bg-emerald-50 text-emerald-700"
-          : "border-amber-200 bg-amber-50 text-amber-800"
-      }`}
       role="status"
+      className={`play-feedback-banner play-feedback-sheet fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-2xl rounded-t-[28px] border-x-4 border-t-4 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-18px_40px_-18px_rgba(26,43,71,0.45)] ${
+        isCorrect
+          ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+          : "border-orange-300 bg-orange-50 text-orange-900"
+      }`}
     >
-      <span
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl font-black text-white ${
-          isCorrect ? "bg-emerald-500" : "bg-amber-400"
-        }`}
-        aria-hidden="true"
-      >
-        {isCorrect ? "✓" : "!"}
-      </span>
-      <div className="min-w-0">
-        <p className="text-base font-extrabold">{isCorrect ? correctLabel : incorrectLabel}</p>
-        {!isCorrect ? <p className="text-sm font-bold opacity-80">{niceTryLabel}</p> : null}
-        {explanation ? <WhyToggle key={explanation} label={t("why")} title={t("explanation")} explanation={explanation} /> : null}
-      </div>
-    </div>
-  );
-}
-
-/** The explanation stays folded behind a prominent "why?" button so students notice it and tap it on purpose. */
-function WhyToggle({ label, title, explanation }: { label: string; title: string; explanation: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="mt-3">
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
-        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary-orange px-5 py-2 text-base font-black text-white shadow-[0_6px_0_0_rgba(194,100,20,0.35)] transition active:translate-y-[2px] active:shadow-[0_3px_0_0_rgba(194,100,20,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-orange"
-      >
-        <span aria-hidden="true">💡</span>
-        {label}
-      </button>
-      {open ? (
-        <div className="mt-3 rounded-2xl border-2 border-primary-orange/40 bg-white px-4 py-3 shadow-sm">
-          <p className="mb-1 text-sm font-extrabold text-primary-orange">{title}</p>
-          <p className="text-lg font-bold leading-relaxed text-text-navy">{explanation}</p>
+      <div className="flex items-center gap-3">
+        <span
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl font-black text-white ${
+            isCorrect ? "bg-emerald-500" : "bg-primary-orange"
+          }`}
+          aria-hidden="true"
+        >
+          {isCorrect ? "✓" : "!"}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-base font-extrabold">{isCorrect ? correctLabel : incorrectLabel}</p>
+          {!isCorrect ? <p className="text-sm font-bold opacity-80">{niceTryLabel}</p> : null}
         </div>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          aria-label={t("reviewClose")}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/80 text-xl font-black leading-none text-text-navy transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-orange"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+
+      {explanation && isCorrect ? (
+        <button
+          type="button"
+          aria-expanded={whyOpen}
+          onClick={() => setWhyOpen((value) => !value)}
+          className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-500 px-5 py-2 text-base font-black text-white shadow-[0_6px_0_0_rgba(4,120,87,0.35)] transition active:translate-y-[2px] active:shadow-[0_3px_0_0_rgba(4,120,87,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+        >
+          <span aria-hidden="true">💡</span>
+          {t("why")}
+        </button>
+      ) : null}
+
+      {showExplanation ? (
+        <div
+          className={`mt-3 max-h-[40dvh] overflow-y-auto rounded-2xl border-2 bg-white px-4 py-3 shadow-sm ${
+            isCorrect ? "border-emerald-300" : "border-orange-300"
+          }`}
+        >
+          <p className={`mb-1 text-sm font-extrabold ${isCorrect ? "text-emerald-600" : "text-primary-orange"}`}>
+            {t("explanation")}
+          </p>
+          <p className="text-lg font-bold leading-relaxed text-text-navy">{explanation}</p>
+          <ExplanationListen url={explanationAudioUrl ?? null} />
+        </div>
+      ) : null}
+
+      {onNext ? (
+        <Button onClick={onNext} disabled={nextDisabled} fullWidth className="mt-3">
+          {nextLabel}
+        </Button>
       ) : null}
     </div>
   );
@@ -945,7 +1086,11 @@ function McqBody({
   feedback: Record<string, unknown>;
   onChange: (value: unknown, ready: boolean) => void;
 }) {
+  const t = useTranslations("lesson");
   const [options] = useState(() => shuffleOptions(optionList(payload)));
+  // Read-aloud follows the shuffled order the student actually sees.
+  useReadingLayout(options.map((option) => ({ key: `opt:${option.id}`, group: "options", pictureOnly: !option.text })));
+  const hasListen = useItemListen();
   const selectedId =
     selected && typeof selected === "object" && "selected_option_id" in selected
       ? String((selected as { selected_option_id: string }).selected_option_id)
@@ -962,16 +1107,17 @@ function McqBody({
         const isFadedOut = locked && !isRight && !isWrong;
         const letter = String.fromCharCode(65 + index);
         const badgeTint = MCQ_BADGE_TINTS[index % MCQ_BADGE_TINTS.length]!;
+        const listenId = `opt:${option.id}`;
         return (
+          <div key={option.id} className="relative">
           <button
-            key={option.id}
             type="button"
             disabled={locked}
             onClick={() => {
               playUiTone("click");
               onChange({ selected_option_id: option.id }, true);
             }}
-            className={`play-choice-tile play-mcq-card relative flex min-h-[5.75rem] items-center justify-between gap-3 rounded-[26px] border-[3px] px-4 py-4 text-start text-lg font-extrabold text-text-navy transition-opacity sm:min-h-[7rem] sm:text-xl ${
+            className={`play-choice-tile play-mcq-card relative flex h-full w-full min-h-[5.75rem] items-center justify-between gap-3 rounded-[26px] border-[3px] px-4 py-4 text-start text-lg font-extrabold text-text-navy transition-opacity sm:min-h-[7rem] sm:text-xl ${hasListen(listenId) ? "pe-16" : ""} ${
               isRight
                 ? "play-choice-right play-glow-ring border-emerald-400 bg-emerald-50"
                 : isWrong
@@ -995,6 +1141,12 @@ function McqBody({
             <ItemPicture url={option.imageUrl} text={option.text} />
             {option.text ? <span className="leading-snug">{option.text}</span> : null}
           </button>
+          <ListenItem
+            id={listenId}
+            label={t("listenOptionLabel", { letter })}
+            className="absolute end-2 top-1/2 -translate-y-1/2"
+          />
+          </div>
         );
       })}
     </div>
@@ -1013,6 +1165,7 @@ function TrueFalseBody({
   onChange: (value: unknown, ready: boolean) => void;
 }) {
   const t = useTranslations("lesson");
+  const hasListen = useItemListen();
   const value =
     selected && typeof selected === "object" && "answer" in selected
       ? Boolean((selected as { answer: boolean }).answer)
@@ -1021,7 +1174,7 @@ function TrueFalseBody({
   const locked = phase === "feedback";
 
   return (
-    <div className="mx-auto grid max-w-md grid-cols-2 gap-3">
+    <div className="relative mx-auto grid max-w-md grid-cols-2 gap-3">
       {[true, false].map((answer) => {
         const isPick = value === answer;
         const isRight = locked && correct === answer;
@@ -1067,6 +1220,9 @@ function TrueFalseBody({
           </button>
         );
       })}
+      {/* Speakers float over the tiles (siblings, not children) so the tile buttons keep their original DOM position. */}
+      {hasListen("sys:true") ? <ListenItem id="sys:true" label={t("true")} className="absolute start-2 top-2" /> : null}
+      {hasListen("sys:false") ? <ListenItem id="sys:false" label={t("false")} className="absolute start-[calc(50%+0.875rem)] top-2" /> : null}
     </div>
   );
 }
@@ -1099,6 +1255,12 @@ function MatchingBody({
       `${left.map((item) => item.id).join("\0")}\0${right.map((item) => item.id).join("\0")}`,
     [left, right]
   );
+  // Two columns, each read top to bottom, exactly as laid out on screen.
+  useReadingLayout([
+    ...left.map((item) => ({ key: `left:${item.id}`, group: "left" as const, pictureOnly: !item.text })),
+    ...right.map((item) => ({ key: `right:${item.id}`, group: "right" as const, pictureOnly: !item.text })),
+  ]);
+  const hasListen = useItemListen();
   const [matches, setMatches] = useState<Record<string, string>>(() => readMatches(selected));
   const [pick, setPick] = useState<{ side: "left" | "right"; id: string } | null>(null);
   const [matchesKey, setMatchesKey] = useState(matchItemsKey);
@@ -1302,12 +1464,13 @@ function MatchingBody({
                 const expected = expectedId ? right.find((rowItem) => rowItem.id === expectedId)?.text : null;
                 const pairIndex = locked && correctMap ? pairAccentByLeftId[leftItem.id] : undefined;
                 return (
+                  <div className="relative flex">
                   <button
                     type="button"
                     data-match-left={leftItem.id}
                     disabled={locked}
                     onClick={() => onLeftClick(leftItem.id)}
-                    className={`relative flex min-h-[4.75rem] w-full flex-col items-stretch justify-center rounded-[22px] border-[3px] px-3 py-3 text-start text-sm font-extrabold text-text-navy shadow-[0_8px_24px_-16px_rgba(26,43,71,0.35)] transition-colors sm:text-base ${cardTone(
+                    className={`relative flex min-h-[4.75rem] w-full flex-col items-stretch justify-center rounded-[22px] border-[3px] px-3 py-3 text-start text-sm font-extrabold text-text-navy shadow-[0_8px_24px_-16px_rgba(26,43,71,0.35)] transition-colors sm:text-base ${hasListen(`left:${leftItem.id}`) ? "pe-12" : ""} ${cardTone(
                       { side: "left", id: leftItem.id, paired: Boolean(pairedRight), ok }
                     )}`}
                   >
@@ -1320,6 +1483,12 @@ function MatchingBody({
                       </span>
                     ) : null}
                   </button>
+                  <ListenItem
+                    id={`left:${leftItem.id}`}
+                    label={leftItem.text || t("listenOptionLabel", { letter: String(row + 1) })}
+                    className="absolute end-1 top-1/2 h-10 w-10 -translate-y-1/2"
+                  />
+                  </div>
                 );
               })()
             ) : (
@@ -1337,12 +1506,13 @@ function MatchingBody({
                 const pairIndex =
                   locked && correctOwnerLeftId != null ? pairAccentByLeftId[correctOwnerLeftId] : undefined;
                 return (
+                  <div className="relative flex">
                   <button
                     type="button"
                     data-match-right={rightItem.id}
                     disabled={locked}
                     onClick={() => onRightClick(rightItem.id)}
-                    className={`relative flex min-h-[4.75rem] w-full flex-col items-stretch justify-center gap-1 rounded-[22px] border-[3px] px-3 py-3 text-start text-sm font-extrabold text-text-navy shadow-[0_8px_24px_-16px_rgba(26,43,71,0.35)] transition-colors sm:text-base ${cardTone(
+                    className={`relative flex min-h-[4.75rem] w-full flex-col items-stretch justify-center gap-1 rounded-[22px] border-[3px] px-3 py-3 text-start text-sm font-extrabold text-text-navy shadow-[0_8px_24px_-16px_rgba(26,43,71,0.35)] transition-colors sm:text-base ${hasListen(`right:${rightItem.id}`) ? "pe-12" : ""} ${cardTone(
                       { side: "right", id: rightItem.id, paired, ok }
                     )}`}
                   >
@@ -1350,6 +1520,12 @@ function MatchingBody({
                     <ItemPicture url={rightItem.image_url} text={rightItem.text} />
                     {rightItem.text ? <span>{rightItem.text}</span> : null}
                   </button>
+                  <ListenItem
+                    id={`right:${rightItem.id}`}
+                    label={rightItem.text || t("listenOptionLabel", { letter: String(row + 1) })}
+                    className="absolute end-1 top-1/2 h-10 w-10 -translate-y-1/2"
+                  />
+                  </div>
                 );
               })()
             ) : (
@@ -1505,6 +1681,12 @@ function DragBody({
   const locked = phase === "feedback";
   const unassigned = items.filter((item) => !assignments[item.id]);
   const draggingItem = drag ? items.find((item) => item.id === drag.itemId) : null;
+  // Screen order: the tray first (items still waiting), then the bins.
+  useReadingLayout([
+    ...unassigned.map((item) => ({ key: `item:${item.id}`, group: "tray" as const, pictureOnly: !item.text })),
+    ...categories.map((cat) => ({ key: `cat:${cat.id}`, group: "categories" as const, pictureOnly: !cat.name })),
+  ]);
+  const hasListen = useItemListen();
 
   const binThemes = [
     { shell: "from-sky-100 to-sky-200 border-sky-300", marker: "●", glow: "border-sky-400 bg-sky-50 scale-[1.03]", accent: "border-sky-400 bg-sky-50 text-sky-800" },
@@ -1549,8 +1731,8 @@ function DragBody({
     const expectedCategoryName =
       wrongTheme && correctMap ? categories.find((cat) => cat.id === correctMap[item.id])?.name : null;
     return (
+      <span key={item.id} className="inline-flex items-center gap-1">
       <button
-        key={item.id}
         type="button"
         disabled={locked}
         onPointerDown={(event) => onCardPointerDown(event, item.id)}
@@ -1588,6 +1770,10 @@ function DragBody({
         {item.text}
         {expectedCategoryName ? <span className="mt-1 block text-xs font-bold">{t("belongsIn", { category: expectedCategoryName })}</span> : null}
       </button>
+      {hasListen(`item:${item.id}`) ? (
+        <ListenItem id={`item:${item.id}`} label={item.text || t("classifyTray")} className="h-10 w-10" />
+      ) : null}
+      </span>
     );
   }
 
@@ -1622,20 +1808,21 @@ function DragBody({
                 if (locked || !pick) return;
                 assign(pick, cat.id);
               }}
-              className={`play-bin min-h-[9.5rem] rounded-[30px] border-[4px] bg-gradient-to-b p-4 text-start transition-all duration-150 ${theme.shell} ${
+              className={`play-bin relative min-h-[9.5rem] rounded-[30px] border-[4px] bg-gradient-to-b p-4 text-start transition-all duration-150 ${theme.shell} ${
                 hot ? theme.glow : ""
               }`}
             >
               <button type="button" disabled={locked || !pick} onClick={(event) => {
                 event.stopPropagation();
                 if (pick && !locked) assign(pick, cat.id);
-              }} className="flex min-h-11 w-full items-center gap-2 text-start disabled:cursor-default">
+              }} className={`flex min-h-11 w-full items-center gap-2 text-start disabled:cursor-default ${hasListen(`cat:${cat.id}`) ? "pe-12" : ""}`}>
                 <span className="text-2xl" aria-hidden="true">
                   {theme.marker}
                 </span>
                 <ItemPicture url={cat.image_url} text={cat.name} small />
                 {cat.name ? <p className="text-base font-black text-text-navy">{cat.name}</p> : null}
               </button>
+              <ListenItem id={`cat:${cat.id}`} label={cat.name || t("classifyTray")} className="absolute end-3 top-3 h-10 w-10" />
               <p className="mt-1 text-xs font-bold text-text-gray">{t("dropHere")}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {inBucket.map((item) => renderCard(item, true))}
@@ -1686,6 +1873,13 @@ function OrderingBody({
   const returnTimerRef = useRef<number | null>(null);
   const slotCount = Math.max(tokens.length, 1);
   const locked = phase === "feedback";
+  // The word bank as it looks now: tokens already placed in a slot are not in it.
+  useReadingLayout(
+    tokens
+      .filter((token) => !order.includes(token.id))
+      .map((token) => ({ key: `tok:${token.id}`, group: "tokens" as const, pictureOnly: !token.text })),
+  );
+  const hasListen = useItemListen();
 
   useEffect(() => {
     return () => {
@@ -1730,8 +1924,8 @@ function OrderingBody({
         {tokens
           .filter((token) => !order.includes(token.id))
           .map((token) => (
+            <span key={token.id} className="inline-flex items-center gap-1">
             <button
-              key={token.id}
               type="button"
               disabled={locked}
               onClick={() => placeToken(token.id)}
@@ -1742,6 +1936,10 @@ function OrderingBody({
               <ItemPicture url={token.image_url} text={token.text} small />
               {token.text}
             </button>
+            {hasListen(`tok:${token.id}`) ? (
+              <ListenItem id={`tok:${token.id}`} label={token.text || t("orderSlot", { n: "" })} className="h-10 w-10" />
+            ) : null}
+            </span>
           ))}
       </div>
       {!locked && order.length > 0 ? (
@@ -1806,6 +2004,9 @@ function OrderingBody({
                     "…"
                   )}
                 </button>
+                {token && hasListen(`tok:${token.id}`) ? (
+                  <ListenItem id={`tok:${token.id}`} label={token.text || t("orderSlot", { n: toIndicDigits(index + 1) })} className="h-10 w-10" />
+                ) : null}
               </li>
             );
           })}
@@ -1839,6 +2040,8 @@ function CrosswordBody({
   const words = Array.isArray(payload.words)
     ? (payload.words as Array<{ id: string; clue: string; length?: number }>)
     : [];
+  useReadingLayout(words.map((word) => ({ key: `clue:${word.id}`, group: "clues" as const })));
+  const hasListen = useItemListen();
   const [answers, setAnswers] = useState<Record<string, string>>(() => readCrosswordAnswers(selected));
   const correctAnswers = feedback.correct_answers && typeof feedback.correct_answers === "object"
     ? feedback.correct_answers as Record<string, string>
@@ -1857,13 +2060,13 @@ function CrosswordBody({
         const correct = expected != null ? answers[word.id]?.trim() === expected.trim() : null;
         return <label
           key={word.id}
-          className={`block rounded-[24px] border-[3px] bg-white p-4 shadow-[0_8px_24px_-16px_rgba(26,43,71,0.4)] ${correct === true ? "border-emerald-300 bg-emerald-50" : correct === false ? "border-rose-200 bg-rose-50/40" : "border-white"}`}
+          className={`relative block rounded-[24px] border-[3px] bg-white p-4 shadow-[0_8px_24px_-16px_rgba(26,43,71,0.4)] ${correct === true ? "border-emerald-300 bg-emerald-50" : correct === false ? "border-rose-200 bg-rose-50/40" : "border-white"}`}
         >
           <span className="flex items-start gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-sm font-black text-amber-700">
               {toIndicDigits(index + 1)}
             </span>
-            <span className="text-base font-extrabold leading-snug text-text-navy">{word.clue}</span>
+            <span className={`text-base font-extrabold leading-snug text-text-navy ${hasListen(`clue:${word.id}`) ? "pe-12" : ""}`}>{word.clue}</span>
           </span>
           <input
             disabled={phase === "feedback"}
@@ -1872,6 +2075,8 @@ function CrosswordBody({
             value={answers[word.id] ?? ""}
             onChange={(event) => setWord(word.id, event.target.value)}
           />
+          {/* After the input in DOM order so the <label> still focuses the input, not this button. */}
+          <ListenItem id={`clue:${word.id}`} label={word.clue || t("listenOptionLabel", { letter: toIndicDigits(index + 1) })} className="absolute end-3 top-3 h-10 w-10" />
           {correct === true ? <span className="mt-2 block text-sm font-extrabold text-emerald-700">✓ {t("correct")}</span> : null}
           {correct === false ? <span className="mt-2 block text-sm font-extrabold text-text-navy">{t("expected")}: {toIndicDigits(expected ?? "")}</span> : null}
         </label>

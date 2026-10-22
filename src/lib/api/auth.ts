@@ -1,5 +1,6 @@
 import { ApiError, apiClient } from "./client";
 import { clearLastVisit } from "@/lib/navigation/lastVisit";
+import { clearAllChildrenLocalData } from "@/lib/offline/clearChildCache";
 
 export class AuthApiError extends Error {
   constructor(
@@ -195,4 +196,5 @@ export async function logout(): Promise<void> {
     throw new AuthApiError("NETWORK", "NETWORK", response.status);
   }
   clearLastVisit();
+  void clearAllChildrenLocalData();
 }

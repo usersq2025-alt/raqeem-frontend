@@ -21,7 +21,7 @@ let mockAlertPreferences = {
 export function getMockGuardianState() {
   return {
     pin_set: mockPinSet,
-    unlocked: mockGuardianUnlocked,
+    unlocked: !mockPinSet || mockGuardianUnlocked,
     pin_locked: false,
     unlock_ttl_minutes: 15,
   };
@@ -77,6 +77,14 @@ function mockParentLaravel(
     return NextResponse.json({ message: "UNLOCKED", unlocked: true, unlock_ttl_minutes: 15 });
   }
 
+  if (path.includes("/parent/guardian-mode/clear-pin")) {
+    const password = body && typeof body === "object" && "password" in body ? String(body.password ?? "") : "";
+    if (!password) return NextResponse.json({ code: "INVALID_CREDENTIALS" }, { status: 422 });
+    mockPinSet = false;
+    mockGuardianUnlocked = true;
+    return NextResponse.json({ pin_set: false, unlocked: true });
+  }
+
   if (path.includes("/parent/guardian-mode/set-pin")) {
     mockPinSet = true;
     mockGuardianUnlocked = true;
@@ -85,7 +93,7 @@ function mockParentLaravel(
 
   if (path.includes("/parent/guardian-mode/lock")) {
     mockGuardianUnlocked = false;
-    return NextResponse.json({ message: "LOCKED", unlocked: false });
+    return NextResponse.json({ message: "LOCKED", unlocked: !mockPinSet });
   }
 
   if (path.includes("/parent/guardian-mode") && !path.includes("verify") && !path.includes("set-pin")) {
@@ -111,7 +119,7 @@ function mockParentLaravel(
       preferred_locale: "ar",
       created_at: new Date().toISOString(),
       pin_set: mockPinSet,
-      guardian_unlocked: mockGuardianUnlocked,
+      guardian_unlocked: !mockPinSet || mockGuardianUnlocked,
       exhibition_mode: sessionParent?.email === "raqeem2026@gmail.com",
     });
   }
@@ -161,7 +169,7 @@ function mockParentLaravel(
   }
 
   if (path.endsWith("/exhibition/reset-purchases")) {
-    return sessionParent?.email === "raqeem2026@gmail.com" && mockGuardianUnlocked
+    return sessionParent?.email === "raqeem2026@gmail.com" && (!mockPinSet || mockGuardianUnlocked)
       ? NextResponse.json({ reset_count: 0, points_refunded: 0 })
       : NextResponse.json({ code: "EXHIBITION_ONLY" }, { status: 403 });
   }
@@ -241,7 +249,7 @@ async function parentLaravelWrite(
 
   if (isMockAuthEnabled()) {
     if (method === "DELETE" && path.startsWith("/students/")) {
-      return mockGuardianUnlocked
+      return (!mockPinSet || mockGuardianUnlocked)
         ? NextResponse.json({ message: "DELETED" })
         : NextResponse.json({ code: "GUARDIAN_LOCKED" }, { status: 403 });
     }

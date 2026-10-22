@@ -1,4 +1,5 @@
 import { readDisplayJson } from "@/lib/format/displayNumerals";
+import { mapAudioManifest, type AudioManifest } from "@/lib/speech/questionAudio";
 export type LessonGift = {
   id: number;
   rewardType: string;
@@ -37,6 +38,8 @@ export type PlayQuestion = {
   imageUrl: string | null;
   imageAlt?: string | null;
   payload: Record<string, unknown>;
+  /** Pre-generated read-aloud clips; null until the feature is enabled and the clips exist. */
+  audio?: AudioManifest | null;
 };
 
 export type AnswerFeedback = {
@@ -83,6 +86,7 @@ export function mapPlayQuestion(raw: Record<string, unknown>): PlayQuestion {
     imageUrl: questionImageUrl(raw.image_url ?? raw.imageUrl),
     imageAlt: typeof raw.image_alt === "string" ? raw.image_alt : typeof raw.imageAlt === "string" ? raw.imageAlt : null,
     payload: raw.payload && typeof raw.payload === "object" ? (raw.payload as Record<string, unknown>) : {},
+    audio: mapAudioManifest(raw.audio),
   };
 }
 

@@ -1,5 +1,10 @@
 export const SESSION_COOKIE_NAME = "raqeem_session";
 
+// Non-httpOnly, non-sensitive companion flag (no token, no ids) set alongside the real
+// session cookie. The offline app shell reads it client-side to tell "logged in but
+// offline" apart from "never logged in", without ever exposing the token to JS.
+export const SESSION_HINT_COOKIE_NAME = "raqeem_has_session";
+
 export type SessionPayload = {
   token: string;
   parent: {

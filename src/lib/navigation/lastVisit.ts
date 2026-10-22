@@ -6,10 +6,17 @@ export function classifyLastVisit(href: string): Omit<LastVisit, "parentId"> | n
   if (!href.startsWith("/") || href.startsWith("//") || href.includes("\\")) return null;
   const url = new URL(href, "https://raqeem.invalid");
   const path = url.pathname;
+  // Lesson-play and review are deliberately NOT trackable as a resume point: both are
+  // active, in-progress sessions, not browsing pages - blindly router.replace()-ing a
+  // student straight back into one on a cold app relaunch (see ResumeLastVisit), with
+  // no regard for whether it was ever finished, is what previously trapped a student
+  // who left an incomplete review mid-session: reopening the app kept forcing them back
+  // into the same unfinished review with no way to reach anything else. Falling back to
+  // whatever page was last tracked BEFORE entering (the unit's path/units screen) is a
+  // safe landing spot a student can act on deliberately instead.
   const student = /^\/(home|subjects|store|headquarters|settings|streak|career-selection)$/.test(path) ||
     /^\/subjects\/[1-9]\d*\/units$/.test(path) ||
-    /^\/units\/[1-9]\d*\/(lessons|path|review)$/.test(path) ||
-    /^\/lessons\/[1-9]\d*\/play$/.test(path);
+    /^\/units\/[1-9]\d*\/(lessons|path)$/.test(path);
   const parent = /^\/(children|add-child)$/.test(path) || /^\/family\/(settings|reports|exhibition|help)$/.test(path);
   if (!student && !parent) return null;
   if (student && !/^[1-9]\d*$/.test(url.searchParams.get("childId") ?? "")) return null;

@@ -7,7 +7,7 @@ import { StudentShell } from "@/components/StudentShell";
 import { LessonPlayExperience, PlayChrome } from "@/components/LessonPlayExperience";
 import { StoreExperience } from "@/components/store/StoreExperience";
 import { ExperiencePreferencesExperience } from "@/components/experience/ExperiencePreferencesExperience";
-import { SubjectsHome } from "@/components/SubjectsHome";
+import { SubjectsHomeView } from "@/components/SubjectsHome";
 import { StudentJourneyDashboard } from "@/components/journey/StudentJourneyDashboard";
 import { HeadquartersExperience } from "@/components/headquarters/HeadquartersExperience";
 import type { PlayQuestion } from "@/lib/api/lessonPlay";
@@ -52,7 +52,7 @@ export default function UxFixture() {
       catalogUnitCount: index < 5 || index === 6 ? 1 : 0,
       catalogLessonCount: index < 5 || index === 6 ? 1 : 0,
     }));
-    return <StudentShell><SubjectsHome child={qaChild} subjects={subjects} streak={mapStreak(mockStreak(1))} /></StudentShell>;
+    return <StudentShell><SubjectsHomeView child={qaChild} subjects={subjects} streak={mapStreak(mockStreak(1))} /></StudentShell>;
   }
   if (mode === "journey") return <StudentShell><StudentJourneyDashboard childId={1} initialData={mockJourneyDashboard(1)} /></StudentShell>;
   if (mode === "lesson-flow" || mode === "lesson-recharge") return <main className="mx-auto max-w-3xl p-4"><LessonPlayExperience lessonId={1} childId={1} pointsBalance={120} /></main>;

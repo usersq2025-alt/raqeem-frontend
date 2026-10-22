@@ -1,8 +1,7 @@
 import { readDisplayJson } from "@/lib/format/displayNumerals";
 import { cookies } from "next/headers";
-import { asRows, mapStreak, mapSubject, mapUnit, orderSubjects, type StudentStreak, type SubjectProgress, type UnitProgress } from "@/lib/api/student";
-import { mapUnitPath, type UnitPath } from "@/lib/api/units";
-import { MOCK_SUBJECTS, MOCK_UNIT_PATH, MOCK_UNITS, mockStreak } from "@/lib/api/mockStudent";
+import { asRows, mapStreak, type StudentStreak } from "@/lib/api/student";
+import { mockStreak } from "@/lib/api/mockStudent";
 import { parseSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth/sessionCookie";
 import { isMockAuthEnabled } from "@/lib/config/useMockAuth";
 
@@ -27,27 +26,6 @@ async function laravelGet(path: string): Promise<unknown | null> {
   }
 }
 
-export async function loadSubjectsProgress(studentId: number): Promise<SubjectProgress[]> {
-  if (isMockAuthEnabled()) {
-    return orderSubjects(MOCK_SUBJECTS.map(mapSubject).filter((row): row is SubjectProgress => row !== null));
-  }
-  const raw = await laravelGet(`/students/${studentId}/subjects`);
-  return orderSubjects(asRows(raw).map(mapSubject).filter((row): row is SubjectProgress => row !== null));
-}
-
-export async function loadUnitsProgress(subjectId: number, studentId: number): Promise<UnitProgress[]> {
-  if (isMockAuthEnabled()) {
-    return asRows(MOCK_UNITS[subjectId] ?? MOCK_UNITS[4])
-      .map(mapUnit)
-      .filter((row): row is UnitProgress => row !== null);
-  }
-  const raw = await laravelGet(`/subjects/${subjectId}/units?student_id=${studentId}`);
-  return asRows(raw)
-    .map(mapUnit)
-    .filter((row): row is UnitProgress => row !== null)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
-}
-
 export async function loadLessonsProgress(unitId: number, studentId: number): Promise<
   Array<{ lessonId: number; title: string; status: string; sortOrder: number; stars: number | null }>
 > {
@@ -63,14 +41,6 @@ export async function loadLessonsProgress(unitId: number, studentId: number): Pr
     sortOrder: Number(row.sort_order ?? row.sortOrder ?? 0),
     stars: row.stars == null ? null : Number(row.stars),
   }));
-}
-
-export async function loadUnitPath(unitId: number, studentId: number): Promise<UnitPath | null> {
-  if (isMockAuthEnabled()) {
-    return mapUnitPath({ ...MOCK_UNIT_PATH, unit_id: unitId });
-  }
-  const raw = await laravelGet(`/units/${unitId}/path?student_id=${studentId}`);
-  return mapUnitPath(raw);
 }
 
 export async function loadStreak(studentId: number): Promise<StudentStreak> {

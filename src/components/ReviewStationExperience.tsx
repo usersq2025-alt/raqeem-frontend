@@ -1,25 +1,26 @@
 "use client";
 
 import { QuestionImage } from "@/components/QuestionImage";
+import { QuestionAudioBar, QuestionAudioProvider, StopAudioOnChange } from "@/components/QuestionAudio";
+import { mapExplanationAudio } from "@/lib/speech/questionAudio";
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import confetti from "canvas-confetti";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
+import { ExitConfirmModal } from "@/components/ui/ExitConfirmModal";
 import {
   PlayChrome,
   PlayFeedbackBanner,
   QuestionBody,
   hintLabelForGameType,
 } from "@/components/LessonPlayExperience";
-import {
-  getReviewQuestion,
-  getUnitReview,
-  submitReviewAnswer,
-  type ReviewSummary,
-} from "@/lib/api/review";
+import { type ReviewSummary } from "@/lib/api/review";
+import { getReviewQuestion, getUnitReview, submitReviewAnswer } from "@/lib/offline/offlineReviewPlay";
 import type { PlayQuestion } from "@/lib/api/lessonPlay";
+import { useRouter } from "@/i18n/navigation";
+import { useGuardedBack } from "@/lib/navigation/useGuardedBack";
 import { withChildQuery } from "@/lib/config/subjects";
 import { playUiTone } from "@/lib/play/uiSounds";
 import { isExperienceCelebrationEnabled } from "@/lib/experience/experiencePrefs";
@@ -31,9 +32,13 @@ type Props = {
 
 type Phase = "playing" | "feedback" | "done" | "empty" | "error";
 
+/** Placeholder while no question is loaded, so the audio provider can always mount. */
+const NO_QUESTION: PlayQuestion = { id: 0, gameType: "", questionText: "", imageUrl: null, payload: {} };
+
 export function ReviewStationExperience({ unitId, childId }: Props) {
   const t = useTranslations("review");
   const tLesson = useTranslations("lesson");
+  const router = useRouter();
   const [summary, setSummary] = useState<ReviewSummary | null>(null);
   const [question, setQuestion] = useState<PlayQuestion | null>(null);
   const [phase, setPhase] = useState<Phase>("playing");
@@ -43,6 +48,7 @@ export function ReviewStationExperience({ unitId, childId }: Props) {
   const [feedback, setFeedback] = useState<Record<string, unknown>>({});
   const [busy, setBusy] = useState(false);
   const [bonus, setBonus] = useState(0);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -150,6 +156,31 @@ export function ReviewStationExperience({ unitId, childId }: Props) {
       ? withChildQuery(`/subjects/${summary.subjectId}/units`, childId)
       : withChildQuery("/subjects", childId);
 
+  // Guarded (confirm-before-leaving) for as long as the review is still in progress -
+  // entering it from the units screen is a real push, so leaving through here (back
+  // button or the in-page exit button, both funnelled through requestExit) pops that
+  // same entry instead of pushing a new one. Previously this screen had no exit
+  // affordance at all while playing/feedback - the only way out was the hardware back
+  // button, which could also walk the student right back into it (see useGuardedBack).
+  const inProgress = phase === "playing" || phase === "feedback";
+  const { restoreGuard } = useGuardedBack(inProgress, () => setShowExitConfirm(true));
+
+  function requestExit() {
+    router.back();
+  }
+  function stayInReview() {
+    setShowExitConfirm(false);
+    restoreGuard();
+  }
+  function confirmExitReview() {
+    setShowExitConfirm(false);
+    const before = window.location.pathname;
+    router.back();
+    window.setTimeout(() => {
+      if (window.location.pathname === before) router.replace(backHref);
+    }, 350);
+  }
+
   if (phase === "error") {
     return <p className="py-16 text-center font-bold text-text-gray">{t("loadError")}</p>;
   }
@@ -170,7 +201,7 @@ export function ReviewStationExperience({ unitId, childId }: Props) {
           className="h-28 w-28 object-contain"
         />
         <p className="mt-4 font-bold text-text-gray">{t("empty")}</p>
-        <Button href={backHref} className="mt-6">
+        <Button href={backHref} replace className="mt-6">
           {t("back")}
         </Button>
       </div>
@@ -190,7 +221,7 @@ export function ReviewStationExperience({ unitId, childId }: Props) {
         />
         <h1 className="mt-4 text-2xl font-extrabold text-text-navy">{t("done")}</h1>
         <p className="mt-2 text-lg font-extrabold text-primary-orange">{t("bonus", { count: bonus })}</p>
-        <Button href={backHref} className="mt-8">
+        <Button href={backHref} replace className="mt-8">
           {t("back")}
         </Button>
       </div>
@@ -222,14 +253,29 @@ export function ReviewStationExperience({ unitId, childId }: Props) {
       <PlayChrome
         progressPct={progressPct}
         questionLabel={t("questionProgress", { current: questionProgress, total })}
+        onExit={requestExit}
+        exitLabel={t("back")}
       />
 
+      <ExitConfirmModal
+        open={showExitConfirm}
+        title={t("exitConfirmTitle")}
+        body={t("exitConfirmBody")}
+        stayLabel={t("exitConfirmStay")}
+        leaveLabel={t("exitConfirmLeave")}
+        onStay={stayInReview}
+        onLeave={confirmExitReview}
+      />
+
+      <QuestionAudioProvider key={`audio-${question?.id ?? "none"}-${summary?.remaining ?? 0}`} question={question ?? NO_QUESTION}>
+      <StopAudioOnChange token={phase} />
       {question ? (
         <div className="play-question-card mt-4 rounded-[28px] border-[3px] border-white bg-white/95 px-5 py-6 shadow-[0_14px_36px_-18px_rgba(26,43,71,0.4)]">
           <p className="text-center text-xl font-extrabold leading-relaxed text-text-navy sm:text-2xl">
             {question.questionText}
           </p>
           <QuestionImage key={`${question.id}-${question.imageUrl}`} src={question.imageUrl} alt={question.imageAlt} />
+          <QuestionAudioBar />
         </div>
       ) : null}
 
@@ -256,13 +302,19 @@ export function ReviewStationExperience({ unitId, childId }: Props) {
 
       {phase === "feedback" && isCorrect != null ? (
         <PlayFeedbackBanner
+          key={`${question?.id}-${summary?.remaining ?? 0}`}
           isCorrect={isCorrect}
           correctLabel={t("correct")}
           incorrectLabel={t("incorrect")}
           niceTryLabel={t("niceTry")}
           explanation={typeof feedback.explanation === "string" ? feedback.explanation : null}
+          explanationAudioUrl={mapExplanationAudio(feedback)}
+          onNext={onNext}
+          nextLabel={t("next")}
+          nextDisabled={busy}
         />
       ) : null}
+      </QuestionAudioProvider>
 
       <div className="sticky bottom-0 z-10 mt-4 bg-gradient-to-t from-[#F7FBFF] via-[#F7FBFF]/95 to-transparent pt-3">
         {phase === "playing" ? (
