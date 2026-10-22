@@ -30,6 +30,11 @@ import { useEffect } from "react";
  */
 export function OfflineBoot() {
   useEffect(() => {
+    // Best-effort: asks the browser not to evict this origin's cached lessons/HQ assets
+    // under storage pressure (it may still refuse, e.g. outside an installed PWA on iOS -
+    // nothing here depends on it succeeding, downloads just work better when it does).
+    void navigator.storage?.persist?.();
+
     if (!("serviceWorker" in navigator)) return;
     const hadControllerOnLoad = !!navigator.serviceWorker.controller;
     void window.serwist?.register({ immediate: true });

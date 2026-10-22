@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { useStudentChrome } from "@/components/StudentChrome";
 import { HQ3D_ASSET_VERSION, HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
-import { cacheHqLoad, getCachedHqLoad, saveHqStateOffline } from "@/lib/offline/hqSync";
+import { cacheHqLoad, getCachedHqLoad, saveHqStateOffline, updateHqOwnership } from "@/lib/offline/hqSync";
 
 const ASSET_VERSION = HQ3D_ASSET_VERSION;
 
@@ -76,12 +76,17 @@ export function Hq3dExperience({ childId, profession }: Props) {
       },
       // Buying is online-only by design (server-authoritative balance check) - left as a
       // plain network call, no offline queue, so it fails clearly instead of silently.
-      buy: (toolId) =>
-        http(`${api}/buy`, {
+      // The cache is still refreshed on success so a later offline visit shows the
+      // tool as owned and the balance spent, instead of a stale pre-purchase snapshot.
+      buy: async (toolId) => {
+        const result = await http<{ points_balance: number; owned: Record<string, number> }>(`${api}/buy`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ toolId }),
-        }),
+        });
+        void updateHqOwnership(childId, { pointsBalance: result.points_balance, owned: result.owned });
+        return result;
+      },
       // Arranging tools must work offline: write locally and queue the sync, never reject
       // here (the state-save endpoint is a safe full overwrite server-side, so a later
       // retry is all that's needed - see src/lib/offline/hqSync.ts).

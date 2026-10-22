@@ -18,7 +18,10 @@
     "test:settings": "npx tsx scripts/verify-settings-separation.ts",
     "test:student-journey": "npx tsx scripts/verify-student-journey.ts",
     "test:numerals": "npx tsx scripts/verify-display-numerals.ts",
-    "test:ux": "node scripts/verify-ux.mjs"
+    "test:ux": "node scripts/verify-ux.mjs",
+    "test:offline-grading": "npx tsx scripts/verify-offline-grading.ts",
+    "test:offline-lesson": "npx tsx scripts/verify-offline-lesson.ts",
+    "test:offline-review": "npx tsx scripts/verify-offline-review.ts"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
@@ -39,6 +42,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
+    "fake-indexeddb": "^6.2.6",
     "puppeteer-core": "^24.43.1",
     "serwist": "^9.5.13",
     "tailwindcss": "^4",

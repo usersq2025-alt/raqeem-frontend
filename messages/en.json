@@ -1551,7 +1551,8 @@
     "accountBody": "From family settings you add children, edit profiles, and open each child space."
   },
   "offlineBanner": {
-    "message": "You're offline right now"
+    "message": "You're offline right now",
+    "syncIssue": "We're trying to save your recent activity - we'll keep retrying"
   },
   "experiencePrefs": {
     "title": "Settings",

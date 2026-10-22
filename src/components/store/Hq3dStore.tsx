@@ -5,10 +5,10 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { useStudentChrome } from "@/components/StudentChrome";
 import { withChildQuery } from "@/lib/config/subjects";
-import { HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
+import { HQ3D_ASSET_VERSION, HQ3D_BUNDLE, hq3dBase, type Hq3dProfession } from "@/lib/config/hq3d";
+import { updateHqOwnership } from "@/lib/offline/hqSync";
 
-// Bump when /public/hq-lab is republished so browsers fetch the new bundle.
-const ASSET_VERSION = "17";
+const ASSET_VERSION = HQ3D_ASSET_VERSION;
 
 type CatalogTool = {
   id: string;
@@ -362,6 +362,7 @@ export function Hq3dStore({ childId, profession }: { childId: number; profession
       );
       setData({ ...data, points_balance: result.points_balance, owned: result.owned });
       setChromePoints?.(result.points_balance);
+      void updateHqOwnership(childId, { pointsBalance: result.points_balance, owned: result.owned });
       setFlash({ id: tool.id, ok: true });
     } catch {
       setFlash({ id: tool.id, ok: false });

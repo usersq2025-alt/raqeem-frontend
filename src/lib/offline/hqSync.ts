@@ -31,6 +31,26 @@ export function getCachedHqLoad(childId: number): Promise<HqStateCache | undefin
   return db.hqState.get(childId);
 }
 
+/** Refreshes just the points/ownership half of the cache after a real online purchase -
+ * buying is online-only by design (see Hq3dExperience's remote.buy comment), but the
+ * cache still needs to reflect it immediately, otherwise the next time this child opens
+ * the HQ offline, the freshly-bought tool would be missing from "owned" and the spent
+ * points would be wrong. Keeps whatever prices/layout were already cached. */
+export async function updateHqOwnership(
+  childId: number,
+  data: { pointsBalance: number; owned: Record<string, number> }
+): Promise<void> {
+  const existing = await db.hqState.get(childId);
+  await db.hqState.put({
+    childId,
+    pointsBalance: data.pointsBalance,
+    owned: data.owned,
+    prices: existing?.prices ?? {},
+    state: existing?.state ?? null,
+    updatedAt: Date.now(),
+  });
+}
+
 /** Writes the layout locally and queues it for sync. Never rejects - the 3D bundle
  * should never see a "save failed" error just because the device is offline. */
 export async function saveHqStateOffline(childId: number, state: unknown): Promise<void> {
