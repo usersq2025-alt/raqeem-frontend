@@ -174,7 +174,9 @@ export async function runBackgroundPreload(
   profession: Hq3dProfession | null,
   respectDataSaver = true
 ): Promise<void> {
-  await preloadStaticPages(respectDataSaver);
-  await preloadSubjectTree(childId, respectDataSaver);
-  if (profession) await preloadHqAssets(profession, respectDataSaver);
+  // Temporarily disabled (offline feature paused): no background preloading or cache
+  // priming. Signature kept so callers need no changes when this is turned back on.
+  void childId;
+  void profession;
+  void respectDataSaver;
 }

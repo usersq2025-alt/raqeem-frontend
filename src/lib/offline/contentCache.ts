@@ -15,7 +15,6 @@
  * actually closes that gap.
  */
 import { db } from "./db";
-import { isConnectivityError, isOnline } from "./connectivity";
 
 export class OfflineNoCacheError extends Error {
   status = 0;
@@ -33,22 +32,13 @@ export async function setCachedContent(key: string, data: unknown): Promise<void
   await db.contentCache.put({ key, data, cachedAt: Date.now() });
 }
 
-/** `fetcher` is only ever called while isOnline() is true - callers don't need to guard
- * that themselves. */
+/**
+ * Temporarily disabled (offline feature paused): always calls the real fetcher and
+ * never reads/writes the local cache, so this behaves exactly like the pre-offline
+ * direct fetch. Keeps the same signature so callers need no changes when this is
+ * turned back on later.
+ */
 export async function fetchWithCache<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
-  if (isOnline()) {
-    try {
-      const data = await fetcher();
-      void setCachedContent(key, data);
-      return data;
-    } catch (err) {
-      if (!isConnectivityError(err)) throw err;
-      const cached = await getCachedContent<T>(key);
-      if (cached !== undefined) return cached;
-      throw err;
-    }
-  }
-  const cached = await getCachedContent<T>(key);
-  if (cached !== undefined) return cached;
-  throw new OfflineNoCacheError();
+  void key;
+  return fetcher();
 }
