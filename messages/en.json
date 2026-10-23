@@ -358,7 +358,9 @@
       "emailInvalid": "Please enter a valid email address",
       "emailHint": "Example: name@gmail.com",
       "emailTaken": "This email is already registered",
+      "phoneTaken": "This number is already linked to an account. Log in instead, or reset your password if you forgot it.",
       "loginLink": "Log in",
+      "resetPasswordLink": "Reset password",
       "phoneInvalid": "Enter your WhatsApp number in international format, e.g. +963944123456",
       "passwordRequired": "Password is required",
       "passwordRules": "At least 8 characters, with uppercase, lowercase, and a number",
@@ -458,7 +460,7 @@
   },
   "forgotPassword": {
     "title": "Reset your password",
-    "subtitle": "Enter your registered email or account ID and we'll send a verification code",
+    "subtitle": "Enter your registered email, account ID, or phone number and we'll send a verification code",
     "back": "Back",
     "send": "Send",
     "sending": "Sending...",
@@ -467,9 +469,9 @@
     "signingIn": "Signing you in...",
     "newPasswordTitle": "Set a new password",
     "newPasswordSubtitle": "Choose a strong password for your account",
-    "otpHint": "If this account is registered, we sent a code to the email linked to {login}",
+    "otpHint": "If this account is registered, we sent a code to {login}",
     "fields": {
-      "login": "Registered email or account ID"
+      "login": "Email, account ID, or phone number"
     },
     "placeholders": {
       "login": "example@email.com or RQMP-XXXXXX"

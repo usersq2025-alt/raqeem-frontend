@@ -19,6 +19,7 @@ export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: 
   const [fullName, setFullName] = useState("");
   const [terms, setTerms] = useState(false);
   const [supportRequired, setSupportRequired] = useState(false);
+  const [phoneTaken, setPhoneTaken] = useState(false);
   const [binding, setBinding] = useState(false);
   const [phone, setPhone] = useState("");
   const [login, setLogin] = useState("");
@@ -50,7 +51,7 @@ export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: 
   async function requestCode(event?: FormEvent) {
     event?.preventDefault();
     if (busy || remaining > 0 || supportRequired) return;
-    setBusy(true); setError(""); setMessage("");
+    setBusy(true); setError(""); setMessage(""); setPhoneTaken(false);
     try {
       const result = await apiClient.post<{ challenge_id: string; message?: string; resend_after: number; support_required?: boolean }>(
         registering ? (challenge ? "/register/phone/resend" : "/register/phone") : "/login/sms/request",
@@ -64,7 +65,9 @@ export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: 
       setMessage(ar ? (result.message ?? "تم طلب رمز جديد. صالح لخمس دقائق.") : "If the details are valid, you will receive a code. It expires in 5 minutes.");
     } catch (e) {
       const details = e instanceof ApiError ? e.body as {retry_after?: number; support_required?: boolean; message?: string} | null : null;
-      if (details?.support_required) {
+      if (registering && e instanceof ApiError && e.status === 422 && details?.message === "PHONE_TAKEN") {
+        setPhoneTaken(true);
+      } else if (details?.support_required) {
         setSupportRequired(true);
         setError(ar ? "توقف إرسال الرموز لهذا الرقم. تواصل مع دعم رقيم لاستعادة الإرسال." : "Code requests are paused. Contact Raqeem support.");
       } else if (e instanceof ApiError && e.status === 429) {
@@ -125,12 +128,25 @@ export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: 
               icon={<PhoneIcon />}
               placeholder="09xxxxxxxx"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              invalid={phoneTaken}
+              onChange={(e) => { setPhone(e.target.value); setPhoneTaken(false); }}
               required
               maxLength={40}
               disabled={busy}
             />
           </div>
+          {phoneTaken ? (
+            <p role="alert" className="-mt-2 text-sm text-red-600">
+              {ar ? "هذا الرقم مسجّل لحساب بالفعل. " : "This number is already linked to an account. "}
+              <Link href="/login" className="font-semibold underline underline-offset-2">
+                {ar ? "تسجيل الدخول" : "Log in"}
+              </Link>
+              {ar ? " أو " : " or "}
+              <Link href="/forgot-password" className="font-semibold underline underline-offset-2">
+                {ar ? "استرجاع كلمة السر" : "reset your password"}
+              </Link>
+            </p>
+          ) : null}
           {!registering && <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={binding} onChange={(e) => setBinding(e.target.checked)} disabled={busy} />
             {ar ? "أربط رقم هاتفي بحسابي للمرة الأولى" : "Link my phone to my account for the first time"}
