@@ -55,7 +55,7 @@ export function AuthShell({
                 </Link>
               ) : null}
             </div>
-            <div className="flex justify-center">
+            <div className="flex min-w-0 justify-center overflow-hidden">
               <BrandLogo size="sm" />
             </div>
             <div className="justify-self-end">

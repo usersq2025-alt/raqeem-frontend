@@ -161,7 +161,13 @@ export function SubjectsHomeView({ child, subjects, streak }: ViewProps) {
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
           {visibleSubjects.map((subject, index) => (
-            <SubjectCard key={subject.subjectId} subject={subject} childId={child.id} index={index} />
+            <SubjectCard
+              key={subject.subjectId}
+              subject={subject}
+              childId={child.id}
+              index={index}
+              centerAlone={visibleSubjects.length % 2 === 1 && index === visibleSubjects.length - 1}
+            />
           ))}
         </div>
       </div>

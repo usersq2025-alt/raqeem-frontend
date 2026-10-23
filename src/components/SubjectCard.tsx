@@ -18,9 +18,12 @@ type Props = {
   subject: SubjectProgress;
   childId: number;
   index: number;
+  /** True when this card is the last one and would otherwise sit alone in the final
+   * row of the 2-column mobile grid (odd total count) - centers it instead. */
+  centerAlone?: boolean;
 };
 
-export function SubjectCard({ subject, childId, index }: Props) {
+export function SubjectCard({ subject, childId, index, centerAlone = false }: Props) {
   const t = useTranslations("student");
   const router = useRouter();
   const href = withChildQuery(`/subjects/${subject.subjectId}/units`, childId);
@@ -42,7 +45,7 @@ export function SubjectCard({ subject, childId, index }: Props) {
       disabled={!available}
       style={{ animationDelay: `${index * 70}ms` }}
       className={`subject-card group flex flex-col items-center rounded-[26px] px-3 pb-3.5 pt-4 text-center ${SUBJECT_TINTS[subject.key]} ${
-        index === 6 ? "col-span-2 mx-auto w-[calc(50%-0.4rem)] md:col-span-1 md:mx-0 md:w-auto" : ""
+        centerAlone ? "col-span-2 mx-auto w-[calc(50%-0.4rem)] md:col-span-1 md:mx-0 md:w-auto" : ""
       } ${available ? "cursor-pointer" : "cursor-not-allowed opacity-75"}`}
     >
       <span

@@ -59,7 +59,7 @@ export function LanguageSwitcher() {
     <Suspense
       fallback={
         <span
-          className="inline-flex h-11 w-[9.5rem] rounded-full border border-brand-navy/15 bg-white/80"
+          className="inline-flex h-11 w-20 rounded-full border border-brand-navy/15 bg-white/80 sm:w-[9.5rem]"
           aria-hidden="true"
         />
       }

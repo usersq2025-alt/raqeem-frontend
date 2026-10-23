@@ -7,6 +7,8 @@ import { apiClient, ApiError } from "@/lib/api/client";
 import { fetchOtpChannels, type VerifyOtpResult } from "@/lib/api/auth";
 import { persistSession } from "@/lib/auth/persistSession";
 import { Button } from "@/components/ui/Button";
+import { FieldInput, MailIcon, PhoneIcon, UserIcon } from "@/components/ui/FieldInput";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: { mode?: "login" | "register"; channelAvailable?: boolean }) {
   const registering = mode === "register";
@@ -88,7 +90,6 @@ export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: 
   }
 
   if (!enabled) return null;
-  const inputClass = "w-full rounded-xl border border-gray-300 bg-white px-3 py-3 text-text-navy";
   return (
     <section className="mt-6 rounded-2xl border border-gray-200 p-4">
       <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="w-full font-bold text-text-navy">
@@ -96,12 +97,40 @@ export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: 
       </button>
       {open && <div className="mt-4 space-y-4">
         {!challenge ? <form onSubmit={requestCode} className="space-y-4">
-          {registering && <label className="block text-sm">{ar ? "اسم ولي الأمر" : "Parent name"}
-            <input className={inputClass} autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required minLength={3} maxLength={120} disabled={busy} />
-          </label>}
-          <label className="block text-sm">{ar ? "رقم الهاتف السوري" : "Syrian mobile number"}
-            <input className={inputClass} type="tel" dir="ltr" autoComplete="tel" placeholder="09xxxxxxxx" value={phone} onChange={(e) => setPhone(e.target.value)} required maxLength={40} disabled={busy} />
-          </label>
+          {registering && <div>
+            <label htmlFor="sms-full-name" className="mb-1.5 block text-start text-sm font-semibold text-text-gray">{ar ? "اسم ولي الأمر" : "Parent name"}</label>
+            <FieldInput
+              id="sms-full-name"
+              name="fullName"
+              variant="soft"
+              autoComplete="name"
+              icon={<UserIcon />}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              minLength={3}
+              maxLength={120}
+              disabled={busy}
+            />
+          </div>}
+          <div>
+            <label htmlFor="sms-phone" className="mb-1.5 block text-start text-sm font-semibold text-text-gray">{ar ? "رقم الهاتف السوري" : "Syrian mobile number"}</label>
+            <FieldInput
+              id="sms-phone"
+              name="phone"
+              variant="soft"
+              type="tel"
+              dir="ltr"
+              autoComplete="tel"
+              icon={<PhoneIcon />}
+              placeholder="09xxxxxxxx"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              maxLength={40}
+              disabled={busy}
+            />
+          </div>
           {!registering && <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={binding} onChange={(e) => setBinding(e.target.checked)} disabled={busy} />
             {ar ? "أربط رقم هاتفي بحسابي للمرة الأولى" : "Link my phone to my account for the first time"}
@@ -109,25 +138,45 @@ export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: 
           {(binding || registering) && <>
             {!registering && <>
             <p className="text-sm text-text-gray">{ar ? "أدخل بيانات حسابك الحالي مرة واحدة، ثم تحقق برسالة الهاتف. لن تحتاج رمز بريد إلكتروني." : "Enter your current account details once, then verify by SMS. No email code is needed."}</p>
-            <label className="block text-sm">{ar ? "البريد أو معرّف الحساب RQMP" : "Email or RQMP account ID"}
-              <input className={inputClass} autoComplete="username" value={login} onChange={(e) => setLogin(e.target.value)} required disabled={busy} />
-            </label>
+            <div>
+              <label htmlFor="sms-login" className="mb-1.5 block text-start text-sm font-semibold text-text-gray">{ar ? "البريد أو معرّف الحساب RQMP" : "Email or RQMP account ID"}</label>
+              <FieldInput
+                id="sms-login"
+                name="login"
+                variant="soft"
+                autoComplete="username"
+                icon={<MailIcon />}
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
+                required
+                disabled={busy}
+              />
+            </div>
             </>}
-            <label className="block text-sm">{ar ? "كلمة سر الحساب" : "Account password"}
-              <input className={inputClass} type="password" autoComplete={registering ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={registering ? 8 : undefined} maxLength={255} disabled={busy} />
-            </label>
+            <div>
+              <label htmlFor="sms-password" className="mb-1.5 block text-start text-sm font-semibold text-text-gray">{ar ? "كلمة سر الحساب" : "Account password"}</label>
+              <PasswordInput
+                id="sms-password"
+                name="password"
+                variant="soft"
+                value={password}
+                placeholder={ar ? "كلمة السر" : "Password"}
+                autoComplete={registering ? "new-password" : "current-password"}
+                showStrength={registering}
+                onChange={setPassword}
+              />
+            </div>
           </>}
           {registering && <>
-            <p className="text-xs text-text-gray">{ar ? "كلمة السر: 8 أحرف على الأقل، مع حرف كبير وصغير ورقم. لا نطلب بريدًا إلكترونيًا." : "Password: 8+ characters with upper/lowercase letters and a digit. No email required."}</p>
             <label className="flex gap-2 text-sm"><input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} required /><span>{ar ? "أوافق على " : "I agree to the "}<Link href="/terms" target="_blank" className="underline">{ar ? "شروط الاستخدام" : "terms"}</Link>{ar ? " و" : " and "}<Link href="/privacy" target="_blank" className="underline">{ar ? "سياسة الخصوصية" : "privacy policy"}</Link></span></label>
           </>}
           <Button type="submit" fullWidth disabled={busy || remaining > 0 || supportRequired}>{busy ? (ar ? "جارٍ الإرسال…" : "Sending…") : remaining > 0 ? `${remaining}s` : (ar ? "إرسال رمز التحقق" : "Send verification code")}</Button>
         </form> : <form onSubmit={verify} className="space-y-4">
           <p className="text-sm" dir="ltr">{phone}</p>
           <label className="block text-sm">{ar ? "رمز الرسالة — صالح لخمس دقائق" : "SMS code — valid for 5 minutes"}
-            <input className={inputClass} dir="ltr" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value.replace(/[٠-٩۰-۹]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".includes(d) ? "٠١٢٣٤٥٦٧٨٩".indexOf(d) : "۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/\D/g, "").slice(0, 6))} required pattern="[0-9]{6}" maxLength={6} disabled={busy} />
+            <input className="w-full rounded-xl border border-gray-300 bg-white px-3 py-3 text-text-navy" dir="ltr" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value.replace(/[٠-٩۰-۹]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".includes(d) ? "٠١٢٣٤٥٦٧٨٩".indexOf(d) : "۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/\D/g, "").slice(0, 4))} required pattern="[0-9]{4}" maxLength={4} disabled={busy} />
           </label>
-          <Button type="submit" fullWidth disabled={busy || code.length !== 6}>{busy ? (ar ? "جارٍ التحقق…" : "Verifying…") : (ar ? "تحقق وادخل" : "Verify and sign in")}</Button>
+          <Button type="submit" fullWidth disabled={busy || code.length !== 4}>{busy ? (ar ? "جارٍ التحقق…" : "Verifying…") : (ar ? "تحقق وادخل" : "Verify and sign in")}</Button>
           <button type="button" disabled={busy || remaining > 0 || supportRequired} onClick={() => void requestCode()} className="text-sm text-primary-orange disabled:opacity-50">{remaining > 0 ? (ar ? `إعادة الإرسال بعد ${remaining} ثانية` : `Resend in ${remaining}s`) : (ar ? "إعادة إرسال الرمز" : "Resend code")}</button>
           <button type="button" disabled={busy} onClick={() => { setChallenge(""); setMessage(""); setError(""); setCode(""); setSupportRequired(false); }} className="mx-3 text-sm underline">{ar ? "تغيير الرقم أو بيانات الحساب" : "Change number or account details"}</button>
         </form>}
