@@ -339,15 +339,9 @@
       "show": "Show password",
       "hide": "Hide password",
       "rulesTitle": "Your password must include:",
-      "length": "At least 8 characters",
-      "lower": "A lowercase English letter (a–z)",
-      "upper": "An uppercase English letter (A–Z)",
-      "digit": "At least one number (0–9)",
+      "length": "At least 8 characters, in whatever language is easiest for you",
       "short": {
-        "length": "8 characters",
-        "upper": "Uppercase",
-        "lower": "Lowercase",
-        "digit": "Number"
+        "length": "8+ characters"
       }
     },
     "errors": {
@@ -363,7 +357,7 @@
       "resetPasswordLink": "Reset password",
       "phoneInvalid": "Enter your WhatsApp number in international format, e.g. +963944123456",
       "passwordRequired": "Password is required",
-      "passwordRules": "At least 8 characters, with uppercase, lowercase, and a number",
+      "passwordRules": "At least 8 characters (Arabic, English, numbers -- whatever's easiest)",
       "confirmRequired": "Please confirm your password",
       "confirmMismatch": "Passwords do not match",
       "termsRequired": "You must accept the terms and conditions",

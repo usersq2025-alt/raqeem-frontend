@@ -7,6 +7,7 @@ import { PasswordInput } from "@/components/ui/PasswordInput";
 import { changeParentPassword } from "@/lib/api/parentAccount";
 import { clearGuardianPin, getGuardianStatus, setGuardianPin } from "@/lib/api/guardian";
 import type { ParentAccount } from "@/lib/api/parentAccount";
+import { isPasswordStrong } from "@/lib/validation/registerSchema";
 import { CardShell, SectionIntro } from "./SettingsUi";
 
 type Props = {
@@ -33,11 +34,8 @@ export function SecuritySection({ account, onAccount, onSaved, onLogout }: Props
   const pinSet = Boolean(account?.pinSet);
   const pwValid =
     pwCurrent.length > 0 &&
-    pwNew.length >= 8 &&
     pwNew === pwConfirm &&
-    /[a-z]/.test(pwNew) &&
-    /[A-Z]/.test(pwNew) &&
-    /\d/.test(pwNew);
+    isPasswordStrong(pwNew);
 
   return (
     <div className="space-y-4">
