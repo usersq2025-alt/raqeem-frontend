@@ -151,18 +151,20 @@ export function CareerSelectionExperience({ childId, gender }: Props) {
       {step === "generating" ? <GeneratingOverlay lines={generatingLines} /> : null}
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col px-5 py-5 md:max-w-6xl md:px-8 md:py-8">
-        <header className="relative mb-6 flex items-center justify-center">
+        <header className="mb-6 grid grid-cols-[auto_1fr_auto] items-center gap-3">
           <Link
             href="/children"
-            className="absolute start-0 flex h-10 w-10 items-center justify-center rounded-full text-text-navy hover:bg-neutral-100"
+            className="justify-self-start flex h-10 w-10 items-center justify-center rounded-full text-text-navy hover:bg-neutral-100"
             aria-label={t("back")}
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5 rtl:rotate-180" fill="none" aria-hidden="true">
               <path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           </Link>
-          <BrandLogo size="sm" />
-          <div className="absolute end-0">
+          <div className="flex min-w-0 justify-center overflow-hidden">
+            <BrandLogo size="sm" />
+          </div>
+          <div className="justify-self-end">
             <LanguageSwitcher />
           </div>
         </header>

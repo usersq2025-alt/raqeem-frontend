@@ -26,10 +26,10 @@ export function RegisterExperience() {
 
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-center px-5 py-8 sm:px-6 md:max-w-none md:items-center md:px-6 md:py-10">
         <article className="register-form-card mx-auto w-full max-w-[440px]">
-          <header className="relative mb-6 flex items-center justify-center">
+          <header className="mb-6 grid grid-cols-[auto_1fr_auto] items-center gap-3">
             <Link
               href="/"
-              className="absolute start-0 flex h-10 w-10 items-center justify-center rounded-full text-text-navy transition-colors hover:bg-neutral-100"
+              className="justify-self-start flex h-10 w-10 items-center justify-center rounded-full text-text-navy transition-colors hover:bg-neutral-100"
               aria-label={t("back")}
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5 rtl:rotate-180" fill="none" aria-hidden="true">
@@ -42,8 +42,10 @@ export function RegisterExperience() {
                 />
               </svg>
             </Link>
-            <BrandLogo size="sm" />
-            <div className="absolute end-0">
+            <div className="flex min-w-0 justify-center overflow-hidden">
+              <BrandLogo size="sm" />
+            </div>
+            <div className="justify-self-end">
               <LanguageSwitcher />
             </div>
           </header>
