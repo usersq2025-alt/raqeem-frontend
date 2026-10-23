@@ -9,6 +9,14 @@ import { persistSession } from "@/lib/auth/persistSession";
 import { Button } from "@/components/ui/Button";
 import { FieldInput, MailIcon, PhoneIcon, UserIcon } from "@/components/ui/FieldInput";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import {
+  clearPhoneChallenge,
+  clearPhoneRegisterDraft,
+  loadPhoneChallenge,
+  loadPhoneRegisterDraft,
+  savePhoneChallenge,
+  savePhoneRegisterDraft,
+} from "@/lib/registerDraft";
 
 export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: { mode?: "login" | "register"; channelAvailable?: boolean }) {
   const registering = mode === "register";
@@ -31,6 +39,7 @@ export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: 
   const [error, setError] = useState("");
   const [retryAt, setRetryAt] = useState(0);
   const [remaining, setRemaining] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     if (channelAvailable) return;
@@ -40,6 +49,33 @@ export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: 
     }).catch(() => {});
     return () => { active = false; };
   }, [channelAvailable]);
+
+  // Leaving the page (or the mobile browser reclaiming the tab) must not force the
+  // parent to redo everything: restore any in-progress phone signup on remount.
+  useEffect(() => {
+    if (!registering) return;
+    void (async () => {
+      await Promise.resolve();
+      const pendingChallenge = loadPhoneChallenge();
+      if (pendingChallenge) {
+        setChallenge(pendingChallenge.challengeId);
+        setPhone(pendingChallenge.phone);
+        setRetryAt(pendingChallenge.retryAt);
+      } else {
+        const draft = loadPhoneRegisterDraft();
+        if (draft) {
+          setFullName(draft.fullName);
+          setPhone(draft.phone);
+        }
+      }
+      setHydrated(true);
+    })();
+  }, [registering]);
+
+  useEffect(() => {
+    if (!registering || !hydrated || challenge) return;
+    savePhoneRegisterDraft({ fullName, phone });
+  }, [registering, hydrated, fullName, phone, challenge]);
 
   useEffect(() => {
     const tick = () => setRemaining(Math.max(0, Math.ceil((retryAt - Date.now()) / 1000)));
@@ -59,9 +95,13 @@ export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: 
         { signal: AbortSignal.timeout(25_000) },
       );
       setChallenge(result.challenge_id); setCode("");
-      setRetryAt(Date.now() + result.resend_after * 1000);
+      const nextRetryAt = Date.now() + result.resend_after * 1000;
+      setRetryAt(nextRetryAt);
       setSupportRequired(Boolean(result.support_required));
-      if (registering) setPassword("");
+      if (registering) {
+        setPassword("");
+        savePhoneChallenge({ challengeId: result.challenge_id, phone, retryAt: nextRetryAt });
+      }
       setMessage(ar ? (result.message ?? "تم طلب رمز جديد. صالح لخمس دقائق.") : "If the details are valid, you will receive a code. It expires in 5 minutes.");
     } catch (e) {
       const details = e instanceof ApiError ? e.body as {retry_after?: number; support_required?: boolean; message?: string} | null : null;
@@ -85,6 +125,7 @@ export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: 
     setBusy(true); setError("");
     try {
       const result = await apiClient.post<VerifyOtpResult>("/login/sms/verify", { challenge_id: challenge, code });
+      if (registering) { clearPhoneRegisterDraft(); clearPhoneChallenge(); }
       await persistSession(result.token, result.parent);
       router.replace(registering ? "/account-success" : "/children");
     } catch {
@@ -194,7 +235,7 @@ export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: 
           </label>
           <Button type="submit" fullWidth disabled={busy || code.length !== 4}>{busy ? (ar ? "جارٍ التحقق…" : "Verifying…") : (ar ? "تحقق وادخل" : "Verify and sign in")}</Button>
           <button type="button" disabled={busy || remaining > 0 || supportRequired} onClick={() => void requestCode()} className="text-sm text-primary-orange disabled:opacity-50">{remaining > 0 ? (ar ? `إعادة الإرسال بعد ${remaining} ثانية` : `Resend in ${remaining}s`) : (ar ? "إعادة إرسال الرمز" : "Resend code")}</button>
-          <button type="button" disabled={busy} onClick={() => { setChallenge(""); setMessage(""); setError(""); setCode(""); setSupportRequired(false); }} className="mx-3 text-sm underline">{ar ? "تغيير الرقم أو بيانات الحساب" : "Change number or account details"}</button>
+          <button type="button" disabled={busy} onClick={() => { if (registering) clearPhoneChallenge(); setChallenge(""); setMessage(""); setError(""); setCode(""); setSupportRequired(false); }} className="mx-3 text-sm underline">{ar ? "تغيير الرقم أو بيانات الحساب" : "Change number or account details"}</button>
         </form>}
         {message && <p role="status" className="text-sm text-text-gray">{message}</p>}
         {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
