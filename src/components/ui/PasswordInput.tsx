@@ -24,7 +24,7 @@ type Props = {
   onBlur?: () => void;
 };
 
-const RULE_ORDER: PasswordRuleId[] = ["length"];
+const RULE_ORDER: PasswordRuleId[] = ["length", "upper", "lower", "digit"];
 
 export function PasswordInput({
   id,

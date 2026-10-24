@@ -7,7 +7,7 @@ import { PasswordInput } from "@/components/ui/PasswordInput";
 import { changeParentPassword } from "@/lib/api/parentAccount";
 import { clearGuardianPin, getGuardianStatus, setGuardianPin } from "@/lib/api/guardian";
 import type { ParentAccount } from "@/lib/api/parentAccount";
-import { isPasswordStrong } from "@/lib/validation/registerSchema";
+import { isPasswordStrong, MIN_PASSWORD_LENGTH } from "@/lib/validation/registerSchema";
 import { CardShell, SectionIntro } from "./SettingsUi";
 
 type Props = {
@@ -65,7 +65,7 @@ export function SecuritySection({ account, onAccount, onSaved, onLogout }: Props
           onChange={setPwNew}
           autoComplete="new-password"
         />
-        {pwNew && pwNew.length < 8 ? (
+        {pwNew && pwNew.length < MIN_PASSWORD_LENGTH ? (
           <p className="mt-1 text-xs font-semibold text-red-600">{t("security.passwordMin")}</p>
         ) : null}
         <label className="mt-3 block text-sm font-semibold" htmlFor="confirm-pw">

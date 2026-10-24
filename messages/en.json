@@ -338,10 +338,16 @@
       "strong": "Strong",
       "show": "Show password",
       "hide": "Hide password",
-      "rulesTitle": "Your password must include:",
-      "length": "At least 8 characters, in whatever language is easiest for you",
+      "rulesTitle": "Your password is stronger with:",
+      "length": "At least 8 characters",
+      "lower": "A lowercase English letter (a–z)",
+      "upper": "An uppercase English letter (A–Z)",
+      "digit": "At least one number (0–9)",
       "short": {
-        "length": "8+ characters"
+        "length": "8 characters",
+        "upper": "Uppercase",
+        "lower": "Lowercase",
+        "digit": "Number"
       }
     },
     "errors": {
@@ -357,7 +363,7 @@
       "resetPasswordLink": "Reset password",
       "phoneInvalid": "Enter your WhatsApp number in international format, e.g. +963944123456",
       "passwordRequired": "Password is required",
-      "passwordRules": "At least 8 characters (Arabic, English, numbers -- whatever's easiest)",
+      "passwordRules": "At least 6 characters",
       "confirmRequired": "Please confirm your password",
       "confirmMismatch": "Passwords do not match",
       "termsRequired": "You must accept the terms and conditions",
@@ -1381,7 +1387,7 @@
       "panelTitle": "Security and access",
       "panelLead": "Protect your account and control the return from child space to parent mode.",
       "confirmPassword": "Confirm new password",
-      "passwordMin": "At least 8 characters.",
+      "passwordMin": "At least 6 characters.",
       "passwordMismatch": "Passwords do not match.",
       "pinMissing": "PIN protection is off (optional)",
       "pinActive": "Parent PIN is active",

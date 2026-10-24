@@ -25,25 +25,31 @@ export function isValidEmail(value: string): boolean {
   return EMAIL_PATTERN.test(email);
 }
 
-/** Only length is enforced -- parents can use whatever characters (including Arabic)
- * are easiest for them to remember. */
-export type PasswordRuleId = "length";
+/** The checklist still shows the ideal (8 chars, upper/lower/digit) as guidance, but
+ * nothing below is actually required to submit -- only MIN_PASSWORD_LENGTH is enforced,
+ * so a parent who prefers something simpler (or in Arabic) isn't blocked. */
+export const MIN_PASSWORD_LENGTH = 6;
+
+export type PasswordRuleId = "length" | "lower" | "upper" | "digit";
 
 export function getPasswordRules(password: string): Record<PasswordRuleId, boolean> {
   return {
     length: password.length >= 8,
+    lower: /[a-z]/.test(password),
+    upper: /[A-Z]/.test(password),
+    digit: /\d/.test(password),
   };
 }
 
 export function getPasswordStrength(password: string): 0 | 1 | 2 | 3 {
-  if (password.length < 8) return 0;
-  if (password.length >= 16) return 3;
-  if (password.length >= 12) return 2;
-  return 1;
+  if (!password) return 0;
+  const rules = getPasswordRules(password);
+  const met = [rules.length, rules.lower && rules.upper, rules.digit].filter(Boolean).length;
+  return met as 0 | 1 | 2 | 3;
 }
 
 export function isPasswordStrong(password: string): boolean {
-  return getPasswordRules(password).length;
+  return password.length >= MIN_PASSWORD_LENGTH;
 }
 
 type SchemaMessages = {
