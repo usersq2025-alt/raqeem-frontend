@@ -235,7 +235,7 @@ export function SmsPhoneLoginForm({ mode = "login", channelAvailable = false }: 
           </label>
           <Button type="submit" fullWidth disabled={busy || code.length !== 4}>{busy ? (ar ? "جارٍ التحقق…" : "Verifying…") : (ar ? "تحقق وادخل" : "Verify and sign in")}</Button>
           <button type="button" disabled={busy || remaining > 0 || supportRequired} onClick={() => void requestCode()} className="text-sm text-primary-orange disabled:opacity-50">{remaining > 0 ? (ar ? `إعادة الإرسال بعد ${remaining} ثانية` : `Resend in ${remaining}s`) : (ar ? "إعادة إرسال الرمز" : "Resend code")}</button>
-          <button type="button" disabled={busy} onClick={() => { if (registering) clearPhoneChallenge(); setChallenge(""); setMessage(""); setError(""); setCode(""); setSupportRequired(false); }} className="mx-3 text-sm underline">{ar ? "تغيير الرقم أو بيانات الحساب" : "Change number or account details"}</button>
+          <button type="button" disabled={busy} onClick={() => { if (registering) clearPhoneChallenge(); setChallenge(""); setMessage(""); setError(""); setCode(""); setSupportRequired(false); setRetryAt(0); }} className="mx-3 text-sm underline">{ar ? "تغيير الرقم أو بيانات الحساب" : "Change number or account details"}</button>
         </form>}
         {message && <p role="status" className="text-sm text-text-gray">{message}</p>}
         {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
