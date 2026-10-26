@@ -23,7 +23,7 @@ export function AuthShell({
   const showBack = !hideBack && backHref && backLabel;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background-white">
+    <div data-auth-buttons className="relative min-h-screen overflow-x-hidden bg-background-white">
       <div className="pointer-events-none absolute inset-0 hidden md:block" aria-hidden="true">
         <div className="absolute -start-24 top-10 h-72 w-72 rounded-full bg-violet-200/50 blur-3xl" />
         <div className="absolute -end-16 top-32 h-80 w-80 rounded-full bg-sky-200/45 blur-3xl" />

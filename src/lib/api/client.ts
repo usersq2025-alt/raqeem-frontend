@@ -2,7 +2,9 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status: number,
-    public readonly body: unknown = null
+    public readonly body: unknown = null,
+    /** Seconds from a Retry-After header (rate-limit responses carry no JSON hint). */
+    public readonly retryAfter: number | null = null
   ) {
     super(message);
     this.name = "ApiError";
@@ -47,7 +49,8 @@ async function request<T>(
         (payload && typeof payload === "object" && "message" in payload
           ? String((payload as { message: unknown }).message)
           : null) || `API error: ${response.status} ${response.statusText}`;
-      throw new ApiError(message, response.status, payload);
+      const retryAfter = Number(response.headers.get("Retry-After"));
+      throw new ApiError(message, response.status, payload, Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : null);
     }
 
     return payload as T;

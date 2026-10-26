@@ -199,6 +199,35 @@ html[data-raqeem-font="ruqaa"] .text-3xl { font-size: 2.25rem; }
   }
 }
 
+/* Button colours.
+   Outside the auth screens the original look is unchanged (white text on brand orange).
+   Inside [data-auth-buttons] (login, sign-up, verification, forgot-password, success) the
+   primary and secondary buttons use brand orange with brand navy text (5.5:1 or better).
+   .btn-sticker-navy is the secondary-state variant: brand navy fill with the orange ring
+   (white on navy is 14.2:1). Extending the auth look to lessons, store and settings needs a
+   visual review of those screens first. */
+:root {
+  --btn-bg-top: #ff9a4a;
+  --btn-bg: #f48232;
+  --btn-fg: #1a2b47;
+  --btn-off-bg: #fde6d3;
+  --btn-off-fg: #4d5c75;
+  --btn-off-ring: #f7c9a5;
+  --btn-focus: #1a2b47;
+}
+
+[data-auth-buttons] {
+  --btn-bg: #f48232;
+  --btn-bg-hover: #ff9a4a;
+  --btn-fg: #1a2b47;
+  --btn-ring: #f48232;
+  --btn-edge: #d9651a;
+  --btn-off-bg: #fde6d3;
+  --btn-off-fg: #4d5c75;
+  --btn-off-ring: #f7c9a5;
+  --btn-off-edge: #f0b48a;
+}
+
 @layer components {
   .btn-sticker {
     border: 3px solid #ffffff;
@@ -248,6 +277,87 @@ html[data-raqeem-font="ruqaa"] .text-3xl { font-size: 2.25rem; }
   }
 }
 
+/* Themed overrides: unlayered, so they win over the utility classes on <Button>. */
+[data-auth-buttons] .btn-sticker {
+  background-color: var(--btn-bg);
+  color: var(--btn-fg);
+  box-shadow:
+    0 0 0 2.5px var(--btn-ring),
+    0 5px 0 var(--btn-edge);
+}
+
+[data-auth-buttons] .btn-sticker:hover {
+  background-color: var(--btn-bg-hover);
+  filter: none;
+}
+
+[data-auth-buttons] .btn-sticker:active {
+  box-shadow:
+    0 0 0 2.5px var(--btn-ring),
+    0 1px 0 var(--btn-edge);
+}
+
+[data-auth-buttons] .btn-sticker-secondary {
+  color: #1a2b47;
+}
+
+[data-auth-buttons] .btn-sticker-secondary:hover {
+  background-color: #fff1e6;
+  filter: none;
+}
+
+[data-auth-buttons] :is(.btn-sticker, .btn-sticker-secondary):disabled {
+  opacity: 1;
+  background-color: var(--btn-off-bg);
+  color: var(--btn-off-fg);
+  box-shadow:
+    0 0 0 2.5px var(--btn-off-ring),
+    0 2px 0 var(--btn-off-edge);
+}
+
+[data-auth-buttons] :is(.btn-sticker, .btn-sticker-secondary):focus-visible {
+  outline: 3px solid var(--btn-focus);
+  outline-offset: 4px;
+}
+
+/* Option B as a stand-alone variant: for a secondary-state action that must not compete
+   with the screen's orange primary button (white on navy is 14.2:1). */
+.btn-sticker-navy {
+  border: 3px solid #ffffff;
+  background-color: #1a2b47;
+  color: #ffffff;
+  box-shadow:
+    0 0 0 2.5px #f48232,
+    0 4px 0 #0f1b30;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background-color 0.12s ease;
+}
+
+.btn-sticker-navy:hover {
+  background-color: #2a4470;
+}
+
+.btn-sticker-navy:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 0 0 2.5px #f48232,
+    0 1px 0 #0f1b30;
+}
+
+.btn-sticker-navy:disabled {
+  background-color: #e3e9f4;
+  color: #4a5a75;
+  box-shadow:
+    0 0 0 2.5px #c5cfe3,
+    0 2px 0 #b3bfd6;
+}
+
+.btn-sticker-navy:focus-visible {
+  outline: 3px solid #1a2b47;
+  outline-offset: 4px;
+}
 @keyframes otp-spin {
   to {
     transform: rotate(360deg);
@@ -1335,8 +1445,8 @@ html[data-raqeem-font="ruqaa"] .text-3xl { font-size: 2.25rem; }
   padding: 0.95rem 1.85rem;
   font-size: 1.05rem;
   font-weight: 800;
-  color: #ffffff;
-  background: linear-gradient(180deg, #ff9a4a 0%, #f48232 52%, #e56e1c 100%);
+  color: var(--btn-fg);
+  background: linear-gradient(180deg, var(--btn-bg-top) 0%, var(--btn-bg) 100%);
   box-shadow:
     0 10px 24px -8px rgba(244, 130, 50, 0.55),
     0 2px 8px -2px rgba(26, 43, 71, 0.12);
@@ -1358,13 +1468,20 @@ html[data-raqeem-font="ruqaa"] .text-3xl { font-size: 2.25rem; }
   transform: translateY(1px);
 }
 
+.hero-cta:focus-visible {
+  outline: 3px solid var(--btn-focus);
+  outline-offset: 3px;
+}
+
 .hero-cta:disabled {
-  opacity: 0.45;
+  cursor: not-allowed;
+  color: var(--btn-off-fg);
+  background: var(--btn-off-bg);
+  box-shadow: inset 0 0 0 2px var(--btn-off-ring);
   pointer-events: none;
   transform: none;
   filter: none;
 }
-
 .register-submit.hero-cta {
   width: 100%;
   max-width: none;

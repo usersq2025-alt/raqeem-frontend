@@ -1,16 +1,18 @@
 import type { ComponentProps } from "react";
 import { Link } from "@/i18n/navigation";
 
-type ButtonVariant = "primary" | "secondary";
+type ButtonVariant = "primary" | "secondary" | "navy";
 
 const baseClass =
   "inline-flex w-full items-center justify-center gap-2.5 rounded-full px-6 py-3.5 text-base font-bold disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-45 disabled:shadow-none";
 
+// Inside auth screens ([data-auth-buttons]) globals.css restyles primary/secondary with the
+// approved navy-on-orange colours; elsewhere these classes are the original look.
 const variants: Record<ButtonVariant, string> = {
   primary: "btn-sticker bg-primary-orange text-white",
   secondary: "btn-sticker-secondary bg-white text-primary-orange",
+  navy: "btn-sticker-navy disabled:opacity-100",
 };
-
 type CommonProps = {
   variant?: ButtonVariant;
   children: React.ReactNode;

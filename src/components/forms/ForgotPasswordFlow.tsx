@@ -16,6 +16,7 @@ import {
 import { persistSession } from "@/lib/auth/persistSession";
 import { isPasswordStrong } from "@/lib/validation/registerSchema";
 import { maskEmail } from "@/lib/utils/maskEmail";
+import { normalizeSyrianPhone } from "@/lib/auth/phoneAuth";
 
 type Step = 1 | 2 | 3 | 4;
 type OtpStatus = "idle" | "invalid" | "expired" | "network";
@@ -59,6 +60,7 @@ function displayLogin(value: string) {
 export function ForgotPasswordFlow() {
   const t = useTranslations("forgotPassword");
   const tOtp = useTranslations("otp");
+  const tp = useTranslations("phoneAuth");
   const tRegister = useTranslations("register");
   const router = useRouter();
 
@@ -81,6 +83,8 @@ export function ForgotPasswordFlow() {
   const remaining = issuedAt ? Math.max(0, issuedAt + OTP_TTL_MS - now) : OTP_TTL_MS;
   const locallyExpired = issuedAt !== null && remaining <= 0;
   const canResend = locallyExpired || otpStatus === "expired";
+  const expired = canResend;
+  const phoneLogin = normalizeSyrianPhone(login) !== null;
   const passwordReady =
     isPasswordStrong(password) && confirmPassword.length > 0 && password === confirmPassword;
 
@@ -158,7 +162,7 @@ export function ForgotPasswordFlow() {
 
   function goToPassword(event: FormEvent) {
     event.preventDefault();
-    if (code.length !== OTP_LENGTH) return;
+    if (code.length !== OTP_LENGTH || expired) return;
     setPasswordError("");
     setStep(3);
   }
@@ -260,10 +264,14 @@ export function ForgotPasswordFlow() {
       {step === 2 ? (
         <form className="mt-6" onSubmit={goToPassword}>
           <h1 className="text-center text-2xl font-extrabold text-text-navy md:text-[1.7rem]">
-            {tOtp("title")}
+            {tp("code.title")}
           </h1>
           <p className="mt-2 text-center text-sm leading-6 text-text-gray">
-            {t("otpHint", { login: displayLogin(login) })}
+            {phoneLogin ? (
+              <>{tp("code.resetHintPhone")} <bdi dir="ltr" className="font-extrabold text-text-navy">{login.trim()}</bdi></>
+            ) : (
+              t("otpHint", { login: displayLogin(login) })
+            )}
           </p>
           <div className="mt-8">
             <OtpInput
@@ -275,7 +283,7 @@ export function ForgotPasswordFlow() {
               }}
               error={otpStatus === "invalid"}
               shake={shake}
-              disabled={submitting}
+              disabled={submitting || expired}
               describedBy={otpError ? "reset-otp-feedback" : "reset-otp-timer"}
               groupLabel={tOtp("groupLabel")}
               digitLabel={(n) => tOtp("digitLabel", { n })}
@@ -314,20 +322,21 @@ export function ForgotPasswordFlow() {
               {locallyExpired ? tOtp("timerExpired") : tOtp("timer", { time: formatRemaining(remaining) })}
             </span>
           </div>
-          <div className="mt-3 text-center">
-            <button
-              type="button"
-              onClick={handleResend}
-              disabled={!canResend || resending}
-              className="text-sm font-bold text-primary-orange disabled:cursor-not-allowed disabled:text-neutral-400"
-            >
-              {resending ? tOtp("resending") : tOtp("resend")}
-            </button>
-          </div>
-          <div className="mt-8">
-            <Button type="submit" fullWidth disabled={code.length !== OTP_LENGTH}>
-              {tOtp("confirm")}
-            </Button>
+          <div className="mt-6 flex flex-col gap-3">
+            {expired ? (
+              <>
+                <Button type="button" fullWidth disabled={resending} aria-busy={resending} onClick={handleResend}>
+                  {resending ? tOtp("resending") : tp("code.sendNew")}
+                </Button>
+                <Button type="submit" variant="secondary" fullWidth disabled>
+                  {tOtp("confirm")}
+                </Button>
+              </>
+            ) : (
+              <Button type="submit" fullWidth disabled={code.length !== OTP_LENGTH}>
+                {tOtp("confirm")}
+              </Button>
+            )}
           </div>
         </form>
       ) : null}

@@ -70,7 +70,12 @@ export function clearRegisterDraft(): void {
 }
 
 const PHONE_DRAFT_KEY = "raqeem.register.phoneDraft.v1";
-const PHONE_CHALLENGE_KEY = "raqeem.register.phoneChallenge.v1";
+const PHONE_CHALLENGE_KEYS = {
+  register: "raqeem.register.phoneChallenge.v1",
+  login: "raqeem.login.phoneChallenge.v1",
+} as const;
+
+export type ChallengeScope = keyof typeof PHONE_CHALLENGE_KEYS;
 
 export type PhoneRegisterDraft = { fullName: string; phone: string };
 
@@ -109,12 +114,12 @@ export function clearPhoneRegisterDraft(): void {
 /** The pending registration challenge survives a reload/backgrounded tab so leaving
  * the page after a code was sent doesn't force the parent to start over. The code
  * itself is never stored here -- only its identifier. */
-export type PhoneChallengeDraft = { challengeId: string; phone: string; retryAt: number };
+export type PhoneChallengeDraft = { challengeId: string; phone: string; retryAt: number; issuedAt?: number; binding?: boolean };
 
-export function loadPhoneChallenge(): PhoneChallengeDraft | null {
+export function loadPhoneChallenge(scope: ChallengeScope = "register"): PhoneChallengeDraft | null {
   if (!canUseStorage("sessionStorage")) return null;
   try {
-    const raw = window.sessionStorage.getItem(PHONE_CHALLENGE_KEY);
+    const raw = window.sessionStorage.getItem(PHONE_CHALLENGE_KEYS[scope]);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<PhoneChallengeDraft>;
     if (typeof parsed.challengeId !== "string" || !parsed.challengeId) return null;
@@ -122,25 +127,77 @@ export function loadPhoneChallenge(): PhoneChallengeDraft | null {
       challengeId: parsed.challengeId,
       phone: typeof parsed.phone === "string" ? parsed.phone : "",
       retryAt: typeof parsed.retryAt === "number" ? parsed.retryAt : 0,
+      issuedAt: typeof parsed.issuedAt === "number" ? parsed.issuedAt : undefined,
+      binding: parsed.binding === true,
     };
   } catch {
     return null;
   }
 }
 
-export function savePhoneChallenge(draft: PhoneChallengeDraft): void {
+export function savePhoneChallenge(draft: PhoneChallengeDraft, scope: ChallengeScope = "register"): void {
   if (!canUseStorage("sessionStorage")) return;
   try {
-    window.sessionStorage.setItem(PHONE_CHALLENGE_KEY, JSON.stringify(draft));
+    window.sessionStorage.setItem(PHONE_CHALLENGE_KEYS[scope], JSON.stringify(draft));
   } catch {
     /* private mode / quota */
   }
 }
 
-export function clearPhoneChallenge(): void {
+export function clearPhoneChallenge(scope: ChallengeScope = "register"): void {
   try {
-    window.sessionStorage.removeItem(PHONE_CHALLENGE_KEY);
+    window.sessionStorage.removeItem(PHONE_CHALLENGE_KEYS[scope]);
   } catch {
     /* ignore */
+  }
+}
+
+const PENDING_LOGIN_KEY = "raqeem.login.pending.v1";
+
+/** What a parent typed before being sent from sign-up to log-in. Kept in session
+ * storage, never in the URL, and never includes a password. */
+export type PendingLogin = { kind: "email" | "phone"; value: string };
+
+export function savePendingLogin(pending: PendingLogin): void {
+  if (!canUseStorage("sessionStorage")) return;
+  try {
+    window.sessionStorage.setItem(PENDING_LOGIN_KEY, JSON.stringify(pending));
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+export function consumePendingLogin(): PendingLogin | null {
+  if (!canUseStorage("sessionStorage")) return null;
+  try {
+    const raw = window.sessionStorage.getItem(PENDING_LOGIN_KEY);
+    window.sessionStorage.removeItem(PENDING_LOGIN_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<PendingLogin>;
+    if ((parsed.kind !== "email" && parsed.kind !== "phone") || typeof parsed.value !== "string" || !parsed.value) return null;
+    return { kind: parsed.kind, value: parsed.value };
+  } catch {
+    return null;
+  }
+}
+const AUTH_METHOD_KEY = "raqeem.auth.method.v1";
+
+/** Last way the parent chose to sign up or log in ("password" = email or ID). A convenience only. */
+export function loadAuthMethod(): "phone" | "email" | null {
+  if (!canUseStorage("localStorage")) return null;
+  try {
+    const value = window.localStorage.getItem(AUTH_METHOD_KEY);
+    return value === "phone" || value === "email" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveAuthMethod(method: "phone" | "email"): void {
+  if (!canUseStorage("localStorage")) return;
+  try {
+    window.localStorage.setItem(AUTH_METHOD_KEY, method);
+  } catch {
+    /* private mode / quota */
   }
 }

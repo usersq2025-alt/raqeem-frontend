@@ -12,6 +12,8 @@ const CONFETTI_COLORS = ["#F48232", "#F9A8D4", "#7DD3FC", "#FDE68A", "#C4B5FD", 
 
 type Props = {
   publicId: string;
+  /** True when the account has an email, so email + password is a valid way back in. */
+  hasEmail: boolean;
 };
 
 function prefersReducedMotion() {
@@ -58,8 +60,9 @@ function fireCelebration() {
   }, 280);
 }
 
-export function AccountSuccessView({ publicId }: Props) {
+export function AccountSuccessView({ publicId, hasEmail }: Props) {
   const t = useTranslations("success");
+  const tp = useTranslations("phoneAuth.success");
 
   useEffect(() => {
     fireCelebration();
@@ -76,42 +79,35 @@ export function AccountSuccessView({ publicId }: Props) {
       <h1 className="success-enter success-delay-1 mt-2 text-2xl font-extrabold text-text-navy md:text-[1.75rem]">
         {t("title")}
       </h1>
-      <p className="success-enter success-delay-2 mx-auto mt-2 max-w-[22rem] text-sm leading-6 text-text-gray">
-        {t("body")}
-      </p>
 
-      <div className="success-enter success-delay-3 mt-6 text-start">
-        {publicId ? (
-          <AccountIdCard publicId={publicId} />
-        ) : (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-            {t("idMissing")}
-          </p>
-        )}
-      </div>
-
-      <p
-        className="success-enter success-delay-4 mt-3 flex items-start gap-2.5 rounded-xl border border-amber-300/80 bg-amber-50 px-3.5 py-3 text-start text-sm font-semibold leading-5 text-amber-950"
-        role="note"
-      >
-        <span
-          className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-primary-orange bg-white text-[11px] font-black text-primary-orange"
-          aria-hidden="true"
-        >
-          i
-        </span>
-        {t("saveNotice")}
-      </p>
-
-      <div className="success-enter success-delay-5 mt-7">
+      <div className="success-enter success-delay-3 mt-5">
         <Button href="/add-child" fullWidth>
-          {t("continue")}
+          {tp("addChild")}
         </Button>
       </div>
+
+      {publicId ? (
+        <details className="success-enter success-delay-4 mt-4 text-start">
+          <summary className="flex min-h-11 cursor-pointer items-center justify-center font-semibold text-text-navy">
+            {tp("detailsSummary")}
+          </summary>
+          <div className="mt-2">
+            <AccountIdCard publicId={publicId} />
+            <section className="mt-3 rounded-xl border border-neutral-300 bg-white px-3.5 py-3 text-sm leading-6 text-neutral-800" aria-labelledby="sign-in-ways">
+              <h2 id="sign-in-ways" className="font-extrabold text-text-navy">{tp("signInTitle")}</h2>
+              <p className="mt-1">{hasEmail ? tp("signInEmail") : tp("signInPhone")}</p>
+            </section>
+            <p className="mt-3 text-sm font-semibold leading-5 text-neutral-800" role="note">{t("saveNotice")}</p>
+          </div>
+        </details>
+      ) : (
+        <p className="success-enter success-delay-3 mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          {t("idMissing")}
+        </p>
+      )}
     </div>
   );
 }
-
 function WelcomeMoment({ label }: { label: string }) {
   return (
     <div className="relative mx-auto h-[13.25rem] w-[13.25rem] sm:h-[15.5rem] sm:w-[15.5rem]">

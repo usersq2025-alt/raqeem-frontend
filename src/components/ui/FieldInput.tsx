@@ -15,11 +15,11 @@ export const FieldInput = forwardRef<HTMLInputElement, FieldInputProps>(function
   const iconPadding = trailing
     ? "ps-11 pe-11"
     : ltrInput
-      ? "ps-3 pe-11"
+      ? "ps-3 pe-11 ltr:ps-11 ltr:pe-3"
       : "ps-11 pe-3";
   const surface =
     variant === "soft"
-      ? "auth-field bg-[#F7F4F0] py-3.5 text-[15px] focus:bg-white"
+      ? "auth-field bg-[#F7F4F0] py-3 text-base focus:bg-white"
       : "bg-white py-3 text-sm";
 
   return (
@@ -31,7 +31,7 @@ export const FieldInput = forwardRef<HTMLInputElement, FieldInputProps>(function
         {...props}
         ref={ref}
         aria-invalid={invalid || undefined}
-        className={`w-full rounded-2xl border text-text-navy outline-none transition-[border-color,box-shadow,background-color] placeholder:text-neutral-400 focus:border-primary-orange focus:ring-2 focus:ring-primary-orange/25 ${surface} ${iconPadding} ${
+        className={`w-full rounded-2xl border text-text-navy outline-none transition-[border-color,box-shadow,background-color] placeholder:text-neutral-500 focus:border-text-navy focus:ring-2 focus:ring-text-navy/25 ${surface} ${iconPadding} ${
           invalid ? "border-red-400" : variant === "soft" ? "border-[#E7DFD6]" : "border-neutral-200"
         } ${className}`}
       />

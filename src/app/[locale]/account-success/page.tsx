@@ -17,7 +17,7 @@ export default async function AccountSuccessPage() {
 
   return (
     <AuthShell hideBack celebration>
-      <AccountSuccessView publicId={session.parent.public_id ?? ""} />
+      <AccountSuccessView publicId={session.parent.public_id ?? ""} hasEmail={Boolean(session.parent.email)} />
     </AuthShell>
   );
 }

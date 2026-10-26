@@ -20,6 +20,7 @@ export function VerifyOtpExperience({ parentId, email, whatsappPhone }: Props) {
 
   return (
     <main
+      data-auth-buttons
       lang={locale}
       dir={isRtl ? "rtl" : "ltr"}
       className="relative min-h-dvh overflow-x-hidden bg-background-white text-start [text-align:start]"

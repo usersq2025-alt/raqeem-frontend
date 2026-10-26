@@ -285,7 +285,7 @@
     }
   },
   "register": {
-    "title": "Welcome to Raqeem 👋",
+    "title": "Create a parent account",
     "subtitle": "Create your parent account to join your child on their learning journey.",
     "visualHeadline": "Begin the journey of discovery.",
     "visualBody": "A small key opens a wide world of your child’s skills.",
@@ -298,7 +298,7 @@
     },
     "nextStep": "Next step: create our little hero’s profile.",
     "back": "Back",
-    "submit": "Join the Raqeem family 🚀",
+    "submit": "Continue",
     "submitting": "Creating...",
     "haveAccount": "Already have an account?",
     "haveAccountLogin": "Log in",
@@ -338,6 +338,8 @@
       "strong": "Strong",
       "show": "Show password",
       "hide": "Hide password",
+      "required": "At least 6 characters",
+      "tips": "Optional tips for a stronger password:",
       "rulesTitle": "Your password is stronger with:",
       "length": "At least 8 characters",
       "lower": "A lowercase English letter (a–z)",
@@ -357,7 +359,7 @@
       "emailRequired": "Email is required",
       "emailInvalid": "Please enter a valid email address",
       "emailHint": "Example: name@gmail.com",
-      "emailTaken": "This email is already registered",
+      "emailTaken": "This email is already registered with Raqeem.",
       "phoneTaken": "This number is already linked to an account. Log in instead, or reset your password if you forgot it.",
       "loginLink": "Log in",
       "resetPasswordLink": "Reset password",
@@ -405,12 +407,12 @@
     "back": "Back"
   },
   "success": {
-    "title": "Welcome to Raqeem! 🎉",
+    "title": "Your account is ready!",
     "body": "Your account was created successfully — ready for a fun learning journey",
     "idLabel": "Your parent ID",
     "copy": "Copy",
     "copied": "Copied ✓",
-    "saveNotice": "Save this ID — you will need it to log in later",
+    "saveNotice": "Keep this ID; it helps if you forget your email or number.",
     "continue": "Continue",
     "mascotAlt": "A child standing on a glowing book, launching a paper airplane at the start of the journey",
     "idMissing": "Could not display the ID. Refresh the page or try again."
@@ -1678,5 +1680,117 @@
     "close": "Close image",
     "failed": "The question image could not load. Please retry before answering.",
     "retry": "Reload image"
+  },
+  "phoneAuth": {
+    "registerMethod": {
+      "legend": "Sign-up method",
+      "phone": "Phone",
+      "email": "Email"
+    },
+    "loginMethod": {
+      "legend": "Log-in method",
+      "phone": "Phone",
+      "password": "Email or ID"
+    },
+    "form": {
+      "nameLabel": "Parent name",
+      "nameError": "Enter your name (at least 3 characters).",
+      "phoneLabel": "Phone number",
+      "phoneRequired": "Enter your phone number.",
+      "phoneInvalid": "That phone number isn't valid. Example: 0944123456",
+      "passwordLabel": "Password",
+      "passwordShort": "Password must be at least 6 characters.",
+      "passwordRequired": "Enter your password.",
+      "loginLabel": "Email or account ID",
+      "loginRequired": "Enter your email or account ID.",
+      "termsRequired": "Accept the terms to continue.",
+      "sendCode": "Send verification code",
+      "sending": "Sending…",
+      "sendCodeIn": "Send a new code in {time}",
+      "continue": "Continue",
+      "continueIn": "Continue in {time}",
+      "helpSummary": "Trouble logging in by phone?",
+      "helpEmail": "Log in with email or ID",
+      "helpLink": "Link my number to an existing account",
+      "bindTitle": "Link your number to your account",
+      "bindHelp": "Enter your current account details once, then we verify your number by SMS.",
+      "bindClose": "Back",
+      "haveAccount": "Already have an account?",
+      "createAccount": "Create account",
+    "resumeCode": "Continue entering the code",
+    "loginLink": "Log in",
+      "forgot": "Forgot password?",
+    "forgotCredentials": "Forgot your log-in details?"
+    },
+    "code": {
+      "title": "Enter the verification code",
+      "label": "Verification code",
+      "sentTo": "We requested a code to",
+      "sentToLogin": "If the number is valid we'll send a code to",
+      "editPhone": "Edit number",
+      "digitLabel": "Digit {n} of 4",
+      "incomplete": "Enter the full code (4 digits).",
+      "wrong": "The code is wrong or expired. Try again or request a new one.",
+      "expired": "The code expired. Request a new one.",
+      "expiredWait": "The code expired. You can request a new one in {time}.",
+      "confirm": "Confirm code",
+      "confirming": "Confirming…",
+    "sendNew": "Send a new code",
+    "sendNewIn": "Send a new code in {time}",
+    "resetHintPhone": "If the number is registered we'll text a code to",
+      "resend": "Resend code",
+      "resending": "Sending…",
+      "resendIn": "Resend in {time}",
+      "notArrivedSummary": "No code yet?",
+      "notArrived": "Check the number and your signal, then wait a minute.",
+      "waitReason": "The wait grows after each request to protect your account. You can edit the number to try another."
+    },
+    "notice": {
+      "taken": {
+        "title": "This number is registered with Raqeem.",
+        "body": "Log in to your account.",
+        "login": "Log in"
+      },
+      "blocked": {
+        "title": "Code sending is paused for this number.",
+        "body": "Contact Raqeem support or try another number.",
+        "support": "Contact support"
+      },
+      "cooldown": {
+        "title": "Wait {time} before requesting a new code.",
+        "body": "The wait grows after each request to protect your account."
+      },
+      "unavailable": {
+        "title": "Couldn't send right now. Try again shortly.",
+        "retry": "Try again"
+      },
+      "network": {
+        "title": "No connection. Check your internet and try again.",
+        "retry": "Try again"
+      },
+      "unknown": {
+        "title": "Couldn't send the code. Check the number and try again."
+      },
+      "emailTaken": {
+        "title": "This email is registered with Raqeem.",
+        "body": "Log in to your account.",
+        "login": "Log in"
+      }
+    },
+    "otp": {
+      "supportPaused": "Code sending is paused here for protection.",
+      "support": "Contact support",
+      "waitExplain": "The wait grows after each request to protect your account.",
+      "validityExpired": "The code has expired.",
+      "changeEmailPassword": "Password to confirm the email change",
+      "accountPassword": "Password"
+    },
+    "success": {
+      "addChild": "Add my child",
+      "detailsSummary": "Account ID and ways to log in",
+      "signInTitle": "How to log in later",
+      "signInEmail": "Your email or parent ID, plus your password.",
+      "signInPhone": "Your phone number with an SMS code, or your parent ID with your password."
+    }
   }
 }

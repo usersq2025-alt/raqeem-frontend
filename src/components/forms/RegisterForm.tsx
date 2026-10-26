@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { MethodChoice, MethodChoiceSkeleton } from "./MethodChoice";
 import { SmsPhoneLoginForm } from "./SmsPhoneLoginForm";
 import { Link, useRouter } from "@/i18n/navigation";
 import { RocketIcon } from "@/components/ui/Button";
 import { FieldInput, MailIcon, PhoneIcon, UserIcon, WarningIcon } from "@/components/ui/FieldInput";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { AuthApiError, fetchOtpChannels, registerUser, type OtpChannel } from "@/lib/api/auth";
+import { formatDuration } from "@/lib/auth/phoneAuth";
 import {
   NAME_PATTERN,
   createRegisterSchema,
@@ -17,7 +19,11 @@ import {
 import {
   clearRegisterDraft,
   loadRegisterDraft,
+  loadAuthMethod,
+  loadPhoneChallenge,
   loadRegisterPasswordDraft,
+  saveAuthMethod,
+  savePendingLogin,
   saveRegisterDraft,
   saveRegisterPasswordDraft,
 } from "@/lib/registerDraft";
@@ -31,27 +37,58 @@ function toE164(raw: string): string | null {
   return /^\+[1-9]\d{7,14}$/.test(value) ? value : null;
 }
 
-export function RegisterForm() {
-  const ar = useLocale() === "ar";
+export function RegisterForm({ onCodeStep }: { onCodeStep?: (active: boolean) => void }) {
+  const t = useTranslations("phoneAuth");
   const [method, setMethod] = useState<"email" | "phone">("email");
-  const [smsAvailable, setSmsAvailable] = useState(false);
+  // null until the server says which methods exist; the space is held meanwhile.
+  const [smsAvailable, setSmsAvailable] = useState<boolean | null>(null);
+  const [phoneStep, setPhoneStep] = useState<1 | 2>(1);
   useEffect(() => {
     let active = true;
-    void fetchOtpChannels().then((channels) => { if (active) setSmsAvailable(channels.sms === true); });
+    void fetchOtpChannels().then((channels) => {
+      if (!active) return;
+      const sms = channels.sms === true;
+      setMethod(sms ? (loadPhoneChallenge("register") ? "phone" : (loadAuthMethod() ?? "phone")) : "email");
+      setSmsAvailable(sms);
+    });
     return () => { active = false; };
   }, []);
 
+  const phoneMode = method === "phone" && smsAvailable === true;
+  const inCodeStep = phoneMode && phoneStep === 2;
+  useEffect(() => { onCodeStep?.(inCodeStep); }, [inCodeStep, onCodeStep]);
+
+  if (smsAvailable === null) return <MethodChoiceSkeleton tall />;
+
   return <>
-    {smsAvailable && <div className="mb-4 grid grid-cols-2 gap-2" role="group" aria-label={ar ? "طريقة إنشاء الحساب" : "Registration method"}>
-      <button type="button" aria-pressed={method === "phone"} onClick={() => setMethod("phone")} className={`rounded-xl border p-3 font-bold ${method === "phone" ? "border-primary-orange bg-orange-50" : "border-gray-200"}`}>{ar ? "برقم الهاتف" : "Phone number"}</button>
-      <button type="button" aria-pressed={method === "email"} onClick={() => setMethod("email")} className={`rounded-xl border p-3 font-bold ${method === "email" ? "border-primary-orange bg-orange-50" : "border-gray-200"}`}>{ar ? "بالبريد الإلكتروني" : "Email"}</button>
-    </div>}
-    {method === "phone" && smsAvailable ? <SmsPhoneLoginForm mode="register" channelAvailable /> : <EmailRegisterForm />}
+    {smsAvailable && !(phoneMode && phoneStep === 2) ? (
+      <MethodChoice
+        legend={t("registerMethod.legend")}
+        name="registerMethod"
+        value={method}
+        onChange={(next) => { setMethod(next); saveAuthMethod(next); }}
+        options={[
+          { value: "phone", label: t("registerMethod.phone") },
+          { value: "email", label: t("registerMethod.email") },
+        ]}
+      />
+    ) : null}
+    {phoneMode ? <SmsPhoneLoginForm mode="register" channelAvailable onStepChange={setPhoneStep} /> : <EmailRegisterForm />}
+    {inCodeStep ? null : (
+    <p className="pt-1 text-start text-sm font-medium text-neutral-700">
+      {t("form.haveAccount")}{" "}
+      <Link href="/login" className="inline-flex min-h-11 items-center font-extrabold text-text-navy underline decoration-primary-orange/70 underline-offset-4">
+        {t("form.loginLink")}
+      </Link>
+    </p>
+    )}
   </>;
 }
-
 function EmailRegisterForm() {
   const t = useTranslations("register");
+  const tp = useTranslations("phoneAuth");
+  const locale = useLocale();
+  const submitLock = useRef(false);
   const router = useRouter();
 
   const schemaMessages = useMemo(
@@ -118,10 +155,10 @@ function EmailRegisterForm() {
   }, [fullName, email, acceptedTerms, password, hydrated]);
 
   const formValues = { fullName, email, password, acceptedTerms };
-  const schemaValid = schema.safeParse(formValues).success;
   const useWhatsApp = whatsappAvailable && channel === "whatsapp";
   const phoneE164 = toE164(phone);
-  const canSubmit = schemaValid && !emailTaken && !submitting && (!useWhatsApp || phoneE164 !== null);
+  // Stay enabled so a press explains what is missing instead of leaving a dead button.
+  const canSubmit = !emailTaken && !submitting;
 
   function liveNameError(): string | undefined {
     const value = fullName.trim();
@@ -171,6 +208,8 @@ function EmailRegisterForm() {
       return;
     }
 
+    if (submitLock.current) return;
+    submitLock.current = true;
     setSubmitting(true);
     try {
       const result = await registerUser({
@@ -193,22 +232,30 @@ function EmailRegisterForm() {
     } catch (error) {
       if (error instanceof AuthApiError && error.code === "EMAIL_TAKEN") {
         setEmailTaken(true);
+        savePendingLogin({ kind: "email", value: parsed.data.email });
         return;
       }
       if (error instanceof AuthApiError && error.status === 422 && useWhatsApp) {
         setErrors({ phone: t("errors.phoneInvalid") });
         return;
       }
-      setFormError(t("errors.generic"));
+      if (error instanceof AuthApiError && error.status === 0) {
+        setFormError(tp("notice.network.title"));
+      } else if (error instanceof AuthApiError && (error.status === 429 || error.status === 423)) {
+        setFormError(tp("notice.cooldown.title", { time: formatDuration(error.retryAfter || 60, locale) }));
+      } else {
+        setFormError(t("errors.generic"));
+      }
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   }
 
   return (
-    <form className="mt-7 flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+    <form className="flex flex-col gap-3" onSubmit={handleSubmit} noValidate>
       <div>
-        <label htmlFor="fullName" className="mb-1.5 block text-start text-sm font-semibold text-text-gray">
+        <label htmlFor="fullName" className="mb-1.5 block text-start text-sm font-semibold text-neutral-800">
           {t("fields.fullName")}
         </label>
         <FieldInput
@@ -217,7 +264,6 @@ function EmailRegisterForm() {
           variant="soft"
           autoComplete="name"
           value={fullName}
-          placeholder={t("placeholders.fullName")}
           invalid={Boolean(errors.fullName || liveName)}
           aria-describedby={errors.fullName || liveName ? "fullName-error" : undefined}
           icon={<UserIcon />}
@@ -230,14 +276,14 @@ function EmailRegisterForm() {
           }}
         />
         {errors.fullName || liveName ? (
-          <p id="fullName-error" className="mt-1 text-xs text-red-500">
+          <p id="fullName-error" className="mt-1 text-sm font-semibold text-red-700">
             {errors.fullName ?? liveName}
           </p>
         ) : null}
       </div>
 
       <div>
-        <label htmlFor="email" className="mb-1.5 block text-start text-sm font-semibold text-text-gray">
+        <label htmlFor="email" className="mb-1.5 block text-start text-sm font-semibold text-neutral-800">
           {t("fields.email")}
         </label>
         <FieldInput
@@ -267,7 +313,7 @@ function EmailRegisterForm() {
           }}
         />
         {!emailTaken && (errors.email || liveEmail) ? (
-          <p id="email-error" className="mt-1 text-xs text-red-500">
+          <p id="email-error" className="mt-1 text-sm font-semibold text-red-700">
             {errors.email ?? liveEmail}
           </p>
         ) : null}
@@ -275,21 +321,27 @@ function EmailRegisterForm() {
           <div
             id="email-taken"
             role="alert"
-            className="mt-2 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-600"
+            className="mt-2 rounded-2xl border-2 border-amber-500 bg-amber-50 p-3.5 text-sm leading-6 text-amber-950"
           >
-            <WarningIcon />
-            <p className="flex-1">
-              {t("errors.emailTaken")}{" "}
-              <Link href="/login" className="font-semibold underline underline-offset-2">
-                {t("errors.loginLink")}
-              </Link>
+            <p className="flex items-start gap-2 font-extrabold">
+              <span className="mt-0.5 shrink-0"><WarningIcon /></span>
+              <span>{tp("notice.emailTaken.title")}</span>
             </p>
+            <p className="mt-1">{tp("notice.emailTaken.body")}</p>
+            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1">
+              <Link href="/login" className="btn-sticker-navy inline-flex min-h-11 items-center rounded-full px-5 font-bold">
+                {tp("notice.emailTaken.login")}
+              </Link>
+              <Link href="/forgot-password" className="inline-flex min-h-11 items-center font-bold text-text-navy underline underline-offset-4">
+                {tp("form.forgot")}
+              </Link>
+            </div>
           </div>
         ) : null}
       </div>
 
       <div>
-        <label htmlFor="password" className="mb-1.5 block text-start text-sm font-semibold text-text-gray">
+        <label htmlFor="password" className="mb-1.5 block text-start text-sm font-semibold text-neutral-800">
           {t("fields.password")}
         </label>
         <PasswordInput
@@ -297,7 +349,7 @@ function EmailRegisterForm() {
           name="password"
           variant="soft"
           value={password}
-          placeholder={t("placeholders.password")}
+          placeholder=""
           invalid={Boolean(errors.password)}
           showStrength
           describedBy={
@@ -314,7 +366,7 @@ function EmailRegisterForm() {
           }}
         />
         {errors.password ? (
-          <p id="password-error" className="mt-1 text-xs text-red-500">
+          <p id="password-error" className="mt-1 text-sm font-semibold text-red-700">
             {errors.password}
           </p>
         ) : null}
@@ -322,7 +374,7 @@ function EmailRegisterForm() {
 
       {whatsappAvailable ? (
         <fieldset>
-          <legend className="mb-1.5 block text-start text-sm font-semibold text-text-gray">
+          <legend className="mb-1.5 block text-start text-sm font-semibold text-neutral-800">
             {t("channel.legend")}
           </legend>
           <div className="grid grid-cols-2 gap-2">
@@ -350,7 +402,7 @@ function EmailRegisterForm() {
 
           {useWhatsApp ? (
             <div className="mt-3">
-              <label htmlFor="phone" className="mb-1.5 block text-start text-sm font-semibold text-text-gray">
+              <label htmlFor="phone" className="mb-1.5 block text-start text-sm font-semibold text-neutral-800">
                 {t("channel.phoneLabel")}
               </label>
               <FieldInput
@@ -372,7 +424,7 @@ function EmailRegisterForm() {
                 }}
               />
               {errors.phone ? (
-                <p id="phone-error" className="mt-1 text-xs text-red-500">
+                <p id="phone-error" className="mt-1 text-sm font-semibold text-red-700">
                   {errors.phone}
                 </p>
               ) : (
@@ -425,11 +477,11 @@ function EmailRegisterForm() {
         </span>
       </label>
       {errors.terms ? (
-        <p id="terms-error" className="text-xs text-red-500">
+        <p id="terms-error" className="text-sm font-semibold text-red-700">
           {errors.terms}
         </p>
       ) : null}
-      {formError ? <p className="text-sm text-red-500">{formError}</p> : null}
+      {formError ? <p role="alert" className="text-sm font-semibold text-red-700">{formError}</p> : null}
 
       <button type="submit" className="hero-cta register-submit mt-1" disabled={!canSubmit} aria-busy={submitting}>
         {submitting ? (
@@ -444,16 +496,6 @@ function EmailRegisterForm() {
           </>
         )}
       </button>
-
-      <p className="pt-1 text-start text-sm font-medium text-text-gray">
-        {t("haveAccount")}{" "}
-        <Link
-          href="/login"
-          className="font-extrabold text-text-navy underline decoration-primary-orange/70 underline-offset-4 transition-colors hover:text-primary-orange"
-        >
-          {t("haveAccountLogin")}
-        </Link>
-      </p>
     </form>
   );
 }

@@ -62,7 +62,7 @@ function toAuthError(error: unknown): AuthApiError {
     }
     if (error.status === 429 || error.status === 423) {
       const details = error.body as { retry_after?: number; support_required?: boolean } | null;
-      return new AuthApiError(error.message, "NETWORK", error.status, details?.retry_after ?? 60, details?.support_required === true);
+      return new AuthApiError(error.message, "NETWORK", error.status, details?.retry_after ?? error.retryAfter ?? 60, details?.support_required === true);
     }
     if (error.status === 401) {
       return new AuthApiError(error.message, "INVALID_CREDENTIALS", 401);

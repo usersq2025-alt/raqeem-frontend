@@ -19,6 +19,8 @@
     "test:student-journey": "npx tsx scripts/verify-student-journey.ts",
     "test:numerals": "npx tsx scripts/verify-display-numerals.ts",
     "test:ux": "node scripts/verify-ux.mjs",
+    "test:phone-auth": "npx tsx scripts/verify-phone-auth.ts",
+    "test:phone-auth-ux": "node scripts/verify-phone-auth-ux.mjs",
     "test:audio": "npx tsx scripts/verify-question-audio.ts",
     "test:audio-ux": "node scripts/verify-question-audio-ux.mjs",
     "test:offline-grading": "npx tsx scripts/verify-offline-grading.ts",
